@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 180" fill="none" role="img" aria-label="Aidapt">
+  <!-- Teal chevron mark (Aidapt Teal #11A8A0) -->
+  <polyline points="60,42 162,90 60,138" fill="none" stroke="#11A8A0" stroke-width="42" stroke-linecap="square" stroke-linejoin="miter"/>
+  <!-- Wordmark: textLength + lengthAdjust forces a fixed width so it never overflows the canvas -->
+  <text x="198" y="128" textLength="332" lengthAdjust="spacingAndGlyphs"
+        font-family="Arial, Helvetica, sans-serif" font-size="110" font-weight="800" fill="#0B2A33">aidapt</text>
+</svg>
