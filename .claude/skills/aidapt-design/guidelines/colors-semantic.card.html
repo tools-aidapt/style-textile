@@ -1,0 +1,42 @@
+<!-- @dsCard group="Colors" viewport="700x250" name="Semantic colours" subtitle="Derived from the palette: success=Wood, info=Water, warning=Earth→Fire, error=Fire→red" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  html,body{margin:0}
+  body{background:var(--white);font-family:var(--font-sans);color:var(--text-primary);padding:20px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .sem{border:1px solid var(--border-default);border-radius:var(--radius-lg);overflow:hidden}
+  .swatch{height:54px;display:flex;align-items:center;justify-content:center;font:var(--fw-semibold) 13px/1 var(--font-sans)}
+  .meta{padding:10px 12px}
+  .meta .n{font:var(--fw-bold) 14px/1.1 var(--font-display);margin-bottom:4px}
+  .meta .d{font:400 12px/1.35 var(--font-sans);color:var(--text-secondary)}
+  .meta .hx{font:500 11px/1 var(--font-mono);color:var(--text-tertiary);margin-top:6px;display:block}
+  .surfaces{display:flex;gap:6px;margin-top:8px}
+  .pill{flex:1;border-radius:var(--radius-sm);padding:5px 6px;font:500 10px/1 var(--font-mono);text-align:center}
+</style></head><body>
+  <div class="grid">
+    <div class="sem">
+      <div class="swatch" style="background:var(--success);color:#fff">Success</div>
+      <div class="meta"><div class="n">Success</div><div class="d">Wood / Spring — growth, confirmation.</div>
+        <span class="hx">#008558 · white 4.67:1</span>
+        <div class="surfaces"><span class="pill" style="background:var(--success-surface);color:var(--success-text)">surface</span></div></div>
+    </div>
+    <div class="sem">
+      <div class="swatch" style="background:var(--info);color:#fff">Info</div>
+      <div class="meta"><div class="n">Info</div><div class="d">Water / Cyan — the hero family.</div>
+        <span class="hx">#007D9C · white 4.76:1</span>
+        <div class="surfaces"><span class="pill" style="background:var(--info-surface);color:var(--info-text)">surface</span></div></div>
+    </div>
+    <div class="sem">
+      <div class="swatch" style="background:var(--warning);color:var(--ink-900)">Warning</div>
+      <div class="meta"><div class="n">Warning</div><div class="d">Earth→Fire bridge, amber. Ink label.</div>
+        <span class="hx">#D98A1E · Ink 6.42:1</span>
+        <div class="surfaces"><span class="pill" style="background:var(--warning-surface);color:var(--warning-text)">surface</span></div></div>
+    </div>
+    <div class="sem">
+      <div class="swatch" style="background:var(--error);color:#fff">Error</div>
+      <div class="meta"><div class="n">Error</div><div class="d">Fire anchor rotated to true red.</div>
+        <span class="hx">#CE3A22 · white 4.94:1</span>
+        <div class="surfaces"><span class="pill" style="background:var(--error-surface);color:var(--error-text)">surface</span></div></div>
+    </div>
+  </div>
+</body></html>

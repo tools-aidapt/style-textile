@@ -1,0 +1,352 @@
+{
+  "_comment": [
+    "A local development fixture, not production data. Point",
+    "VITE_REQUISITION_SCHEMA_URL at /requisition-schema.sample.json to work on the",
+    "requisition form without n8n. In production this exact shape is served by n8n,",
+    "which reads GET /api/v2/list/{id}/field from ClickUp and maps each field onto",
+    "the keys below. Option UUIDs are deliberately absent: the app submits labels,",
+    "and n8n resolves them against the live workspace.",
+    "The form no longer asks for section, job grade or job code — HR assigns those —",
+    "so they are not listed here and are sent as null.",
+    "TODO(kenafric): six of these fields do not exist in ClickUp yet — location,",
+    "othersReportingIndirectly, jobOverview, keyResponsibilitiesOutcomes,",
+    "relevantSkillsExperienceAttributes and requisitionRaised. Until they do, n8n",
+    "lists them in missingKeys and the form refuses to open.",
+    "People come from the two directory endpoints (VITE_EMPLOYEES_WEBHOOK_URL and",
+    "VITE_USERS_WEBHOOK_URL), not from this file. See kenafric-*.sample.json."
+  ],
+  "fields": {
+    "company": {
+      "key": "company",
+      "clickupName": "Company",
+      "type": "drop_down",
+      "options": [
+        {
+          "label": "Kenafric Beverages & Bottling Limited"
+        },
+        {
+          "label": "Kenafric Biscuits Limited"
+        },
+        {
+          "label": "Kenafric Industries Limited"
+        },
+        {
+          "label": "Kenafric Industries Limited - Shared Services"
+        },
+        {
+          "label": "Kenafric Manufacturing Limited"
+        },
+        {
+          "label": "Kenafric Manufacturing Limited - Shared Services"
+        },
+        {
+          "label": "Kenafric Manufacturing Limited- Footwear"
+        },
+        {
+          "label": "Kenafric Manufacturing Limited - Stationery"
+        },
+        {
+          "label": "Kenafric Properties Limited"
+        }
+      ]
+    },
+    "department": {
+      "key": "department",
+      "clickupName": "Department",
+      "type": "drop_down",
+      "options": [
+        {
+          "label": "Administration"
+        },
+        {
+          "label": "Audit"
+        },
+        {
+          "label": "Consumer Insight"
+        },
+        {
+          "label": "Engineering"
+        },
+        {
+          "label": "Finance"
+        },
+        {
+          "label": "Human Resource"
+        },
+        {
+          "label": "ICT"
+        },
+        {
+          "label": "Insurance"
+        },
+        {
+          "label": "Legal"
+        },
+        {
+          "label": "Marketing"
+        },
+        {
+          "label": "Production"
+        },
+        {
+          "label": "Quality & Product Development"
+        },
+        {
+          "label": "Sales & Distribution"
+        },
+        {
+          "label": "Supply Chain"
+        },
+        {
+          "label": "N/A"
+        }
+      ]
+    },
+    "costCentre": {
+      "key": "costCentre",
+      "clickupName": "Cost Centre",
+      "type": "drop_down",
+      "options": [
+        {
+          "label": "Administration"
+        },
+        {
+          "label": "Audit"
+        },
+        {
+          "label": "Consumer Insight"
+        },
+        {
+          "label": "Engineering"
+        },
+        {
+          "label": "Finance"
+        },
+        {
+          "label": "Human Resource"
+        },
+        {
+          "label": "ICT"
+        },
+        {
+          "label": "Insurance"
+        },
+        {
+          "label": "Legal"
+        },
+        {
+          "label": "Marketing"
+        },
+        {
+          "label": "Production"
+        },
+        {
+          "label": "Quality & Product Development"
+        },
+        {
+          "label": "Sales & Distribution"
+        },
+        {
+          "label": "Supply Chain"
+        },
+        {
+          "label": "N/A"
+        }
+      ]
+    },
+    "location": {
+      "key": "location",
+      "clickupName": "Work Location",
+      "type": "drop_down",
+      "options": [
+        {
+          "label": "Nairobi, Kenya"
+        },
+        {
+          "label": "Thika, Kenya"
+        }
+      ]
+    },
+    "positionType": {
+      "key": "positionType",
+      "clickupName": "Position Type",
+      "type": "drop_down",
+      "options": [
+        {
+          "label": "Outsourced"
+        },
+        {
+          "label": "Permanent"
+        },
+        {
+          "label": "Intern"
+        },
+        {
+          "label": "Fixed Term Contract"
+        }
+      ]
+    },
+    "newOrReplacement": {
+      "key": "newOrReplacement",
+      "clickupName": "Position: New/Replacement",
+      "type": "drop_down",
+      "options": [
+        {
+          "label": "New"
+        },
+        {
+          "label": "Replacement"
+        }
+      ]
+    },
+    "recruitmentType": {
+      "key": "recruitmentType",
+      "clickupName": "Recruitment Type",
+      "type": "labels",
+      "options": [
+        {
+          "label": "Internal Recruitment"
+        },
+        {
+          "label": "Recruitment Agency"
+        },
+        {
+          "label": "External Recruitment"
+        }
+      ]
+    },
+    "positionRequirements": {
+      "key": "positionRequirements",
+      "clickupName": "Position Requirements",
+      "type": "labels",
+      "options": [
+        {
+          "label": "Email Address",
+          "note": "ICT"
+        },
+        {
+          "label": "Laptop/Computer/Connectivity",
+          "note": "ICT"
+        },
+        {
+          "label": "SAP Credentials",
+          "note": "ICT"
+        },
+        {
+          "label": "Office Space & Accessories",
+          "note": "HR"
+        },
+        {
+          "label": "Pick-up",
+          "note": "Garage"
+        },
+        {
+          "label": "Saloon Vehicle",
+          "note": "Garage"
+        },
+        {
+          "label": "Business Cards - Role Based",
+          "note": "owner TBC"
+        },
+        {
+          "label": "Fuel Allowance",
+          "note": "owner TBC"
+        },
+        {
+          "label": "N/A"
+        }
+      ]
+    },
+    "assessmentStagesRequired": {
+      "key": "assessmentStagesRequired",
+      "clickupName": "Assessment Stages Required",
+      "type": "labels",
+      "options": [
+        {
+          "label": "Telephone"
+        },
+        {
+          "label": "Stage 1"
+        },
+        {
+          "label": "Stage 2"
+        },
+        {
+          "label": "Stage 3"
+        }
+      ]
+    },
+    "totalSubPositions": {
+      "key": "totalSubPositions",
+      "clickupName": "Total Sub-Positions",
+      "type": "number"
+    },
+    "requestingManager": {
+      "key": "requestingManager",
+      "clickupName": "Requesting Manager",
+      "type": "people"
+    },
+    "reportingTo": {
+      "key": "reportingTo",
+      "clickupName": "Reporting To",
+      "type": "text"
+    },
+    "othersReportingIndirectly": {
+      "key": "othersReportingIndirectly",
+      "clickupName": "Others Reporting Indirectly",
+      "type": "textarea"
+    },
+    "jobOverview": {
+      "key": "jobOverview",
+      "clickupName": "Job Overview",
+      "type": "textarea"
+    },
+    "keyResponsibilitiesOutcomes": {
+      "key": "keyResponsibilitiesOutcomes",
+      "clickupName": "Key Responsibilities & Outcomes",
+      "type": "textarea"
+    },
+    "educationalQualification": {
+      "key": "educationalQualification",
+      "clickupName": "Educational Qualification",
+      "type": "textarea"
+    },
+    "relevantSkillsExperienceAttributes": {
+      "key": "relevantSkillsExperienceAttributes",
+      "clickupName": "Relevant Skills, Experience & Attributes",
+      "type": "textarea"
+    },
+    "previousFailuresSuccesses": {
+      "key": "previousFailuresSuccesses",
+      "clickupName": "Previous Failures / Successes",
+      "type": "textarea"
+    },
+    "competitiveAdvantage": {
+      "key": "competitiveAdvantage",
+      "clickupName": "Competitive Advantage",
+      "type": "textarea"
+    },
+    "sixMonthsObjectives": {
+      "key": "sixMonthsObjectives",
+      "clickupName": "6 Months Objectives",
+      "type": "textarea"
+    },
+    "potentialCareerPath": {
+      "key": "potentialCareerPath",
+      "clickupName": "Potential Career Path",
+      "type": "textarea"
+    },
+    "interviewPanel": {
+      "key": "interviewPanel",
+      "clickupName": "Interview Panel",
+      "type": "people"
+    },
+    "requisitionRaised": {
+      "key": "requisitionRaised",
+      "clickupName": "Requisition Raised",
+      "type": "date"
+    }
+  },
+  "employees": [],
+  "missingKeys": []
+}

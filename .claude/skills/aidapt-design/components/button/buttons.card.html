@@ -1,0 +1,56 @@
+<!-- @dsCard group="Components" viewport="700x440" name="Buttons" subtitle="Primary (Teal) · CTA (Ember) · Secondary · Ghost · Destructive — all states" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<style>
+  html,body{margin:0}
+  body{background:var(--white);color:var(--text-primary);padding:22px}
+  .grid{display:flex;flex-direction:column;gap:16px}
+  .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .lab{font:600 11px/1 var(--font-sans);letter-spacing:var(--ls-wider);text-transform:uppercase;color:var(--text-tertiary);width:96px;flex:none}
+</style></head><body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="../../_ds_bundle.js"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script type="text/babel">
+    const { Button, IconButton } = window.AidaptDesignSystem_0090ec;
+    const Ico = ({n}) => { const r=React.useRef(null);
+      React.useEffect(()=>{ if(r.current){ r.current.innerHTML=''; const e=document.createElement('i'); e.setAttribute('data-lucide',n); r.current.appendChild(e); window.lucide.createIcons({attrs:{width:18,height:18}}); }},[]);
+      return <span ref={r} style={{display:'inline-flex'}}/>; };
+    function Demo(){
+      return (
+        <div className="grid">
+          <div className="row"><span className="lab">Variants</span>
+            <Button variant="primary">Primary</Button>
+            <Button variant="cta" iconRight={<Ico n="chevron-right"/>}>Start a project</Button>
+            <Button variant="secondary">Secondary</Button>
+            <Button variant="ghost">Ghost</Button>
+            <Button variant="destructive">Delete</Button>
+          </div>
+          <div className="row"><span className="lab">Sizes</span>
+            <Button variant="primary" size="sm">Small</Button>
+            <Button variant="primary" size="md">Medium</Button>
+            <Button variant="primary" size="lg">Large</Button>
+          </div>
+          <div className="row"><span className="lab">With icon</span>
+            <Button variant="primary" iconLeft={<Ico n="plus"/>}>New project</Button>
+            <Button variant="secondary" iconLeft={<Ico n="download"/>}>Export</Button>
+            <Button variant="ghost" iconRight={<Ico n="arrow-right"/>}>Continue</Button>
+          </div>
+          <div className="row"><span className="lab">States</span>
+            <Button variant="primary" disabled>Disabled</Button>
+            <Button variant="primary" loading>Saving…</Button>
+            <Button variant="cta" loading>Working</Button>
+          </div>
+          <div className="row"><span className="lab">Icon-only</span>
+            <IconButton icon={<Ico n="search"/>} label="Search" />
+            <IconButton icon={<Ico n="plus"/>} label="Add" variant="primary" />
+            <IconButton icon={<Ico n="settings"/>} label="Settings" variant="outline" />
+          </div>
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+  </script>
+</body></html>

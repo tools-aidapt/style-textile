@@ -1,0 +1,17 @@
+<!-- @dsCard group="Spacing" viewport="700x190" name="Radius scale" subtitle="Restrained, soft — never bubbly. 8px default, 12px cards, pills for chips only." -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  html,body{margin:0}
+  body{background:var(--white);color:var(--text-primary);padding:22px;display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap}
+  .item{text-align:center}
+  .box{width:78px;height:78px;background:var(--teal-100);border:1.5px solid var(--teal-400)}
+  .nm{font:var(--fw-semibold) 12px/1 var(--font-sans);margin-top:9px}
+  .px{font:500 11px/1 var(--font-mono);color:var(--text-tertiary);margin-top:4px}
+</style></head><body>
+  <div class="item"><div class="box" style="border-radius:var(--radius-sm)"></div><div class="nm">sm</div><div class="px">4px</div></div>
+  <div class="item"><div class="box" style="border-radius:var(--radius-md)"></div><div class="nm">md · default</div><div class="px">8px</div></div>
+  <div class="item"><div class="box" style="border-radius:var(--radius-lg)"></div><div class="nm">lg · cards</div><div class="px">12px</div></div>
+  <div class="item"><div class="box" style="border-radius:var(--radius-xl)"></div><div class="nm">xl · modals</div><div class="px">16px</div></div>
+  <div class="item"><div class="box" style="border-radius:var(--radius-2xl)"></div><div class="nm">2xl · hero</div><div class="px">24px</div></div>
+  <div class="item"><div class="box" style="border-radius:var(--radius-pill)"></div><div class="nm">pill · chips</div><div class="px">999px</div></div>
+</body></html>

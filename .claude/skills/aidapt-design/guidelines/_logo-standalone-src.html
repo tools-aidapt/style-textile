@@ -1,0 +1,21 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Aidapt — Logo</title><link rel="stylesheet" href="../styles.css">
+<template id="__bundler_thumbnail" data-bg-color="#11A8A0">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#11A8A0"></rect>
+    <path d="M500 280 L700 400 L500 520 L500 448 L580 400 L500 352 Z" fill="#FFFFFF"></path>
+  </svg>
+</template>
+<style>
+  html,body{margin:0}
+  body{background:var(--white);padding:0;display:grid;grid-template-columns:1fr 1fr;min-height:230px}
+  .panel{display:flex;align-items:center;justify-content:center;padding:30px;position:relative}
+  .light{background:var(--white);border-right:1px solid var(--border-subtle)}
+  .dark{background:var(--deepflow-900)}
+  img{height:62px;width:auto}
+  .tag{position:absolute;bottom:12px;font:600 10px/1 var(--font-sans);letter-spacing:var(--ls-wider);text-transform:uppercase}
+  .light .tag{color:var(--text-tertiary)}
+  .dark .tag{color:var(--deepflow-200)}
+</style></head><body>
+  <div class="panel light"><img src="../assets/logo/aidapt-logo.png" alt="Aidapt logo on white"><span class="tag">On light · Ink + Teal</span></div>
+  <div class="panel dark"><img src="../assets/logo/aidapt-logo-dark.png" alt="Aidapt logo on Deep Flow"><span class="tag">On Deep Flow · White + Teal</span></div>
+</body></html>

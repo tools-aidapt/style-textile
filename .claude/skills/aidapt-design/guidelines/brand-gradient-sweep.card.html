@@ -1,0 +1,24 @@
+<!-- @dsCard group="Brand" viewport="700x270" name="Gradients — diagonal sweep" subtitle="The workhorse. Water-led, cropped, with film grain. Dark / Medium / Light." -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  html,body{margin:0}
+  body{background:var(--white);color:var(--text-primary);padding:20px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .g{height:140px;border-radius:var(--radius-lg);border:1px solid var(--border-subtle);position:relative;overflow:hidden;display:flex;align-items:flex-end;padding:12px}
+  .g .lbl{font:var(--fw-semibold) 12px/1.2 var(--font-sans);position:relative;z-index:2}
+  .dark{background:var(--grad-sweep-dark)}
+  .dark .lbl{color:var(--white)}
+  .med{background:var(--grad-sweep-medium)}
+  .med .lbl{color:var(--ink-900)}
+  .light{background:var(--grad-sweep-light)}
+  .light .lbl{color:var(--ink-900)}
+  .meta{margin-top:13px;font:400 12px/1.4 var(--font-sans);color:var(--text-secondary)}
+  .meta code{font:500 11px/1 var(--font-mono);color:var(--text-primary);background:var(--mist-50);padding:2px 6px;border-radius:4px}
+</style></head><body>
+  <div class="grid">
+    <div class="g dark has-grain"><span class="lbl">Dark · Deep Flow → Teal</span></div>
+    <div class="g med has-grain"><span class="lbl">Medium · Teal → Cyan core</span></div>
+    <div class="g light has-grain"><span class="lbl">Light · Frost wash</span></div>
+  </div>
+  <p class="meta">Use Dark + Medium first. Always cropped, never whole, never fully warm. <code>--grad-sweep-dark</code> · <code>--grad-sweep-medium</code> · <code>--grad-sweep-light</code></p>
+</body></html>

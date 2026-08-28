@@ -1,0 +1,85 @@
+<!-- @dsCard group="Motion" viewport="760x300" name="Fluid motion engine" subtitle="Interruptible springs with velocity handoff — grab, throw, or retarget mid-flight. window.AidaptMotion." -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<style>
+html,body{margin:0}
+body{background:var(--white);color:var(--text-primary);font-family:var(--font-sans);padding:18px}
+.wrap{display:grid;grid-template-columns:1fr 216px;gap:16px;align-items:stretch}
+.stage{position:relative;height:196px;background:var(--mist-50);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);overflow:hidden;touch-action:none;cursor:crosshair}
+.mid{position:absolute;inset:50% 0 auto 0;border-top:1px dashed var(--mist-200)}
+.ball{position:absolute;top:50%;left:0;width:36px;height:36px;margin-top:-18px;touch-action:none;cursor:grab;will-change:transform}
+.ball:active{cursor:grabbing}
+.ball i{display:block;width:100%;height:100%;border-radius:50%;background:var(--teal-400);box-shadow:var(--shadow-md);transition:transform var(--dur-press) var(--ease-press)}
+.ball:active i{transform:scale(1.12)}
+.hint{position:absolute;left:12px;bottom:10px;font:500 11px/1.5 var(--font-sans);color:var(--text-tertiary);pointer-events:none}
+.hud{position:absolute;right:12px;top:10px;font:500 11px/1 var(--font-mono);color:var(--text-secondary);background:var(--material-thin-bg);backdrop-filter:blur(var(--material-blur-thin));border:1px solid var(--border-subtle);border-radius:var(--radius-pill);padding:6px 10px;pointer-events:none}
+.rail{display:flex;flex-direction:column;gap:0;border:1px solid var(--border-subtle);border-radius:var(--radius-lg);overflow:hidden}
+.rail h4{margin:0;padding:10px 12px 8px;font:600 11px/1 var(--font-sans);letter-spacing:var(--ls-wider);text-transform:uppercase;color:var(--text-secondary);background:var(--mist-50);border-bottom:1px solid var(--border-subtle)}
+.row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:baseline;padding:9px 12px;border-top:1px solid var(--border-subtle)}
+.row:first-of-type{border-top:none}
+.row b{font:600 12px/1.3 var(--font-sans)}
+.row small{display:block;font:400 11px/1.4 var(--font-sans);color:var(--text-tertiary)}
+.row code{font:500 11px/1 var(--font-mono);color:var(--teal-700);white-space:nowrap;font-variant-numeric:tabular-nums}
+</style></head><body>
+<div class="wrap">
+  <div class="stage" id="stage">
+    <div class="mid"></div>
+    <div class="ball" id="ball"><i></i></div>
+    <span class="hud t-num" id="hud">0 px/s</span>
+    <span class="hint">Click anywhere — retarget mid-flight · drag — 1:1 with rubber-band edges · flick — momentum projects the landing</span>
+  </div>
+  <div class="rail">
+    <h4>Spring presets · damping / response</h4>
+    <div class="row"><span><b>default</b><small>UI state changes</small></span><code>1.0 / 0.35s</code></div>
+    <div class="row"><span><b>move</b><small>reposition, drag settle</small></span><code>1.0 / 0.40s</code></div>
+    <div class="row"><span><b>rotate</b><small>rotation</small></span><code>0.8 / 0.40s</code></div>
+    <div class="row"><span><b>sheet</b><small>drawers, throws</small></span><code>0.8 / 0.30s</code></div>
+  </div>
+</div>
+<script src="../../_ds_bundle.js"></script>
+<script>
+window.addEventListener('load', function () {
+  var M = window.AidaptMotion, stage = document.getElementById('stage'), ball = document.getElementById('ball'), hud = document.getElementById('hud');
+  if (!M) { hud.textContent = 'engine offline'; return; }
+  var R = 36, PAD = 10;
+  function maxX() { return stage.clientWidth - R - PAD * 2; }
+  var spring = M.createSpring(Object.assign({}, M.presets.move, {
+    onUpdate: function (x) {
+      ball.style.transform = 'translateX(' + (PAD + x) + 'px)';
+      hud.textContent = Math.round(Math.abs(spring.velocity)) + ' px/s';
+    },
+    onRest: function () { hud.textContent = 'at rest'; }
+  }));
+  spring.set(maxX() * 0.5);
+  stage.addEventListener('pointerdown', function (e) {
+    if (ball.contains(e.target)) return;
+    var rect = stage.getBoundingClientRect();
+    spring.to(Math.max(0, Math.min(e.clientX - rect.left - PAD - R / 2, maxX()))); /* velocity carries — no hard cut */
+  });
+  var drag = null;
+  ball.addEventListener('pointerdown', function (e) {
+    e.stopPropagation();
+    ball.setPointerCapture(e.pointerId);
+    spring.stop(); /* grab mid-flight */
+    drag = { grab: e.clientX - spring.value, tracker: M.createVelocityTracker() };
+    drag.tracker.add(e.clientX);
+    hud.textContent = 'tracking 1:1';
+  });
+  ball.addEventListener('pointermove', function (e) {
+    if (!drag) return;
+    var x = e.clientX - drag.grab, W = maxX();
+    if (x < 0) x = M.rubberband(x, 140);
+    else if (x > W) x = W + M.rubberband(x - W, 140);
+    spring.set(x);
+    drag.tracker.add(e.clientX);
+  });
+  function release() {
+    if (!drag) return;
+    var v = drag.tracker.get(); drag = null;
+    var target = Math.max(0, Math.min(spring.value + M.project(v), maxX()));
+    spring.to(target, { velocity: v }); /* seamless handoff */
+  }
+  ball.addEventListener('pointerup', release);
+  ball.addEventListener('pointercancel', release);
+});
+</script>
+</body></html>

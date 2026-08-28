@@ -1,0 +1,209 @@
+<!-- @dsCard group="Brand" viewport="700x2040" name="Gradients — flow mesh & bridge" subtitle="Directional sweep + edge-anchored blooms, teal-led. Shown at hero & card scale, two-layer grain on. Tweak angle, bloom, vignette & grain live." -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  html, body { margin: 0; }
+  body { background: var(--white); color: var(--text-primary); padding: 22px; font-family: var(--font-sans); }
+  #app { max-width: 660px; }
+
+  .lead { font: 400 12.5px/1.5 var(--font-sans); color: var(--text-secondary); margin: 0 0 8px; max-width: 64ch; }
+  .lead b { color: var(--text-primary); font-weight: var(--fw-semibold); }
+  code { font-family: var(--font-mono); font-size: 0.92em; color: var(--teal-700); }
+
+  .live { display: inline-flex; flex-wrap: wrap; gap: 6px 8px; margin: 0 0 22px; }
+  .live .pill { font: var(--fw-medium) 10.5px/1 var(--font-mono); color: var(--teal-700);
+                background: var(--teal-50); border: 1px solid var(--teal-100);
+                padding: 5px 8px; border-radius: 999px; }
+
+  .sec { margin-bottom: 26px; }
+  .sec:last-of-type { margin-bottom: 0; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin: 0 0 9px; }
+  .head h3 { margin: 0; font: var(--fw-bold) 14px/1.2 var(--font-sans); letter-spacing: -0.01em; color: var(--text-primary); white-space: nowrap; }
+  .head .tok { font: var(--fw-medium) 11px/1 var(--font-mono); color: var(--teal-600); white-space: nowrap; }
+
+  .hero { position: relative; height: 240px; border-radius: var(--radius-lg); overflow: hidden;
+          border: 1px solid var(--border-subtle); display: flex; align-items: flex-end; padding: 18px 20px; box-sizing: border-box; }
+  .hero .tag { position: relative; z-index: 2; font: var(--fw-semibold) 12px/1.3 var(--font-sans);
+               letter-spacing: var(--ls-wide); text-transform: uppercase; }
+  .tag.on-dark { color: var(--white); }
+  .tag.on-light { color: var(--ink-900); }
+
+  .row { display: grid; grid-template-columns: 150px 1fr; gap: 16px; align-items: center; margin-top: 11px; }
+  .card { height: 118px; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-subtle); position: relative; }
+  .scale-note { font: var(--fw-semibold) 9.5px/1 var(--font-sans); letter-spacing: var(--ls-wider); text-transform: uppercase; color: var(--text-tertiary); margin: 0 0 5px; }
+  .stops { font: 400 11.5px/1.55 var(--font-mono); color: var(--text-secondary); margin: 0; }
+  .stops b { color: var(--text-primary); font-weight: var(--fw-semibold); }
+  .stops i { color: var(--text-tertiary); font-style: normal; }
+
+  .divider { height: 1px; background: var(--border-subtle); border: 0; margin: 4px 0 22px; }
+
+  .grain-note { margin-top: 8px; padding: 13px 15px; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--mist-100); }
+  .grain-note p { margin: 0; font: 400 11.5px/1.55 var(--font-sans); color: var(--text-secondary); }
+  .grain-note b { color: var(--text-primary); font-weight: var(--fw-semibold); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+
+<script type="text/babel">
+const { useTweaks, TweaksPanel, TweakSection, TweakSlider, TweakToggle } = window;
+
+// Canonical gradient definitions — mirror the locked tokens in tokens/layout.css.
+// blooms listed top → bottom; centres sit on/beyond an edge so only a soft falloff enters frame.
+const GRADIENTS = [
+  {
+    key: "dark", name: "Flow · Dark", token: "--grad-flow-dark", tagTone: "on-dark",
+    sweep: { angle: 122, stops: "#04212e 0%, #062A3B 34%, #0c5e62 74%, #11A8A0 108%" },
+    blooms: [
+      { label: "frost", rgb: "159,238,245", a: 0.42, sx: 64, sy: 58, x: 88, y: -6, fade: 54 },
+      { label: "cyan",  rgb: "54,197,224",  a: 0.55, sx: 96, sy: 86, x: 97, y: 4,  fade: 58 },
+    ],
+    vignette: true,
+    note: ["sweep · 122° deep-flow → teal", "cyan 0.55 @ 97% 4% (96×86)", "frost 0.42 @ 88% −6% (64×58)", "vignette · deepens edges"],
+  },
+  {
+    key: "medium", name: "Flow · Medium", token: "--grad-flow-medium", tagTone: "on-light",
+    sweep: { angle: 126, stops: "#11A8A0 0%, #36C5E0 70%, #9FEEF5 114%" },
+    blooms: [
+      { label: "frost", rgb: "207,246,240", a: 0.85, sx: 92, sy: 86, x: 2,   y: 2,   fade: 56 },
+      { label: "deep",  rgb: "6,42,59",     a: 0.52, sx: 82, sy: 78, x: 104, y: 106, fade: 58 },
+    ],
+    vignette: false,
+    note: ["sweep · 126° teal → cyan → frost", "frost 0.85 @ 2% 2% (92×86)", "deep-teal 0.52 @ 104% 106% (82×78)"],
+  },
+  {
+    key: "light", name: "Flow · Light", token: "--grad-light", tagTone: "on-light",
+    sweep: { angle: 120, stops: "#F7F2E6 0%, #CFF6F0 72%, #9FEEF5 116%" },
+    blooms: [
+      { label: "cyan", rgb: "54,197,224",  a: 0.28, sx: 80, sy: 74, x: 102, y: -4,  fade: 56 },
+      { label: "sage", rgb: "154,217,197", a: 0.46, sx: 76, sy: 72, x: -2,  y: 106, fade: 56 },
+    ],
+    vignette: false,
+    note: ["sweep · 120° sand-white → frost", "cyan 0.28 @ 102% −4% (80×74)", "sage 0.46 @ −2% 106% (76×72)"],
+  },
+  {
+    key: "bridge", name: "Bridge · Wood → Fire", token: "--grad-bridge", tagTone: "on-light",
+    sweep: { angle: 104, stops: "#4FD1A5 0%, #9AD9C5 30%, #E8D8B0 64%, #FF8A5B 104%" },
+    blooms: [
+      { label: "ember",  rgb: "255,138,91", a: 0.70, sx: 58, sy: 70, x: 106, y: 110, fade: 50 },
+      { label: "spring", rgb: "79,209,165", a: 0.55, sx: 82, sy: 80, x: -4,  y: -6,  fade: 56 },
+    ],
+    vignette: false,
+    note: ["sweep · 104° spring → sage → sand → ember", "spring 0.55 glow @ −4% −6%", "ember 0.70 corner @ 106% 110%", "analogous · Fire ≤5% · never teal→ember"],
+  },
+];
+
+function bloomCss(b, bloomMult, reach) {
+  const a = Math.min(1, b.a * bloomMult);
+  const sx = (b.sx * reach).toFixed(1);
+  const sy = (b.sy * reach).toFixed(1);
+  return `radial-gradient(${sx}% ${sy}% at ${b.x}% ${b.y}%, rgba(${b.rgb},${a.toFixed(3)}) 0%, rgba(${b.rgb},0) ${b.fade}%)`;
+}
+function buildBg(g, t) {
+  const layers = g.blooms.map((b) => bloomCss(b, t.bloom, t.reach));
+  if (g.vignette) {
+    layers.push(`radial-gradient(140% 130% at 50% 50%, rgba(2,18,26,0) 38%, rgba(2,18,26,${t.vignette.toFixed(2)}) 100%)`);
+  }
+  layers.push(`linear-gradient(${g.sweep.angle + t.angle}deg, ${g.sweep.stops})`);
+  return layers.join(", ");
+}
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "angle": 0,
+  "bloom": 1,
+  "reach": 1,
+  "vignette": 0.6,
+  "grain": true,
+  "grainStrength": 1,
+  "labels": true
+}/*EDITMODE-END*/;
+
+function GradientSection({ g, t }) {
+  const grainCls = t.grain ? "has-grain" : "";
+  const surfStyle = { background: buildBg(g, t), "--grain-strength": t.grainStrength };
+  return (
+    <div className="sec">
+      <div className="head"><h3>{g.name}</h3><span className="tok">{g.token}</span></div>
+      <div className={`hero ${grainCls}`} style={surfStyle}>
+        <span className={`tag ${g.tagTone}`}>Hero · 240px</span>
+      </div>
+      <div className="row">
+        <div>
+          <p className="scale-note">Card scale</p>
+          <div className={`card ${grainCls}`} style={surfStyle}></div>
+        </div>
+        {t.labels && (
+          <p className="stops">
+            {g.note.map((line, i) => (
+              <React.Fragment key={i}>
+                {i === 0 ? <b>{line}</b> : i === g.note.length - 1 && g.key === "bridge" ? <i>{line}</i> : line}
+                {i < g.note.length - 1 && <br />}
+              </React.Fragment>
+            ))}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  return (
+    <React.Fragment>
+      <p className="lead">
+        Flow gradients are <b>directional sweep + edge-anchored blooms</b>: a linear sweep runs corner-to-corner so the
+        surface <b>flows</b>, then 1–3 oversized radial blooms whose centres sit <b>on or beyond an edge</b> bleed soft light
+        into the frame — never a discrete circle. Deep Flow holds the far edge; <b>Ember is a single contained foot</b> (Fire ≤5%).
+        Every surface carries the two-layer film grain. Shown at <b>hero</b> and <b>card</b> scale so bloom and banding both read.
+      </p>
+      <div className="live">
+        <span className="pill">angle {t.angle >= 0 ? "+" : ""}{t.angle}°</span>
+        <span className="pill">bloom ×{t.bloom.toFixed(2)}</span>
+        <span className="pill">reach ×{t.reach.toFixed(2)}</span>
+        <span className="pill">vignette {t.vignette.toFixed(2)}</span>
+        <span className="pill">grain {t.grain ? `×${t.grainStrength.toFixed(2)}` : "off"}</span>
+      </div>
+
+      <GradientSection g={GRADIENTS[0]} t={t} />
+      <GradientSection g={GRADIENTS[1]} t={t} />
+      <GradientSection g={GRADIENTS[2]} t={t} />
+      <hr className="divider" />
+      <GradientSection g={GRADIENTS[3]} t={t} />
+
+      <div className="grain-note">
+        <p>
+          <b>Two-layer film grain</b> — <code>--grain-white</code> + <code>--grain-black</code> via <code>.has-grain</code>.
+          feTurbulence fractalNoise, baseFrequency <b>0.85</b>, numOctaves <b>3</b>, 220×220 tile, randomised seeds (no visible
+          repeat at hero scale), <code>soft-light</code> blend — white ≈30% over black ≈38%. Welded into the colour to fully kill banding.
+        </p>
+      </div>
+
+      <TweaksPanel>
+        <TweakSection label="Flow" />
+        <TweakSlider label="Sweep angle" value={t.angle} min={-30} max={30} step={1} unit="°" onChange={(v) => setTweak("angle", v)} />
+        <TweakSlider label="Bloom intensity" value={t.bloom} min={0.4} max={1.4} step={0.05} onChange={(v) => setTweak("bloom", v)} />
+        <TweakSlider label="Bloom reach" value={t.reach} min={0.7} max={1.3} step={0.05} onChange={(v) => setTweak("reach", v)} />
+        <TweakSlider label="Vignette depth" value={t.vignette} min={0} max={0.85} step={0.05} onChange={(v) => setTweak("vignette", v)} />
+        <TweakSection label="Grain" />
+        <TweakToggle label="Film grain" value={t.grain} onChange={(v) => setTweak("grain", v)} />
+        <TweakSlider label="Grain strength" value={t.grainStrength} min={0.3} max={1.6} step={0.05} onChange={(v) => setTweak("grainStrength", v)} />
+        <TweakSection label="Documentation" />
+        <TweakToggle label="Show stop labels" value={t.labels} onChange={(v) => setTweak("labels", v)} />
+      </TweaksPanel>
+    </React.Fragment>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("app")).render(<App />);
+</script>
+</body>
+</html>

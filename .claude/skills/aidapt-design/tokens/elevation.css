@@ -1,0 +1,50 @@
+/* ============================================================
+   Aidapt — Radius, Borders, Elevation, Z-index
+   ------------------------------------------------------------
+   Calm & ordered: restrained rounding (soft, not bubbly),
+   hairline borders, and quiet shadows tinted toward Deep Flow
+   (never neutral grey/black) so elevation stays on-brand.
+   ============================================================ */
+
+:root {
+  /* ---- Radius ---- */
+  --radius-none: 0;
+  --radius-xs:   2px;
+  --radius-sm:   4px;
+  --radius-md:   8px;    /* default — inputs, buttons */
+  --radius-lg:   12px;   /* cards */
+  --radius-xl:   16px;   /* large surfaces, modals */
+  --radius-2xl:  24px;   /* hero panels */
+  --radius-pill: 999px;  /* chips, toggles, avatars */
+  --radius-circle: 50%;
+
+  /* ---- Border widths ---- */
+  --border-hairline: 1px;   /* @kind other */
+  --border-thin:     1.5px; /* @kind other */
+  --border-medium:   2px;   /* @kind other */
+  --border-thick:    3px;   /* @kind other */
+
+  /* ---- Elevation — shadows tinted to Deep Flow (6,42,59) ----
+     Soft, low-contrast; calm depth, never a hard drop. */
+  --shadow-none: none;
+  --shadow-xs: 0 1px 2px rgba(6,42,59,0.06);
+  --shadow-sm: 0 1px 2px rgba(6,42,59,0.06), 0 2px 6px rgba(6,42,59,0.06);
+  --shadow-md: 0 2px 4px rgba(6,42,59,0.05), 0 6px 16px rgba(6,42,59,0.09);
+  --shadow-lg: 0 4px 8px rgba(6,42,59,0.06), 0 16px 32px rgba(6,42,59,0.12);
+  --shadow-xl: 0 8px 16px rgba(6,42,59,0.08), 0 28px 56px rgba(6,42,59,0.16);
+  /* Teal glow — for hero/brand focus moments only */
+  --shadow-teal: 0 8px 28px rgba(17,168,160,0.28);
+  /* Inset — sunken fields */
+  --shadow-inset: inset 0 1px 2px rgba(6,42,59,0.08);
+
+  /* ---- Z-index layers ---- */
+  --z-base:      0;     /* @kind other */
+  --z-raised:    10;    /* @kind other */
+  --z-sticky:    100;   /* @kind other */
+  --z-dropdown:  300;   /* @kind other */
+  --z-overlay:   400;   /* @kind other */
+  --z-modal:     500;   /* @kind other */
+  --z-popover:   600;   /* @kind other */
+  --z-toast:     700;   /* @kind other */
+  --z-max:       9999;  /* @kind other */
+}

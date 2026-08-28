@@ -1,0 +1,180 @@
+{
+  "name": "Requisition - Form Schema",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "requisition-schema",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://aidapt.co,https://www.aidapt.co"
+        },
+        "authentication": "basicAuth"
+      },
+      "id": "c2a1f5d2-0000-4000-8000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -260,
+        0
+      ],
+      "webhookId": "requisition-schema",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Requisition Webhook (Basic Auth)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.clickup.com/api/v2/list/901220480011/field",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": false
+            }
+          }
+        }
+      },
+      "id": "c2a1f5d2-0000-4000-8000-000000000002",
+      "name": "ClickUp - List Fields",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -40,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "ClickUp API Token (Header Auth)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.clickup.com/api/v2/team",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": false
+            }
+          }
+        }
+      },
+      "id": "c2a1f5d2-0000-4000-8000-000000000003",
+      "name": "ClickUp - Workspace Members",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        180,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "ClickUp API Token (Header Auth)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build the requisition form schema the React app consumes.\n//\n// The app knows field *keys*, never ClickUp UUIDs, so the mapping lives here.\n// A key this workspace cannot supply is reported in `missingKeys` rather than\n// omitted quietly — the form refuses to open on a missing key, which is the\n// only safe behaviour when the alternative is dropping a manager's answers.\n\nconst NAME_TO_KEY = {\n  'company': 'company',\n  'department': 'department',\n  'cost centre': 'costCentre',\n  'cost center': 'costCentre',\n  'section': 'section',\n  'work location': 'location',\n  'location': 'location',\n  'job grade': 'jobGrade',\n  'job code no': 'jobCodeNo',\n  'job code': 'jobCodeNo',\n  'position type': 'positionType',\n  'position new replacement': 'newOrReplacement',\n  'total sub positions': 'totalSubPositions',\n  'recruitment type': 'recruitmentType',\n  'requesting manager': 'requestingManager',\n  'reporting to': 'reportingTo',\n  'others reporting indirectly': 'othersReportingIndirectly',\n  'job overview': 'jobOverview',\n  'key responsibilities outcomes': 'keyResponsibilitiesOutcomes',\n  'key responsibilities and outcomes': 'keyResponsibilitiesOutcomes',\n  'educational qualification': 'educationalQualification',\n  'relevant skills experience attributes': 'relevantSkillsExperienceAttributes',\n  'relevant skills experience and attributes': 'relevantSkillsExperienceAttributes',\n  'previous failures successes': 'previousFailuresSuccesses',\n  'competitive advantage': 'competitiveAdvantage',\n  '6 months objectives': 'sixMonthsObjectives',\n  'potential career path': 'potentialCareerPath',\n  'position requirements': 'positionRequirements',\n  'assessment stages required': 'assessmentStagesRequired',\n  'interview panel': 'interviewPanel',\n  'requisition raised': 'requisitionRaised',\n};\n\n// Every key the form writes to. Kept in step with REQUIRED_FIELD_KEYS in\n// src/requisition/schema.ts.\nconst REQUIRED = [\n  'company', 'department', 'costCentre', 'location',\n  'positionType', 'newOrReplacement', 'totalSubPositions',\n  'recruitmentType', 'requestingManager', 'reportingTo',\n  'othersReportingIndirectly', 'jobOverview', 'keyResponsibilitiesOutcomes',\n  'educationalQualification', 'relevantSkillsExperienceAttributes',\n  'previousFailuresSuccesses', 'competitiveAdvantage', 'sixMonthsObjectives',\n  'potentialCareerPath', 'positionRequirements', 'assessmentStagesRequired',\n  'interviewPanel', 'requisitionRaised',\n];\n\n// The owning department, shown as quiet secondary text beside each item.\n// Managers tick more honestly when they can see who they create work for.\n// TODO(kenafric): two owners are unconfirmed, and the list has no motorcycle\n// or scooter option that a rider or field-sales role would need.\nconst PROVISIONING_OWNER = {\n  'Email Address': 'ICT',\n  'Laptop/Computer/Connectivity': 'ICT',\n  'SAP Credentials': 'ICT',\n  'Office Space & Accessories': 'HR',\n  'Pick-up': 'Garage',\n  'Saloon Vehicle': 'Garage',\n  'Business Cards - Role Based': 'owner TBC',\n  'Fuel Allowance': 'owner TBC',\n};\n\n// The client confirmed the work-location list: two sites, no inferred entries.\nconst PROVISIONAL_LOCATIONS = new Set([]);\n\nconst norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();\n\nconst TYPE_MAP = {\n  drop_down: 'drop_down',\n  labels: 'labels',\n  users: 'people',\n  number: 'number',\n  date: 'date',\n  text: 'text',\n  textarea: 'textarea',\n  short_text: 'text',\n};\n\nconst sourceFields = $('ClickUp - List Fields').first().json.fields || [];\n\nconst fields = {};\nfor (const field of sourceFields) {\n  const key = NAME_TO_KEY[norm(field.name)];\n  if (!key) continue;\n\n  const options = (field.type_config?.options || [])\n    .slice()\n    .sort((a, b) => (a.orderindex ?? 0) - (b.orderindex ?? 0))\n    .map((option) => {\n      const label = option.name ?? option.label ?? '';\n      const mapped = { label };\n      if (key === 'positionRequirements' && PROVISIONING_OWNER[label]) {\n        mapped.note = PROVISIONING_OWNER[label];\n      }\n      if (key === 'location' && PROVISIONAL_LOCATIONS.has(label)) {\n        mapped.provisional = true;\n      }\n      return mapped;\n    });\n\n  // Option UUIDs are deliberately not forwarded: the app submits labels, and\n  // the submit workflow resolves them again on the way back in.\n  fields[key] = {\n    key,\n    clickupName: field.name,\n    type: TYPE_MAP[field.type] || 'text',\n    ...(options.length ? { options } : {}),\n  };\n}\n\nconst teams = $('ClickUp - Workspace Members').first().json.teams || [];\nconst team = teams.find((t) => String(t.id) === '9012912728') || teams[0] || {};\nconst members = (team.members || [])\n  .map((entry) => entry.user || entry)\n  .filter((user) => user && user.id && !user.deleted)\n  .map((user) => ({\n    clickupUserId: user.id,\n    name: user.username || user.email || String(user.id),\n    email: user.email,\n    initials: user.initials,\n  }))\n  .sort((a, b) => a.name.localeCompare(b.name));\n\nconst missingKeys = REQUIRED.filter((key) => !fields[key]);\n\n// TODO(kenafric): the active-employee register is not exposed yet, so \"who is\n// being replaced\" falls back to free text in the app.\nreturn [{ json: { fields, members, employees: [], missingKeys } }];\n"
+      },
+      "id": "c2a1f5d2-0000-4000-8000-000000000004",
+      "name": "Build Schema",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Cache-Control",
+                "value": "public, max-age=600"
+              },
+              {
+                "name": "X-Content-Type-Options",
+                "value": "nosniff"
+              }
+            ]
+          }
+        }
+      },
+      "id": "c2a1f5d2-0000-4000-8000-000000000005",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        620,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "ClickUp - List Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ClickUp - List Fields": {
+      "main": [
+        [
+          {
+            "node": "ClickUp - Workspace Members",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ClickUp - Workspace Members": {
+      "main": [
+        [
+          {
+            "node": "Build Schema",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Schema": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "requisition-schema"
+  }
+}

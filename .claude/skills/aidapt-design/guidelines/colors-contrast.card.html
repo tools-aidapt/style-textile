@@ -1,0 +1,27 @@
+<!-- @dsCard group="Colors" viewport="700x340" name="Contrast pairings (WCAG AA)" subtitle="Verified text/background pairs. Live samples — every ratio proven." -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  html,body{margin:0}
+  body{background:var(--white);font-family:var(--font-sans);color:var(--text-primary);padding:20px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font:var(--fw-semibold) 11px/1 var(--font-sans);letter-spacing:var(--ls-wider);text-transform:uppercase;color:var(--text-tertiary);padding:0 10px 10px}
+  td{padding:7px 10px;border-top:1px solid var(--border-subtle);vertical-align:middle}
+  .chip{display:inline-flex;align-items:center;padding:7px 14px;border-radius:var(--radius-md);font:var(--fw-semibold) 13px/1 var(--font-sans);border:1px solid transparent}
+  .ratio{font:500 13px/1 var(--font-mono)}
+  .pass{color:var(--success);font-weight:600}
+  .fail{color:var(--error);font-weight:600}
+  .role{color:var(--text-secondary);font-size:12px}
+</style></head><body>
+  <table>
+    <thead><tr><th>Sample</th><th>Pairing</th><th>Ratio</th><th>Verdict / role</th></tr></thead>
+    <tbody>
+      <tr><td><span class="chip" style="background:#fff;color:var(--ink-900);border-color:var(--border-default)">Ink on White</span></td><td class="role">#0A1A22 / #FFFFFF</td><td class="ratio">17.7:1</td><td><span class="pass">AAA</span> · body default</td></tr>
+      <tr><td><span class="chip" style="background:var(--deepflow-900);color:#fff">White on Deep Flow</span></td><td class="role">#FFFFFF / #062A3B</td><td class="ratio">15.0:1</td><td><span class="pass">AAA</span> · dark-mode default</td></tr>
+      <tr><td><span class="chip" style="background:var(--teal-400);color:var(--ink-900)">Ink on Teal</span></td><td class="role">#0A1A22 / #11A8A0</td><td class="ratio">6.0:1</td><td><span class="pass">AA</span> · text on Teal</td></tr>
+      <tr><td><span class="chip" style="background:var(--teal-400);color:#fff">White on Teal</span></td><td class="role">#FFFFFF / #11A8A0</td><td class="ratio">2.9:1</td><td><span class="fail">FAIL</span> · never do this</td></tr>
+      <tr><td><span class="chip" style="background:var(--ember-300);color:var(--ink-900)">Ink on Ember</span></td><td class="role">#0A1A22 / #FF8A5B</td><td class="ratio">7.6:1</td><td><span class="pass">AA</span> · CTA label</td></tr>
+      <tr><td><span class="chip" style="background:var(--ember-300);color:#fff">White on Ember</span></td><td class="role">#FFFFFF / #FF8A5B</td><td class="ratio">2.3:1</td><td><span class="fail">FAIL</span> · never do this</td></tr>
+      <tr><td><span class="chip" style="background:#fff;color:var(--steel-600);border-color:var(--border-default)">Steel on White</span></td><td class="role">#5A6B72 / #FFFFFF</td><td class="ratio">5.6:1</td><td><span class="pass">AA</span> · secondary text</td></tr>
+    </tbody>
+  </table>
+</body></html>

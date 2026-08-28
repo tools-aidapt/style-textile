@@ -1,0 +1,17 @@
+<!-- @dsCard group="Brand" viewport="700x230" name="Logo" subtitle="Wordmark + chevron. Ink on light, white on Deep Flow. Never recolour warm." -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  html,body{margin:0}
+  body{background:var(--white);padding:0;display:grid;grid-template-columns:1fr 1fr;min-height:230px}
+  .panel{display:flex;align-items:center;justify-content:center;padding:30px}
+  .light{background:var(--white);border-right:1px solid var(--border-subtle)}
+  .dark{background:var(--deepflow-900)}
+  img{height:62px;width:auto}
+  .tag{position:absolute;bottom:12px;font:600 10px/1 var(--font-sans);letter-spacing:var(--ls-wider);text-transform:uppercase}
+  .panel{position:relative}
+  .light .tag{color:var(--text-tertiary)}
+  .dark .tag{color:var(--deepflow-200)}
+</style></head><body>
+  <div class="panel light"><img src="../assets/logo/aidapt-logo.png?v=2026b" alt="Aidapt logo on white"><span class="tag">On light · Ink + Teal</span></div>
+  <div class="panel dark"><img src="../assets/logo/aidapt-logo-dark.png?v=2026b" alt="Aidapt logo on Deep Flow"><span class="tag">On Deep Flow · White + Teal</span></div>
+</body></html>

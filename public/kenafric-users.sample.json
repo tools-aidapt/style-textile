@@ -1,0 +1,111 @@
+{
+  "workspace_id": "9012912728",
+  "workspace_name": "Kenafric Group",
+  "retrieved_at": "2026-08-28T06:49:29.265Z",
+  "count": 8,
+  "pending_invites": 0,
+  "by_role": {
+    "member": 87,
+    "admin": 5,
+    "owner": 1
+  },
+  "users": [
+    {
+      "id": 900000031,
+      "username": "Asha Wanjiru",
+      "email": "awanjiru@kenafric.example",
+      "role": "member",
+      "invite_accepted": true,
+      "date_invited": "2026-08-06T06:59:24.857Z",
+      "date_joined": "2026-08-06T07:02:56.722Z",
+      "last_active": "2026-08-28T05:31:06.762Z",
+      "invited_by": "hr@kenafric.example",
+      "profile_picture": "https://attachments.clickup.com/profilePictures/900000031_xx.jpg"
+    },
+    {
+      "id": 900000032,
+      "username": "Brian Barasa",
+      "email": "bbarasa@kenafric.example",
+      "role": "member",
+      "invite_accepted": true,
+      "date_invited": "2025-07-15T11:09:00.234Z",
+      "date_joined": "2025-07-16T16:59:46.780Z",
+      "last_active": "2026-08-25T09:27:01.637Z",
+      "invited_by": "hr@kenafric.example",
+      "profile_picture": "https://attachments.clickup.com/profilePictures/900000032_xx.jpg"
+    },
+    {
+      "id": 900000000,
+      "username": "Asha Wanjiru",
+      "email": "awanjiru@kenafric.example",
+      "role": "member",
+      "invite_accepted": true,
+      "date_invited": "2026-02-18T12:20:48.561Z",
+      "date_joined": "2026-02-20T08:34:23.033Z",
+      "last_active": "2026-04-30T09:52:13.415Z",
+      "invited_by": "hr@kenafric.example",
+      "profile_picture": "https://attachments.clickup.com/profilePictures/900000000_xx.jpg"
+    },
+    {
+      "id": 900000033,
+      "username": "Catherine Juma",
+      "email": "cjuma@kenafric.example",
+      "role": "member",
+      "invite_accepted": true,
+      "date_invited": "2026-06-17T12:46:03.784Z",
+      "date_joined": "2026-06-17T13:06:11.253Z",
+      "last_active": "2026-08-28T06:39:47.983Z",
+      "invited_by": "hr@kenafric.example",
+      "profile_picture": null
+    },
+    {
+      "id": 900000034,
+      "username": "Daniel Rotich",
+      "email": "drotich@kenafric.example",
+      "role": "member",
+      "invite_accepted": true,
+      "date_invited": "2025-06-16T11:32:05.265Z",
+      "date_joined": "2025-06-16T12:25:11.538Z",
+      "last_active": "2026-08-27T21:32:22.759Z",
+      "invited_by": "hr@kenafric.example",
+      "profile_picture": "https://attachments.clickup.com/profilePictures/900000034_xx.jpg"
+    },
+    {
+      "id": 900000035,
+      "username": "Esther Zuma",
+      "email": "ezuma@kenafric.example",
+      "role": "member",
+      "invite_accepted": true,
+      "date_invited": "2025-06-27T14:24:39.804Z",
+      "date_joined": "2025-06-29T04:54:18.727Z",
+      "last_active": "2026-08-27T22:14:46.174Z",
+      "invited_by": "hr@kenafric.example",
+      "profile_picture": "https://attachments.clickup.com/profilePictures/900000035_xx.jpg"
+    },
+    {
+      "id": 900000036,
+      "username": "Francis Mutiso",
+      "email": "fmutiso@kenafric.example",
+      "role": "admin",
+      "invite_accepted": true,
+      "date_invited": "2026-06-04T05:44:32.876Z",
+      "date_joined": "2026-06-04T07:31:11.308Z",
+      "last_active": "2026-06-12T03:17:15.073Z",
+      "invited_by": "hr@kenafric.example",
+      "profile_picture": "https://attachments.clickup.com/profilePictures/900000036_xx.jpg"
+    },
+    {
+      "id": 900000001,
+      "username": "Brian Barasa",
+      "email": "bbarasa@kenafric.example",
+      "role": "member",
+      "invite_accepted": true,
+      "date_invited": "2025-06-14T07:24:05.388Z",
+      "date_joined": "2025-06-17T05:45:01.330Z",
+      "last_active": "2026-08-28T06:30:55.233Z",
+      "invited_by": "hr@kenafric.example",
+      "profile_picture": "https://attachments.clickup.com/profilePictures/900000001_xx.jpg"
+    }
+  ],
+  "_comment": "Anonymised copy of the live response, kept for its SHAPE only. Names, emails, ids and photo URLs are synthetic; every other key, type and null is exactly as the endpoint returned it on 2026-08-28."
+}

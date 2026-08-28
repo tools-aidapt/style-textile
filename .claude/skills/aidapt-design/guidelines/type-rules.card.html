@@ -1,0 +1,32 @@
+<!-- @dsCard group="Type" viewport="700x250" name="Headline rules" subtitle="No trailing periods. Verb series take periods. Serif never sets a headline." -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  html,body{margin:0}
+  body{background:var(--white);color:var(--text-primary);padding:20px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .col{border:1px solid var(--border-default);border-radius:var(--radius-lg);padding:15px 16px}
+  .col.do{border-color:var(--spring-300);background:var(--spring-50)}
+  .col.dont{border-color:var(--ember-200);background:var(--ember-50)}
+  .h{font:var(--fw-semibold) 11px/1 var(--font-sans);letter-spacing:var(--ls-wider);text-transform:uppercase;margin:0 0 12px;display:flex;align-items:center;gap:7px}
+  .do .h{color:var(--spring-700)}
+  .dont .h{color:var(--ember-600)}
+  .ex{font:var(--fw-bold) 20px/1.15 var(--font-display);letter-spacing:-.01em;margin:0 0 5px}
+  .note{font:400 12px/1.3 var(--font-sans);color:var(--text-secondary);margin:0 0 13px}
+  .ex:last-of-type{margin-bottom:5px}
+  .col > div:last-child .note{margin-bottom:0}
+</style></head><body>
+  <div class="grid">
+    <div class="col do">
+      <p class="h">✓ Do</p>
+      <div><p class="ex">Keep your voice</p><p class="note">Statement headline — no trailing period.</p></div>
+      <div><p class="ex">Translate. Adapt. Outperform.</p><p class="note">Verb series — periods between as rhythm.</p></div>
+      <div><p class="ex">Ready to scale?</p><p class="note">A question takes a question mark.</p></div>
+    </div>
+    <div class="col dont">
+      <p class="h">✗ Don't</p>
+      <div><p class="ex">Keep your voice.</p><p class="note">No trailing period on a single statement.</p></div>
+      <div><p class="ex" style="font-family:var(--font-serif);font-weight:600">Keep your voice</p><p class="note">Serif never sets a headline (quotes only).</p></div>
+      <div><p class="ex" style="color:var(--ember-500)">Keep <span style="color:var(--cyan-500)">your</span> voice</p><p class="note">No warm headline without a Water anchor; one Water tone max.</p></div>
+    </div>
+  </div>
+</body></html>

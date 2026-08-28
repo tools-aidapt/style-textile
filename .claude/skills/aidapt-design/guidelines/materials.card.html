@@ -1,0 +1,24 @@
+<!-- @dsCard group="Materials" viewport="760x310" name="Materials & depth" subtitle="Translucency is hierarchy: thick separates structure, thin floats controls. Adaptive by default." -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  html,body{margin:0}
+  body{min-height:310px;background:var(--grad-flow-medium, linear-gradient(120deg,#062A3B 0%,#11A8A0 60%,#36C5E0 100%));padding:20px;font-family:var(--font-sans)}
+  .bar{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:var(--radius-lg);margin-bottom:18px}
+  .bar b{font:var(--fw-bold) 15px/1.2 var(--font-display);color:var(--text-vibrant);letter-spacing:var(--ls-snug)}
+  .bar span{font:500 12px/1.4 var(--font-sans);color:var(--text-vibrant-secondary)}
+  .bar .pill{margin-left:auto;font:600 12px/1 var(--font-sans);color:var(--ink-900);background:var(--teal-300);border-radius:var(--radius-pill);padding:8px 14px}
+  .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .chip{border-radius:var(--radius-lg);padding:14px 16px 12px;min-height:96px;display:flex;flex-direction:column;justify-content:flex-end;gap:2px}
+  .chip b{font:600 13px/1.2 var(--font-sans);color:var(--text-vibrant)}
+  .chip code{font:500 11px/1.5 var(--font-mono);color:var(--text-vibrant-secondary)}
+  .rules{margin:16px 2px 0;font:500 11.5px/1.6 var(--font-sans);color:var(--frost-100,#D6F0E9)}
+  .rules b{color:var(--white)}
+</style></head><body class="has-grain">
+  <div class="bar ads-material-regular"><b>Console</b><span>Content scrolls beneath — chrome is a floating layer, not a fixed strip</span><span class="pill">Vibrant label</span></div>
+  <div class="row">
+    <div class="chip ads-material-thick"><b>Thick</b><code>blur 28 · structure: sidebars, sheets</code></div>
+    <div class="chip ads-material-regular"><b>Regular</b><code>blur 20 · toolbars, nav</code></div>
+    <div class="chip ads-material-thin"><b>Thin</b><code>blur 12 · floating controls, HUDs</code></div>
+  </div>
+  <p class="rules"><b>Rules.</b> Bigger surfaces read thicker (deeper blur + shadow). Never stack two materials. Colour lives on solid layers — over a material use <b>vibrant text</b> (a step heavier, never flat grey). Dim with a scrim only for blocking tasks. <b>Adaptive:</b> reduced-transparency → solid; increased-contrast → solid + border; both are built into the tokens.</p>
+</body></html>

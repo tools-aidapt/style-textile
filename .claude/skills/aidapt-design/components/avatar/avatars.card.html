@@ -1,0 +1,44 @@
+<!-- @dsCard group="Components" viewport="700x200" name="Avatars" subtitle="Image / initials fallback, sizes xs–xl, presence dots, and overlapping groups" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<style>
+  html,body{margin:0}
+  body{background:var(--white);color:var(--text-primary);padding:24px}
+  .row{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:20px}
+  .row:last-child{margin-bottom:0}
+  .lab{font:600 11px/1 var(--font-sans);letter-spacing:var(--ls-wider);text-transform:uppercase;color:var(--text-tertiary);width:86px;flex:none}
+</style></head><body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="../../_ds_bundle.js"></script>
+  <script type="text/babel">
+    const { Avatar, AvatarGroup } = window.AidaptDesignSystem_0090ec;
+    function Demo(){
+      return (
+        <div>
+          <div className="row"><span className="lab">Sizes</span>
+            <Avatar name="Aiko Tanaka" size="xs" />
+            <Avatar name="Lev Petrov" size="sm" />
+            <Avatar name="Mei Lin" size="md" />
+            <Avatar name="Sam Ortiz" size="lg" />
+            <Avatar name="Noa Berg" size="xl" />
+          </div>
+          <div className="row"><span className="lab">Status</span>
+            <Avatar name="Aiko Tanaka" size="lg" status="online" />
+            <Avatar name="Lev Petrov" size="lg" status="busy" />
+            <Avatar name="Mei Lin" size="lg" status="away" />
+            <Avatar name="Workspace" size="lg" shape="square" />
+          </div>
+          <div className="row"><span className="lab">Group</span>
+            <AvatarGroup max={4} size="md">
+              <Avatar name="Aiko Tanaka" /><Avatar name="Lev Petrov" /><Avatar name="Mei Lin" />
+              <Avatar name="Sam Ortiz" /><Avatar name="Noa Berg" /><Avatar name="Dana Cole" />
+            </AvatarGroup>
+          </div>
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+  </script>
+</body></html>

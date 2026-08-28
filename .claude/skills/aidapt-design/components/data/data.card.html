@@ -1,0 +1,58 @@
+<!-- @dsCard group="Components" viewport="700x440" name="Data table & empty state" subtitle="Sortable table with status badges, and a guided zero-state" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<style>
+  html,body{margin:0}
+  body{background:var(--bg-subtle);color:var(--text-primary);padding:22px}
+  .ttl{font:600 11px/1 var(--font-sans);letter-spacing:var(--ls-wider);text-transform:uppercase;color:var(--text-tertiary);margin:0 0 12px}
+  .blk{margin-bottom:22px}
+  .empty-wrap{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-lg)}
+</style></head><body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="../../_ds_bundle.js"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script type="text/babel">
+    const { DataTable, EmptyState, Badge, Button } = window.AidaptDesignSystem_0090ec;
+    const Plus = () => { const r=React.useRef(null);
+      React.useEffect(()=>{ if(r.current){ const e=document.createElement('i'); e.setAttribute('data-lucide','plus'); r.current.appendChild(e); window.lucide.createIcons(); }},[]);
+      return <span ref={r} style={{display:'inline-flex'}}/>; };
+    const rows=[
+      {id:1,name:'Spring launch',lang:'EN › JA, DE',segments:1284,status:'In review',tone:'warning'},
+      {id:2,name:'Support centre',lang:'EN › KO',segments:842,status:'Approved',tone:'success'},
+      {id:3,name:'Investor update',lang:'EN › DE',segments:96,status:'Draft',tone:'neutral'},
+      {id:4,name:'Product tour',lang:'EN › JA',segments:430,status:'Syncing',tone:'info'},
+    ];
+    function Demo(){
+      const [sort,setSort]=React.useState({key:'segments',dir:'desc'});
+      const sorted=[...rows].sort((a,b)=> sort.dir==='asc'?a.segments-b.segments:b.segments-a.segments);
+      return (
+        <div>
+          <div className="blk">
+            <div className="ttl">Data table</div>
+            <DataTable
+              sort={sort} onSort={(k)=>setSort(s=>({key:k,dir:s.dir==='asc'?'desc':'asc'}))}
+              columns={[
+                {key:'name',header:'Project'},
+                {key:'lang',header:'Languages'},
+                {key:'segments',header:'Segments',align:'right',sortable:true},
+                {key:'status',header:'Status',render:(r)=><Badge variant={r.tone} dot>{r.status}</Badge>},
+              ]}
+              data={sorted}
+            />
+          </div>
+          <div className="blk" style={{marginBottom:0}}>
+            <div className="ttl">Empty state</div>
+            <div className="empty-wrap">
+              <EmptyState title="No projects yet"
+                description="Start your first translation project — your memory and glossary build automatically from here."
+                actions={<Button variant="cta" iconLeft={<Plus/>}>Start a project</Button>} />
+            </div>
+          </div>
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+  </script>
+</body></html>

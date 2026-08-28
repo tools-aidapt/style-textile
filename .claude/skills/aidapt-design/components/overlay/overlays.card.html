@@ -1,0 +1,60 @@
+<!-- @dsCard group="Components" viewport="760x430" name="Modal, sheet & tooltip" subtitle="Materialized dialog over a Deep-Flow scrim; gesture-driven bottom sheet; hover/focus tooltips" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<style>
+  html,body{margin:0}
+  body{background:var(--bg-subtle);color:var(--text-primary);padding:22px}
+  .ttl{font:600 11px/1 var(--font-sans);letter-spacing:var(--ls-wider);text-transform:uppercase;color:var(--text-tertiary);margin:0 0 14px}
+  .tips{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px}
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+  .note{font:400 11px/1.5 var(--font-sans);color:var(--text-tertiary);margin:10px 2px 0}
+</style></head><body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="../../_ds_bundle.js"></script>
+  <script type="text/babel">
+    const { Modal, Sheet, Tooltip, Button } = window.AidaptDesignSystem_0090ec;
+    const HasSheet = !!Sheet; // degrade gracefully against an older bundle
+    function Demo(){
+      const [open, setOpen] = React.useState(false);
+      return (
+        <div>
+          <div className="ttl">Tooltip · hover or focus the triggers</div>
+          <div className="tips">
+            <Tooltip label="Appears above" placement="top"><Button variant="secondary" size="sm">Top</Button></Tooltip>
+            <Tooltip label="Appears below" placement="bottom"><Button variant="secondary" size="sm">Bottom</Button></Tooltip>
+            <Tooltip label="Appears left" placement="left"><Button variant="secondary" size="sm">Left</Button></Tooltip>
+            <Tooltip label="Appears right" placement="right"><Button variant="secondary" size="sm">Right</Button></Tooltip>
+          </div>
+          <div className="duo">
+            <div>
+              <div className="ttl">Modal · blocking decisions</div>
+              <Modal static title="Delete project?" subtitle="This removes the memory and glossary too."
+                footer={<><Button variant="ghost" size="sm">Cancel</Button><Button variant="destructive" size="sm">Delete project</Button></>}>
+                You can’t undo this. Exported files are unaffected — only the working project, its translation memory, and glossary are removed.
+              </Modal>
+              <p className="note">Materializes: blur, scale and rise resolve together over the Deep-Flow scrim.</p>
+            </div>
+            <div>
+              <div className="ttl">Sheet · dismissible tasks</div>
+              {HasSheet ? (
+              <Sheet static title="Share report" subtitle="Choose a format"
+                footer={<><Button variant="ghost" size="sm">Cancel</Button><Button size="sm">Share</Button></>}>
+                PDF keeps layout and pagination; CSV exports the raw segment table.
+                <div style={{marginTop:12}}><Button variant="secondary" size="sm" fullWidth onClick={() => setOpen(true)}>Open live sheet — drag, flick, or toss it away</Button></div>
+              </Sheet>
+              ) : (<p className="note">Sheet is compiling — reload this card to see it.</p>)}
+              <p className="note">Live sheet: 1:1 drag, rubber-band top, momentum decides open vs dismiss, spring inherits the throw.</p>
+            </div>
+          </div>
+          {HasSheet && <Sheet open={open} onClose={() => setOpen(false)} title="Share report" subtitle="Drag me — grab mid-flight, flick to dismiss"
+            footer={<><Button variant="ghost" size="sm" onClick={() => setOpen(false)}>Cancel</Button><Button size="sm">Share</Button></>}>
+            The settle spring runs damping 0.8 / response 0.3 and inherits your release velocity — there is no seam between the drag and the animation.
+          </Sheet>}
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+  </script>
+</body></html>

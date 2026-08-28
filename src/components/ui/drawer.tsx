@@ -18,7 +18,7 @@ const DrawerOverlay = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
-  <DrawerPrimitive.Overlay ref={ref} className={cn("fixed inset-0 z-50 bg-black/80", className)} {...props} />
+  <DrawerPrimitive.Overlay ref={ref} className={cn("fixed inset-0 z-overlay bg-[var(--scrim-modal)]", className)} {...props} />
 ));
 DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName;
 
@@ -31,12 +31,18 @@ const DrawerContent = React.forwardRef<
     <DrawerPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background",
+        // 16px is the system's radius for a large surface. Vaul tracks the
+        // drag 1:1, carries the release velocity into the dismiss and
+        // rubber-bands past the top, which is why a drawer — not a dialog —
+        // is the right control for anything a thumb reaches for.
+        "fixed inset-x-0 bottom-0 z-modal mt-24 flex h-auto flex-col rounded-t-xl border border-mist-200 bg-background shadow-xl",
         className,
       )}
       {...props}
     >
-      <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
+      {/* The grab handle. It states where to take hold of the surface, so
+          the gesture is discoverable rather than something you find out. */}
+      <div className="mx-auto mt-3 h-1.5 w-10 shrink-0 rounded-pill bg-mist-200" />
       {children}
     </DrawerPrimitive.Content>
   </DrawerPortal>

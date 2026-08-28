@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local secrets. Nothing matching these may ever be committed — see README.
+.env
+.env.*
+!.env.example
+
+# Test and build output
+coverage
+*.tsbuildinfo

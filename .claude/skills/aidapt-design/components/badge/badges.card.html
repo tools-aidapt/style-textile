@@ -1,0 +1,50 @@
+<!-- @dsCard group="Components" viewport="700x250" name="Badges & tags" subtitle="Status pills (soft / solid / outline) and removable / selectable chips" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<style>
+  html,body{margin:0}
+  body{background:var(--white);color:var(--text-primary);padding:22px}
+  .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  .row:last-child{margin-bottom:0}
+  .lab{font:600 11px/1 var(--font-sans);letter-spacing:var(--ls-wider);text-transform:uppercase;color:var(--text-tertiary);width:78px;flex:none}
+</style></head><body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="../../_ds_bundle.js"></script>
+  <script type="text/babel">
+    const { Badge, Tag } = window.AidaptDesignSystem_0090ec;
+    function Demo(){
+      const [tags,setTags]=React.useState(['Japanese','German','Korean']);
+      const [sel,setSel]=React.useState('Formal');
+      return (
+        <div>
+          <div className="row"><span className="lab">Soft</span>
+            <Badge variant="neutral">Draft</Badge>
+            <Badge variant="teal" dot>Active</Badge>
+            <Badge variant="info">Syncing</Badge>
+            <Badge variant="success" dot>Approved</Badge>
+            <Badge variant="warning">In review</Badge>
+            <Badge variant="error" dot>Failed</Badge>
+          </div>
+          <div className="row"><span className="lab">Solid</span>
+            <Badge variant="teal" appearance="solid">Beta</Badge>
+            <Badge variant="neutral" appearance="solid">New</Badge>
+            <Badge variant="success" appearance="solid">Live</Badge>
+            <Badge variant="warning" appearance="solid">Paused</Badge>
+            <Badge variant="neutral" appearance="outline">v2.4</Badge>
+          </div>
+          <div className="row"><span className="lab">Tags</span>
+            {tags.map(t => <Tag key={t} onRemove={()=>setTags(tags.filter(x=>x!==t))}>{t}</Tag>)}
+            {tags.length===0 && <span style={{font:'400 13px/1 var(--font-sans)',color:'var(--text-tertiary)'}}>All removed</span>}
+          </div>
+          <div className="row"><span className="lab">Select</span>
+            {['Formal','Neutral','Conversational'].map(t =>
+              <Tag key={t} selectable selected={sel===t} onClick={()=>setSel(t)}>{t}</Tag>)}
+          </div>
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+  </script>
+</body></html>

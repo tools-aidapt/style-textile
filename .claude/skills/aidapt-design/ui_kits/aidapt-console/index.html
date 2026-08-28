@@ -1,0 +1,202 @@
+<!-- @dsCard group="Aidapt Console" viewport="1280x820" name="Console — dashboard" subtitle="Full product screen built from the system: nav, stats, project table, modal flow" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aidapt Console</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  html,body{margin:0;height:100%}
+  body{background:var(--bg-subtle)}
+  #root{height:100vh}
+  .app{display:grid;grid-template-columns:248px 1fr;grid-template-rows:64px 1fr;height:100vh;min-height:0}
+  .app__nav{grid-column:1 / -1}
+  .app__side{grid-row:2;min-height:0;overflow:auto}
+  .app__main{grid-row:2;min-height:0;overflow:auto;padding:32px 36px}
+  .page-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;gap:16px}
+  .page-head h1{font:var(--fw-extrabold) var(--fs-h2)/1 var(--font-display);letter-spacing:-.016em;margin:0}
+  .page-head p{font-size:var(--fs-body-sm);color:var(--text-secondary);margin:8px 0 0}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:28px}
+  .stat{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:18px 20px}
+  .stat.accent{border-top:3px solid var(--teal-400)}
+  .stat .ov{font:600 11px/1 var(--font-sans);letter-spacing:var(--ls-wider);text-transform:uppercase;color:var(--text-tertiary);margin:0}
+  .stat .num{font:var(--fw-extrabold) 32px/1 var(--font-display);letter-spacing:-.02em;margin:12px 0 0}
+  .stat .num small{font:500 15px/1 var(--font-mono);color:var(--text-tertiary)}
+  .delta{display:inline-flex;align-items:center;gap:4px;margin-top:11px;font:600 12px/1 var(--font-sans);padding:4px 9px;border-radius:var(--radius-pill)}
+  .delta svg{width:12px;height:12px}
+  .up{background:var(--success-surface);color:var(--success-text)}
+  .down{background:var(--error-surface);color:var(--error-text)}
+  .flat{background:var(--mist-100);color:var(--steel-700)}
+  .section-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 16px}
+  .section-head h2{font:var(--fw-bold) var(--fs-h5)/1 var(--font-display);margin:0}
+  .ar{color:var(--teal-500);font-weight:700;font-family:var(--font-mono)}
+  .toast-wrap{position:fixed;right:28px;bottom:28px;z-index:700;display:flex;flex-direction:column;gap:12px}
+  .empty-wrap{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-lg)}
+</style></head><body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="../../_ds_bundle.js"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script type="text/babel">
+    const D = window.AidaptDesignSystem_0090ec;
+    const { TopNav, Sidebar, Card, Badge, Button, IconButton, Avatar, AvatarGroup,
+            Progress, DataTable, Tabs, Breadcrumbs, EmptyState, FormField, Input, Select, Textarea, Switch, Modal, Toast } = D;
+
+    const Ico = ({n,size=18}) => { const r=React.useRef(null);
+      React.useEffect(()=>{ if(r.current){ r.current.innerHTML=''; const e=document.createElement('i'); e.setAttribute('data-lucide',n); r.current.appendChild(e); window.lucide.createIcons({attrs:{width:size,height:size}}); }});
+      return <span ref={r} style={{display:'inline-flex'}}/>; };
+
+    const SEED = [
+      {id:1,name:'Spring launch',pair:'EN › JA',segments:1284,status:'In review',tone:'warning',pct:72,team:['Aiko Tanaka','Lev Petrov','Mei Lin']},
+      {id:2,name:'Support centre',pair:'EN › KO',segments:842,status:'Approved',tone:'success',pct:100,team:['Sam Ortiz','Noa Berg']},
+      {id:3,name:'Investor update',pair:'EN › DE',segments:96,status:'Draft',tone:'neutral',pct:18,team:['Dana Cole']},
+      {id:4,name:'Product tour',pair:'EN › JA',segments:430,status:'Syncing',tone:'info',pct:54,team:['Aiko Tanaka','Sam Ortiz']},
+      {id:5,name:'Help articles',pair:'EN › DE, FR',segments:2110,status:'Approved',tone:'success',pct:100,team:['Mei Lin','Noa Berg','Dana Cole','Lev Petrov']},
+    ];
+
+    function Stat({ov,num,unit,delta,dir,accent}){
+      return (
+        <div className={"stat"+(accent?" accent":"")}>
+          <p className="ov">{ov}</p>
+          <p className="num">{num}{unit&&<small>{unit}</small>}</p>
+          <span className={"delta "+(dir==='up'?'up':dir==='down'?'down':'flat')}>
+            {dir!=='flat' && <Ico n={dir==='up'?'trending-up':'trending-down'} size={12}/>}{delta}
+          </span>
+        </div>
+      );
+    }
+
+    function NewProjectModal({open,onClose,onCreate}){
+      const [name,setName]=React.useState('');
+      const err = name.trim()==='' ? undefined : (SEED.some(p=>p.name.toLowerCase()===name.trim().toLowerCase()) ? 'That name is already taken' : undefined);
+      return (
+        <Modal open={open} onClose={onClose} title="New translation project"
+          subtitle="Set the basics — your memory and glossary attach automatically."
+          footer={<>
+            <Button variant="ghost" onClick={onClose}>Cancel</Button>
+            <Button variant="primary" disabled={!name.trim()||!!err} onClick={()=>onCreate(name.trim())}>Create project</Button>
+          </>}>
+          <div style={{display:'flex',flexDirection:'column',gap:18}}>
+            <FormField label="Project name" htmlFor="np" required error={err}>
+              <Input id="np" value={name} invalid={!!err} onChange={e=>setName(e.target.value)} placeholder="e.g. Autumn campaign" autoFocus />
+            </FormField>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+              <FormField label="Source" htmlFor="src"><Select id="src" defaultValue="en"><option value="en">English</option><option value="ja">Japanese</option></Select></FormField>
+              <FormField label="Target" htmlFor="tgt"><Select id="tgt" defaultValue="ja"><option value="ja">Japanese</option><option value="de">German</option><option value="ko">Korean</option></Select></FormField>
+            </div>
+            <FormField label="Brief" htmlFor="brf" optional help="Tone, audience, do-not-translate terms.">
+              <Textarea id="brf" rows={3} placeholder="Warm but precise. Keep product names in English…" />
+            </FormField>
+          </div>
+        </Modal>
+      );
+    }
+
+    function App(){
+      const [nav,setNav]=React.useState('dashboard');
+      const [tab,setTab]=React.useState('all');
+      const [rows,setRows]=React.useState(SEED);
+      const [modal,setModal]=React.useState(false);
+      const [toast,setToast]=React.useState(null);
+      const [sort,setSort]=React.useState({key:'segments',dir:'desc'});
+
+      const filtered = rows.filter(r => tab==='all' ? true : tab==='review' ? r.status==='In review' : r.status==='Approved');
+      const sorted = [...filtered].sort((a,b)=> sort.dir==='asc'?a.segments-b.segments:b.segments-a.segments);
+
+      function createProject(name){
+        const np={id:Date.now(),name,pair:'EN › JA',segments:0,status:'Draft',tone:'neutral',pct:0,team:['Aiko Tanaka']};
+        setRows([np,...rows]); setModal(false); setTab('all');
+        setToast({variant:'success',title:'Project created',msg:`“${name}” is ready. Memory and glossary attached.`});
+        setTimeout(()=>setToast(null),4200);
+      }
+
+      const columns=[
+        {key:'name',header:'Project',render:r=><span style={{fontWeight:600,color:'var(--text-primary)'}}>{r.name}</span>},
+        {key:'pair',header:'Languages',render:r=><span style={{fontFamily:'var(--font-mono)',fontSize:13}}><span className="ar">{r.pair}</span></span>},
+        {key:'segments',header:'Segments',align:'right',sortable:true,render:r=>r.segments.toLocaleString()},
+        {key:'pct',header:'Progress',width:160,render:r=><Progress value={r.pct} size="sm" variant={r.pct===100?'success':'teal'} />},
+        {key:'team',header:'Team',render:r=><AvatarGroup max={3} size="sm">{r.team.map((n,i)=><Avatar key={i} name={n}/>)}</AvatarGroup>},
+        {key:'status',header:'Status',render:r=><Badge variant={r.tone} dot>{r.status}</Badge>},
+      ];
+
+      return (
+        <div className="app">
+          <div className="app__nav">
+            <TopNav
+              logo={<img src="../../assets/logo/aidapt-logo.png" alt="Aidapt" />}
+              items={[{label:'Projects',active:true},{label:'Memory'},{label:'Glossaries'},{label:'Reports'}]}
+              actions={<>
+                <IconButton icon={<Ico n="search"/>} label="Search" />
+                <IconButton icon={<Ico n="bell"/>} label="Notifications" />
+                <Avatar name="Aiko Tanaka" size="sm" status="online" />
+              </>}
+            />
+          </div>
+          <div className="app__side">
+            <Sidebar
+              onSelect={(it)=>setNav(it.key)}
+              groups={[
+                {items:[
+                  {key:'dashboard',label:'Dashboard',icon:<Ico n="layout-dashboard"/>,active:nav==='dashboard'},
+                  {key:'projects',label:'Projects',icon:<Ico n="folder"/>,badge:rows.length,active:nav==='projects'},
+                  {key:'review',label:'In review',icon:<Ico n="clock"/>,badge:rows.filter(r=>r.status==='In review').length,active:nav==='review'},
+                ]},
+                {title:'Library',items:[
+                  {key:'memory',label:'Translation memory',icon:<Ico n="database"/>,active:nav==='memory'},
+                  {key:'glossaries',label:'Glossaries',icon:<Ico n="book-open"/>,active:nav==='glossaries'},
+                  {key:'settings',label:'Settings',icon:<Ico n="settings"/>,active:nav==='settings'},
+                ]},
+              ]}
+            />
+          </div>
+          <main className="app__main">
+            <div style={{marginBottom:18}}>
+              <Breadcrumbs items={[{label:'Workspace',href:'#'},{label:'Aidapt Studio'}]}/>
+            </div>
+            <div className="page-head">
+              <div>
+                <h1>Projects</h1>
+                <p>{rows.length} projects · {rows.filter(r=>r.status==='In review').length} awaiting review</p>
+              </div>
+              <Button variant="cta" iconLeft={<Ico n="plus"/>} onClick={()=>setModal(true)}>New project</Button>
+            </div>
+
+            <div className="stats">
+              <Stat ov="Active projects" num={rows.length} delta="+6 this week" dir="up" accent />
+              <Stat ov="Words translated" num="1.24" unit="M" delta="+12%" dir="up" />
+              <Stat ov="Terminology accuracy" num="98.6" unit="%" delta="Steady" dir="flat" />
+              <Stat ov="Awaiting review" num={rows.filter(r=>r.status==='In review').length} delta="-2 today" dir="down" />
+            </div>
+
+            <div className="section-head">
+              <Tabs value={tab} onChange={setTab} tabs={[
+                {id:'all',label:'All',count:rows.length},
+                {id:'review',label:'In review',count:rows.filter(r=>r.status==='In review').length},
+                {id:'approved',label:'Approved',count:rows.filter(r=>r.status==='Approved').length},
+              ]}/>
+            </div>
+
+            {sorted.length>0 ? (
+              <DataTable columns={columns} data={sorted}
+                sort={sort} onSort={(k)=>setSort(s=>({key:k,dir:s.dir==='asc'?'desc':'asc'}))} />
+            ) : (
+              <div className="empty-wrap">
+                <EmptyState title="Nothing here yet"
+                  description="No projects match this filter. Start a new project to see it appear instantly."
+                  actions={<Button variant="cta" iconLeft={<Ico n="plus"/>} onClick={()=>setModal(true)}>New project</Button>} />
+              </div>
+            )}
+          </main>
+
+          <NewProjectModal open={modal} onClose={()=>setModal(false)} onCreate={createProject} />
+
+          {toast && (
+            <div className="toast-wrap">
+              <Toast variant={toast.variant} title={toast.title} onClose={()=>setToast(null)}>{toast.msg}</Toast>
+            </div>
+          )}
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body></html>

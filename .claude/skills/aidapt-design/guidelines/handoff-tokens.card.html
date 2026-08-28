@@ -1,0 +1,742 @@
+<!-- @dsCard group="Handoff" viewport="700x460" name="Developer handoff — tokens" subtitle="The complete token set as a :root CSS block and a JSON object — copy-pasteable" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  html,body{margin:0}
+  body{background:var(--white);color:var(--text-primary);padding:18px}
+  .bar{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .seg{display:inline-flex;background:var(--mist-50);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:3px}
+  .seg button{appearance:none;border:none;background:transparent;cursor:pointer;font:600 12px/1 var(--font-sans);
+    color:var(--text-secondary);padding:7px 14px;border-radius:var(--radius-sm);transition:var(--transition-colors)}
+  .seg button.on{background:var(--white);color:var(--teal-700);box-shadow:var(--shadow-xs)}
+  .copy{margin-left:auto;appearance:none;border:1px solid var(--border-default);background:var(--white);cursor:pointer;
+    font:600 12px/1 var(--font-sans);color:var(--text-primary);padding:8px 14px;border-radius:var(--radius-md);
+    display:inline-flex;align-items:center;gap:7px;transition:var(--transition-colors)}
+  .copy:hover{border-color:var(--teal-400);color:var(--teal-700)}
+  .copy.done{background:var(--success-surface);border-color:var(--success);color:var(--success-text)}
+  .count{font:500 12px/1 var(--font-mono);color:var(--text-tertiary)}
+  pre{margin:0;background:var(--deepflow-900);border-radius:var(--radius-md);padding:16px;overflow:auto;max-height:360px;
+    font:400 12px/1.55 var(--font-mono);color:var(--deepflow-100)}
+  pre .tok{color:var(--cyan-300)}
+  pre::-webkit-scrollbar{width:10px;height:10px}
+  pre::-webkit-scrollbar-thumb{background:var(--deepflow-700);border-radius:6px}
+  .pane{display:none}
+  .pane.on{display:block}
+</style></head><body>
+  <div class="bar">
+    <div class="seg">
+      <button id="b-css" class="on" onclick="show('css')">CSS :root</button>
+      <button id="b-json" onclick="show('json')">JSON</button>
+    </div>
+    <span class="count">319 tokens</span>
+    <button class="copy" id="copy" onclick="copyCur()">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy
+    </button>
+  </div>
+  <div class="pane on" id="pane-css"><pre id="pre-css"></pre></div>
+  <div class="pane" id="pane-json"><pre id="pre-json"></pre></div>
+  <script type="text/plain" id="src-css">:root {
+  /* colors */
+  --teal-50: #DCFEFA;
+  --teal-100: #C0F4EF;
+  --teal-200: #94E3DC;
+  --teal-300: #65CDC5;
+  --teal-400: #11A8A0;
+  --teal-500: #009A92;
+  --teal-600: #007F78;
+  --teal-700: #00645E;
+  --teal-800: #004843;
+  --teal-900: #002F2C;
+  --cyan-50: #D5FEFF;
+  --cyan-100: #B5F4FF;
+  --cyan-200: #81E2F8;
+  --cyan-300: #36C5E0;
+  --cyan-400: #00B3D2;
+  --cyan-500: #0098B8;
+  --cyan-600: #007D9C;
+  --cyan-700: #00627E;
+  --cyan-800: #00465D;
+  --cyan-900: #002E40;
+  --deepflow-50: #E8F9FF;
+  --deepflow-100: #D3ECFC;
+  --deepflow-200: #B2D8EE;
+  --deepflow-300: #91C0DC;
+  --deepflow-400: #70A6C5;
+  --deepflow-500: #538CAB;
+  --deepflow-600: #3A7290;
+  --deepflow-700: #245873;
+  --deepflow-800: #113E54;
+  --deepflow-900: #062A3B;
+  --spring-50: #D8FFEF;
+  --spring-100: #BAF8DE;
+  --spring-200: #8AE8C3;
+  --spring-300: #4FD1A5;
+  --spring-400: #00BB8B;
+  --spring-500: #00A06F;
+  --spring-600: #008558;
+  --spring-700: #006940;
+  --spring-800: #004C2B;
+  --spring-900: #003319;
+  --sage-50: #E1FDF4;
+  --sage-100: #C8F3E5;
+  --sage-200: #9AD9C5;
+  --sage-300: #7ACCB3;
+  --sage-400: #51B398;
+  --sage-500: #28987D;
+  --sage-600: #007E65;
+  --sage-700: #00634D;
+  --sage-800: #004735;
+  --sage-900: #002F21;
+  --frost-50: #E9FAF6;
+  --frost-100: #D6F0E9;
+  --frost-200: #B5DBD1;
+  --frost-300: #95C5B9;
+  --frost-400: #75AB9E;
+  --frost-500: #579183;
+  --frost-600: #3F776B;
+  --frost-700: #295D52;
+  --frost-800: #154239;
+  --frost-900: #072B24;
+  --sand-50: #FDF5E3;
+  --sand-100: #F2E7CC;
+  --sand-200: #E8D8B0;
+  --sand-300: #CBB785;
+  --sand-400: #B39C63;
+  --sand-500: #988145;
+  --sand-600: #7E682D;
+  --sand-700: #634F17;
+  --sand-800: #473704;
+  --sand-900: #2F2300;
+  --warmmist-50: #F9F5EC;
+  --warmmist-100: #F4EEE0;
+  --warmmist-200: #DAD1BD;
+  --warmmist-300: #C3B89F;
+  --warmmist-400: #A99D81;
+  --warmmist-500: #8F8366;
+  --warmmist-600: #756A4F;
+  --warmmist-700: #5B5138;
+  --warmmist-800: #413824;
+  --warmmist-900: #2A2414;
+  --ember-50: #FFEAD9;
+  --ember-100: #FFD6BC;
+  --ember-200: #FFB691;
+  --ember-300: #FF8A5B;
+  --ember-400: #F67138;
+  --ember-500: #DB5100;
+  --ember-600: #BB3500;
+  --ember-700: #991A00;
+  --ember-800: #720100;
+  --ember-900: #500000;
+  --ink-50: #EEF7FD;
+  --ink-100: #DCEAF2;
+  --ink-200: #C1D5E0;
+  --ink-300: #A4BDCB;
+  --ink-400: #87A3B3;
+  --ink-500: #6B8998;
+  --ink-600: #546F7E;
+  --ink-700: #3D5663;
+  --ink-800: #283C47;
+  --ink-900: #0A1A22;
+  --steel-50: #F1F7F9;
+  --steel-100: #E1EAED;
+  --steel-200: #C7D4D9;
+  --steel-300: #ACBCC3;
+  --steel-400: #90A2A9;
+  --steel-500: #75878F;
+  --steel-600: #5A6B72;
+  --steel-700: #45555B;
+  --steel-800: #2F3C41;
+  --steel-900: #1C262A;
+  --mist-50: #EDF1F2;
+  --mist-100: #E3E9EB;
+  --mist-200: #CBD3D6;
+  --mist-300: #B1BBBE;
+  --mist-400: #95A1A4;
+  --mist-500: #7A8689;
+  --mist-600: #626D70;
+  --mist-700: #4A5457;
+  --mist-800: #323B3D;
+  --mist-900: #1F2627;
+  --white: #FFFFFF;
+  --black: #000000;
+  --water-deep: var(--deepflow-900);
+  --water-teal: var(--teal-400);
+  --water-cyan: var(--cyan-300);
+  --wood-spring: var(--spring-300);
+  --wood-sage: var(--sage-200);
+  --wood-frost: var(--frost-100);
+  --earth-sand: var(--sand-200);
+  --earth-mist: var(--warmmist-100);
+  --fire-ember: var(--ember-300);
+  --metal-ink: var(--ink-900);
+  --metal-steel: var(--steel-600);
+  --metal-mist: var(--mist-50);
+  --success-50: #D8FFEF;
+  --success-100: #BAF8DE;
+  --success-500: #00A06F;
+  --success-600: #008558;
+  --success-700: #006940;
+  --success: var(--success-600);
+  --success-surface: var(--success-50);
+  --success-text: var(--success-700);
+  --info-50: #D5FEFF;
+  --info-100: #B5F4FF;
+  --info-500: #0098B8;
+  --info-600: #007D9C;
+  --info-700: #00627E;
+  --info: var(--info-600);
+  --info-surface: var(--info-50);
+  --info-text: var(--info-700);
+  --warning-50: #FFF1D6;
+  --warning-100: #FFE0B7;
+  --warning-400: #D98A1E;
+  --warning-500: #BF6D00;
+  --warning-700: #823C00;
+  --warning: var(--warning-400);
+  --warning-surface: var(--warning-50);
+  --warning-text: var(--warning-700);
+  --error-50: #FFE8DE;
+  --error-100: #FFD3C4;
+  --error-500: #DF482F;
+  --error-600: #CE3A22;
+  --error-700: #9C0800;
+  --error: var(--error-600);
+  --error-surface: var(--error-50);
+  --error-text: var(--error-700);
+  --bg-base: var(--white);
+  --bg-subtle: var(--mist-50);
+  --bg-muted: var(--mist-100);
+  --surface-card: var(--white);
+  --surface-raised: var(--white);
+  --surface-sunken: var(--mist-50);
+  --surface-inverse: var(--deepflow-900);
+  --text-primary: var(--ink-900);
+  --text-secondary: var(--steel-600);
+  --text-tertiary: var(--steel-500);
+  --text-disabled: var(--mist-400);
+  --text-inverse: var(--white);
+  --text-link: var(--teal-600);
+  --text-on-teal: var(--ink-900);
+  --text-on-ember: var(--ink-900);
+  --border-subtle: var(--mist-100);
+  --border-default: var(--mist-200);
+  --border-strong: var(--steel-300);
+  --border-focus: var(--teal-400);
+  --brand-hero: var(--teal-400);
+  --brand-accent: var(--cyan-300);
+  --brand-cta: var(--ember-300);
+  --brand-cta-hover: var(--ember-400);
+  --brand-cta-active: var(--ember-500);
+  --ring: 0 0 0 3px color-mix(in oklch, var(--teal-400) 45%, transparent);
+
+  /* typography */
+  --font-display: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-extrabold: 800;
+  --lh-none: 1;
+  --lh-tight: 1.1;
+  --lh-snug: 1.25;
+  --lh-normal: 1.5;
+  --lh-relaxed: 1.65;
+  --ls-tighter: -0.022em;
+  --ls-tight: -0.014em;
+  --ls-snug: -0.006em;
+  --ls-normal: 0;
+  --ls-wide: 0.02em;
+  --ls-wider: 0.14em;
+  --fs-display: 4rem;
+  --fs-h1: 3rem;
+  --fs-h2: 2.375rem;
+  --fs-h3: 1.875rem;
+  --fs-h4: 1.5rem;
+  --fs-h5: 1.25rem;
+  --fs-h6: 1.0625rem;
+  --fs-body-lg: 1.125rem;
+  --fs-body: 1rem;
+  --fs-body-sm: 0.875rem;
+  --fs-caption: 0.8125rem;
+  --fs-overline: 0.75rem;
+  --fs-code: 0.875rem;
+  --lh-display: 4.25rem;
+  --lh-h1: 3.375rem;
+  --lh-h2: 2.75rem;
+  --lh-h3: 2.375rem;
+  --lh-h4: 2rem;
+  --lh-h5: 1.75rem;
+  --lh-h6: 1.5rem;
+
+  /* spacing */
+  --space-0: 0;
+  --space-px: 1px;
+  --space-0-5: 0.125rem;
+  --space-1: 0.25rem;
+  --space-1-5: 0.375rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
+  --space-40: 10rem;
+  --gap-inline: var(--space-2);
+  --gap-tight: var(--space-3);
+  --gap-default: var(--space-4);
+  --gap-comfy: var(--space-6);
+  --gap-section: var(--space-12);
+  --gap-hero: var(--space-24);
+  --pad-control: var(--space-3);
+  --pad-card: var(--space-6);
+  --pad-card-lg: var(--space-8);
+  --pad-page: var(--space-8);
+  --measure: 66ch;
+  --measure-wide: 78ch;
+  --container: 1200px;
+  --container-wide: 1400px;
+
+  /* elevation */
+  --radius-none: 0;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-pill: 999px;
+  --radius-circle: 50%;
+  --border-hairline: 1px;
+  --border-thin: 1.5px;
+  --border-medium: 2px;
+  --border-thick: 3px;
+  --shadow-none: none;
+  --shadow-xs: 0 1px 2px rgba(6,42,59,0.06);
+  --shadow-sm: 0 1px 2px rgba(6,42,59,0.06), 0 2px 6px rgba(6,42,59,0.06);
+  --shadow-md: 0 2px 4px rgba(6,42,59,0.05), 0 6px 16px rgba(6,42,59,0.09);
+  --shadow-lg: 0 4px 8px rgba(6,42,59,0.06), 0 16px 32px rgba(6,42,59,0.12);
+  --shadow-xl: 0 8px 16px rgba(6,42,59,0.08), 0 28px 56px rgba(6,42,59,0.16);
+  --shadow-teal: 0 8px 28px rgba(17,168,160,0.28);
+  --shadow-inset: inset 0 1px 2px rgba(6,42,59,0.08);
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 100;
+  --z-dropdown: 300;
+  --z-overlay: 400;
+  --z-modal: 500;
+  --z-popover: 600;
+  --z-toast: 700;
+  --z-max: 9999;
+
+  /* motion */
+  --dur-instant: 80ms;
+  --dur-fast: 140ms;
+  --dur-base: 220ms;
+  --dur-slow: 340ms;
+  --dur-slower: 520ms;
+  --ease-forward: cubic-bezier(0.16, 0.8, 0.32, 1);
+  --ease-entrance: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-chevron: cubic-bezier(0.34, 1.2, 0.64, 1);
+  --transition-colors: color var(--dur-fast) var(--ease-standard), background-color var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard);
+  --transition-transform: transform var(--dur-fast) var(--ease-forward);
+  --transition-base: all var(--dur-base) var(--ease-forward);
+
+  /* layout */
+  --bp-xs: 360px;
+  --bp-sm: 640px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
+  --bp-2xl: 1536px;
+  --grad-sweep-dark: linear-gradient(135deg, var(--deepflow-900) 0%, var(--teal-700) 55%, var(--teal-400) 100%);
+  --grad-sweep-medium: linear-gradient(135deg, var(--teal-600) 0%, var(--teal-400) 48%, var(--cyan-300) 100%);
+  --grad-sweep-light: linear-gradient(135deg, var(--frost-100) 0%, var(--frost-50) 60%, var(--white) 100%);
+  --grad-bridge: var(--bridge-bloom-ember), var(--bridge-bloom-spring), var(--bridge-sweep);
+  --flow-dark-sweep: linear-gradient(122deg, #04212e 0%, #062A3B 34%, #0c5e62 74%, #11A8A0 108%);
+  --flow-dark-bloom-cyan: radial-gradient(96% 86% at 97% 4%, rgba(54,197,224,0.55) 0%, rgba(54,197,224,0) 58%);
+  --flow-dark-bloom-frost: radial-gradient(64% 58% at 88% -6%, rgba(159,238,245,0.42) 0%, rgba(159,238,245,0) 54%);
+  --flow-dark-vignette: radial-gradient(140% 130% at 50% 50%, rgba(2,18,26,0) 38%, rgba(2,18,26,0.60) 100%);
+  --grad-flow-dark: var(--flow-dark-bloom-frost), var(--flow-dark-bloom-cyan), var(--flow-dark-vignette), var(--flow-dark-sweep);
+  --flow-medium-sweep: linear-gradient(126deg, #11A8A0 0%, #36C5E0 70%, #9FEEF5 114%);
+  --flow-medium-bloom-frost: radial-gradient(92% 86% at 2% 2%, rgba(207,246,240,0.85) 0%, rgba(207,246,240,0) 56%);
+  --flow-medium-bloom-deep: radial-gradient(82% 78% at 104% 106%, rgba(6,42,59,0.52) 0%, rgba(6,42,59,0) 58%);
+  --grad-flow-medium: var(--flow-medium-bloom-frost), var(--flow-medium-bloom-deep), var(--flow-medium-sweep);
+  --flow-light-sweep: linear-gradient(120deg, #F7F2E6 0%, #CFF6F0 72%, #9FEEF5 116%);
+  --flow-light-bloom-cyan: radial-gradient(80% 74% at 102% -4%, rgba(54,197,224,0.28) 0%, rgba(54,197,224,0) 56%);
+  --flow-light-bloom-sage: radial-gradient(76% 72% at -2% 106%, rgba(154,217,197,0.46) 0%, rgba(154,217,197,0) 56%);
+  --grad-light: var(--flow-light-bloom-cyan), var(--flow-light-bloom-sage), var(--flow-light-sweep);
+  --bridge-sweep: linear-gradient(104deg, #4FD1A5 0%, #9AD9C5 30%, #E8D8B0 64%, #FF8A5B 104%);
+  --bridge-bloom-spring: radial-gradient(82% 80% at -4% -6%, rgba(79,209,165,0.55) 0%, rgba(79,209,165,0) 56%);
+  --bridge-bloom-ember: radial-gradient(58% 70% at 106% 110%, rgba(255,138,91,0.70) 0%, rgba(255,138,91,0) 50%);
+  --grad-mesh-dark: var(--grad-flow-dark);
+  --grad-mesh-medium: var(--grad-flow-medium);
+  --grain-black: url("data:image/svg+xml,…220×220 fractalNoise 0.85/3, seed 11, black alpha .62");
+  --grain-white: url("data:image/svg+xml,…220×220 fractalNoise 0.85/3, seed 29, white alpha .50");
+  --grain: url("data:image/svg+xml,…220×220 two-layer black+white film grain (combined)");
+}</script>
+  <script type="text/plain" id="src-json">{
+  "teal-50": "#DCFEFA",
+  "teal-100": "#C0F4EF",
+  "teal-200": "#94E3DC",
+  "teal-300": "#65CDC5",
+  "teal-400": "#11A8A0",
+  "teal-500": "#009A92",
+  "teal-600": "#007F78",
+  "teal-700": "#00645E",
+  "teal-800": "#004843",
+  "teal-900": "#002F2C",
+  "cyan-50": "#D5FEFF",
+  "cyan-100": "#B5F4FF",
+  "cyan-200": "#81E2F8",
+  "cyan-300": "#36C5E0",
+  "cyan-400": "#00B3D2",
+  "cyan-500": "#0098B8",
+  "cyan-600": "#007D9C",
+  "cyan-700": "#00627E",
+  "cyan-800": "#00465D",
+  "cyan-900": "#002E40",
+  "deepflow-50": "#E8F9FF",
+  "deepflow-100": "#D3ECFC",
+  "deepflow-200": "#B2D8EE",
+  "deepflow-300": "#91C0DC",
+  "deepflow-400": "#70A6C5",
+  "deepflow-500": "#538CAB",
+  "deepflow-600": "#3A7290",
+  "deepflow-700": "#245873",
+  "deepflow-800": "#113E54",
+  "deepflow-900": "#062A3B",
+  "spring-50": "#D8FFEF",
+  "spring-100": "#BAF8DE",
+  "spring-200": "#8AE8C3",
+  "spring-300": "#4FD1A5",
+  "spring-400": "#00BB8B",
+  "spring-500": "#00A06F",
+  "spring-600": "#008558",
+  "spring-700": "#006940",
+  "spring-800": "#004C2B",
+  "spring-900": "#003319",
+  "sage-50": "#E1FDF4",
+  "sage-100": "#C8F3E5",
+  "sage-200": "#9AD9C5",
+  "sage-300": "#7ACCB3",
+  "sage-400": "#51B398",
+  "sage-500": "#28987D",
+  "sage-600": "#007E65",
+  "sage-700": "#00634D",
+  "sage-800": "#004735",
+  "sage-900": "#002F21",
+  "frost-50": "#E9FAF6",
+  "frost-100": "#D6F0E9",
+  "frost-200": "#B5DBD1",
+  "frost-300": "#95C5B9",
+  "frost-400": "#75AB9E",
+  "frost-500": "#579183",
+  "frost-600": "#3F776B",
+  "frost-700": "#295D52",
+  "frost-800": "#154239",
+  "frost-900": "#072B24",
+  "sand-50": "#FDF5E3",
+  "sand-100": "#F2E7CC",
+  "sand-200": "#E8D8B0",
+  "sand-300": "#CBB785",
+  "sand-400": "#B39C63",
+  "sand-500": "#988145",
+  "sand-600": "#7E682D",
+  "sand-700": "#634F17",
+  "sand-800": "#473704",
+  "sand-900": "#2F2300",
+  "warmmist-50": "#F9F5EC",
+  "warmmist-100": "#F4EEE0",
+  "warmmist-200": "#DAD1BD",
+  "warmmist-300": "#C3B89F",
+  "warmmist-400": "#A99D81",
+  "warmmist-500": "#8F8366",
+  "warmmist-600": "#756A4F",
+  "warmmist-700": "#5B5138",
+  "warmmist-800": "#413824",
+  "warmmist-900": "#2A2414",
+  "ember-50": "#FFEAD9",
+  "ember-100": "#FFD6BC",
+  "ember-200": "#FFB691",
+  "ember-300": "#FF8A5B",
+  "ember-400": "#F67138",
+  "ember-500": "#DB5100",
+  "ember-600": "#BB3500",
+  "ember-700": "#991A00",
+  "ember-800": "#720100",
+  "ember-900": "#500000",
+  "ink-50": "#EEF7FD",
+  "ink-100": "#DCEAF2",
+  "ink-200": "#C1D5E0",
+  "ink-300": "#A4BDCB",
+  "ink-400": "#87A3B3",
+  "ink-500": "#6B8998",
+  "ink-600": "#546F7E",
+  "ink-700": "#3D5663",
+  "ink-800": "#283C47",
+  "ink-900": "#0A1A22",
+  "steel-50": "#F1F7F9",
+  "steel-100": "#E1EAED",
+  "steel-200": "#C7D4D9",
+  "steel-300": "#ACBCC3",
+  "steel-400": "#90A2A9",
+  "steel-500": "#75878F",
+  "steel-600": "#5A6B72",
+  "steel-700": "#45555B",
+  "steel-800": "#2F3C41",
+  "steel-900": "#1C262A",
+  "mist-50": "#EDF1F2",
+  "mist-100": "#E3E9EB",
+  "mist-200": "#CBD3D6",
+  "mist-300": "#B1BBBE",
+  "mist-400": "#95A1A4",
+  "mist-500": "#7A8689",
+  "mist-600": "#626D70",
+  "mist-700": "#4A5457",
+  "mist-800": "#323B3D",
+  "mist-900": "#1F2627",
+  "white": "#FFFFFF",
+  "black": "#000000",
+  "water-deep": "var(--deepflow-900)",
+  "water-teal": "var(--teal-400)",
+  "water-cyan": "var(--cyan-300)",
+  "wood-spring": "var(--spring-300)",
+  "wood-sage": "var(--sage-200)",
+  "wood-frost": "var(--frost-100)",
+  "earth-sand": "var(--sand-200)",
+  "earth-mist": "var(--warmmist-100)",
+  "fire-ember": "var(--ember-300)",
+  "metal-ink": "var(--ink-900)",
+  "metal-steel": "var(--steel-600)",
+  "metal-mist": "var(--mist-50)",
+  "success-50": "#D8FFEF",
+  "success-100": "#BAF8DE",
+  "success-500": "#00A06F",
+  "success-600": "#008558",
+  "success-700": "#006940",
+  "success": "var(--success-600)",
+  "success-surface": "var(--success-50)",
+  "success-text": "var(--success-700)",
+  "info-50": "#D5FEFF",
+  "info-100": "#B5F4FF",
+  "info-500": "#0098B8",
+  "info-600": "#007D9C",
+  "info-700": "#00627E",
+  "info": "var(--info-600)",
+  "info-surface": "var(--info-50)",
+  "info-text": "var(--info-700)",
+  "warning-50": "#FFF1D6",
+  "warning-100": "#FFE0B7",
+  "warning-400": "#D98A1E",
+  "warning-500": "#BF6D00",
+  "warning-700": "#823C00",
+  "warning": "var(--warning-400)",
+  "warning-surface": "var(--warning-50)",
+  "warning-text": "var(--warning-700)",
+  "error-50": "#FFE8DE",
+  "error-100": "#FFD3C4",
+  "error-500": "#DF482F",
+  "error-600": "#CE3A22",
+  "error-700": "#9C0800",
+  "error": "var(--error-600)",
+  "error-surface": "var(--error-50)",
+  "error-text": "var(--error-700)",
+  "bg-base": "var(--white)",
+  "bg-subtle": "var(--mist-50)",
+  "bg-muted": "var(--mist-100)",
+  "surface-card": "var(--white)",
+  "surface-raised": "var(--white)",
+  "surface-sunken": "var(--mist-50)",
+  "surface-inverse": "var(--deepflow-900)",
+  "text-primary": "var(--ink-900)",
+  "text-secondary": "var(--steel-600)",
+  "text-tertiary": "var(--steel-500)",
+  "text-disabled": "var(--mist-400)",
+  "text-inverse": "var(--white)",
+  "text-link": "var(--teal-600)",
+  "text-on-teal": "var(--ink-900)",
+  "text-on-ember": "var(--ink-900)",
+  "border-subtle": "var(--mist-100)",
+  "border-default": "var(--mist-200)",
+  "border-strong": "var(--steel-300)",
+  "border-focus": "var(--teal-400)",
+  "brand-hero": "var(--teal-400)",
+  "brand-accent": "var(--cyan-300)",
+  "brand-cta": "var(--ember-300)",
+  "brand-cta-hover": "var(--ember-400)",
+  "brand-cta-active": "var(--ember-500)",
+  "ring": "0 0 0 3px color-mix(in oklch, var(--teal-400) 45%, transparent)",
+  "font-display": "\"Manrope\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+  "font-sans": "\"Inter\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+  "font-serif": "\"Source Serif 4\", Georgia, \"Times New Roman\", serif",
+  "font-mono": "\"IBM Plex Mono\", ui-monospace, \"SF Mono\", Menlo, monospace",
+  "fw-regular": "400",
+  "fw-medium": "500",
+  "fw-semibold": "600",
+  "fw-bold": "700",
+  "fw-extrabold": "800",
+  "lh-none": "1",
+  "lh-tight": "1.1",
+  "lh-snug": "1.25",
+  "lh-normal": "1.5",
+  "lh-relaxed": "1.65",
+  "ls-tighter": "-0.022em",
+  "ls-tight": "-0.014em",
+  "ls-snug": "-0.006em",
+  "ls-normal": "0",
+  "ls-wide": "0.02em",
+  "ls-wider": "0.14em",
+  "fs-display": "4rem",
+  "fs-h1": "3rem",
+  "fs-h2": "2.375rem",
+  "fs-h3": "1.875rem",
+  "fs-h4": "1.5rem",
+  "fs-h5": "1.25rem",
+  "fs-h6": "1.0625rem",
+  "fs-body-lg": "1.125rem",
+  "fs-body": "1rem",
+  "fs-body-sm": "0.875rem",
+  "fs-caption": "0.8125rem",
+  "fs-overline": "0.75rem",
+  "fs-code": "0.875rem",
+  "lh-display": "4.25rem",
+  "lh-h1": "3.375rem",
+  "lh-h2": "2.75rem",
+  "lh-h3": "2.375rem",
+  "lh-h4": "2rem",
+  "lh-h5": "1.75rem",
+  "lh-h6": "1.5rem",
+  "space-0": "0",
+  "space-px": "1px",
+  "space-0-5": "0.125rem",
+  "space-1": "0.25rem",
+  "space-1-5": "0.375rem",
+  "space-2": "0.5rem",
+  "space-3": "0.75rem",
+  "space-4": "1rem",
+  "space-5": "1.25rem",
+  "space-6": "1.5rem",
+  "space-8": "2rem",
+  "space-10": "2.5rem",
+  "space-12": "3rem",
+  "space-16": "4rem",
+  "space-20": "5rem",
+  "space-24": "6rem",
+  "space-32": "8rem",
+  "space-40": "10rem",
+  "gap-inline": "var(--space-2)",
+  "gap-tight": "var(--space-3)",
+  "gap-default": "var(--space-4)",
+  "gap-comfy": "var(--space-6)",
+  "gap-section": "var(--space-12)",
+  "gap-hero": "var(--space-24)",
+  "pad-control": "var(--space-3)",
+  "pad-card": "var(--space-6)",
+  "pad-card-lg": "var(--space-8)",
+  "pad-page": "var(--space-8)",
+  "measure": "66ch",
+  "measure-wide": "78ch",
+  "container": "1200px",
+  "container-wide": "1400px",
+  "radius-none": "0",
+  "radius-xs": "2px",
+  "radius-sm": "4px",
+  "radius-md": "8px",
+  "radius-lg": "12px",
+  "radius-xl": "16px",
+  "radius-2xl": "24px",
+  "radius-pill": "999px",
+  "radius-circle": "50%",
+  "border-hairline": "1px",
+  "border-thin": "1.5px",
+  "border-medium": "2px",
+  "border-thick": "3px",
+  "shadow-none": "none",
+  "shadow-xs": "0 1px 2px rgba(6,42,59,0.06)",
+  "shadow-sm": "0 1px 2px rgba(6,42,59,0.06), 0 2px 6px rgba(6,42,59,0.06)",
+  "shadow-md": "0 2px 4px rgba(6,42,59,0.05), 0 6px 16px rgba(6,42,59,0.09)",
+  "shadow-lg": "0 4px 8px rgba(6,42,59,0.06), 0 16px 32px rgba(6,42,59,0.12)",
+  "shadow-xl": "0 8px 16px rgba(6,42,59,0.08), 0 28px 56px rgba(6,42,59,0.16)",
+  "shadow-teal": "0 8px 28px rgba(17,168,160,0.28)",
+  "shadow-inset": "inset 0 1px 2px rgba(6,42,59,0.08)",
+  "z-base": "0",
+  "z-raised": "10",
+  "z-sticky": "100",
+  "z-dropdown": "300",
+  "z-overlay": "400",
+  "z-modal": "500",
+  "z-popover": "600",
+  "z-toast": "700",
+  "z-max": "9999",
+  "dur-instant": "80ms",
+  "dur-fast": "140ms",
+  "dur-base": "220ms",
+  "dur-slow": "340ms",
+  "dur-slower": "520ms",
+  "ease-forward": "cubic-bezier(0.16, 0.8, 0.32, 1)",
+  "ease-entrance": "cubic-bezier(0.22, 1, 0.36, 1)",
+  "ease-exit": "cubic-bezier(0.4, 0, 1, 1)",
+  "ease-standard": "cubic-bezier(0.4, 0, 0.2, 1)",
+  "ease-chevron": "cubic-bezier(0.34, 1.2, 0.64, 1)",
+  "transition-colors": "color var(--dur-fast) var(--ease-standard), background-color var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard)",
+  "transition-transform": "transform var(--dur-fast) var(--ease-forward)",
+  "transition-base": "all var(--dur-base) var(--ease-forward)",
+  "bp-xs": "360px",
+  "bp-sm": "640px",
+  "bp-md": "768px",
+  "bp-lg": "1024px",
+  "bp-xl": "1280px",
+  "bp-2xl": "1536px",
+  "grad-sweep-dark": "linear-gradient(135deg, var(--deepflow-900) 0%, var(--teal-700) 55%, var(--teal-400) 100%)",
+  "grad-sweep-medium": "linear-gradient(135deg, var(--teal-600) 0%, var(--teal-400) 48%, var(--cyan-300) 100%)",
+  "grad-sweep-light": "linear-gradient(135deg, var(--frost-100) 0%, var(--frost-50) 60%, var(--white) 100%)",
+  "grad-bridge": "var(--bridge-bloom-ember), var(--bridge-bloom-spring), var(--bridge-sweep)",
+  "flow-dark-sweep": "linear-gradient(122deg, #04212e 0%, #062A3B 34%, #0c5e62 74%, #11A8A0 108%)",
+  "flow-dark-bloom-cyan": "radial-gradient(96% 86% at 97% 4%, rgba(54,197,224,0.55) 0%, rgba(54,197,224,0) 58%)",
+  "flow-dark-bloom-frost": "radial-gradient(64% 58% at 88% -6%, rgba(159,238,245,0.42) 0%, rgba(159,238,245,0) 54%)",
+  "flow-dark-vignette": "radial-gradient(140% 130% at 50% 50%, rgba(2,18,26,0) 38%, rgba(2,18,26,0.60) 100%)",
+  "grad-flow-dark": "var(--flow-dark-bloom-frost), var(--flow-dark-bloom-cyan), var(--flow-dark-vignette), var(--flow-dark-sweep)",
+  "flow-medium-sweep": "linear-gradient(126deg, #11A8A0 0%, #36C5E0 70%, #9FEEF5 114%)",
+  "flow-medium-bloom-frost": "radial-gradient(92% 86% at 2% 2%, rgba(207,246,240,0.85) 0%, rgba(207,246,240,0) 56%)",
+  "flow-medium-bloom-deep": "radial-gradient(82% 78% at 104% 106%, rgba(6,42,59,0.52) 0%, rgba(6,42,59,0) 58%)",
+  "grad-flow-medium": "var(--flow-medium-bloom-frost), var(--flow-medium-bloom-deep), var(--flow-medium-sweep)",
+  "flow-light-sweep": "linear-gradient(120deg, #F7F2E6 0%, #CFF6F0 72%, #9FEEF5 116%)",
+  "flow-light-bloom-cyan": "radial-gradient(80% 74% at 102% -4%, rgba(54,197,224,0.28) 0%, rgba(54,197,224,0) 56%)",
+  "flow-light-bloom-sage": "radial-gradient(76% 72% at -2% 106%, rgba(154,217,197,0.46) 0%, rgba(154,217,197,0) 56%)",
+  "grad-light": "var(--flow-light-bloom-cyan), var(--flow-light-bloom-sage), var(--flow-light-sweep)",
+  "bridge-sweep": "linear-gradient(104deg, #4FD1A5 0%, #9AD9C5 30%, #E8D8B0 64%, #FF8A5B 104%)",
+  "bridge-bloom-spring": "radial-gradient(82% 80% at -4% -6%, rgba(79,209,165,0.55) 0%, rgba(79,209,165,0) 56%)",
+  "bridge-bloom-ember": "radial-gradient(58% 70% at 106% 110%, rgba(255,138,91,0.70) 0%, rgba(255,138,91,0) 50%)",
+  "grad-mesh-dark": "var(--grad-flow-dark)",
+  "grad-mesh-medium": "var(--grad-flow-medium)",
+  "grain-black": "url(…) 220×220 fractalNoise 0.85/3 seed 11, black ~38%",
+  "grain-white": "url(…) 220×220 fractalNoise 0.85/3 seed 29, white ~30%",
+  "grain": "url(…) 220×220 two-layer black+white film grain (combined)"
+}</script>
+  <script>
+    var raw={css:document.getElementById('src-css').textContent,json:document.getElementById('src-json').textContent};
+    var cur='css';
+    document.getElementById('pre-css').textContent=raw.css;
+    document.getElementById('pre-json').textContent=raw.json;
+    function show(w){cur=w;
+      document.getElementById('pane-css').classList.toggle('on',w==='css');
+      document.getElementById('pane-json').classList.toggle('on',w==='json');
+      document.getElementById('b-css').classList.toggle('on',w==='css');
+      document.getElementById('b-json').classList.toggle('on',w==='json');}
+    function copyCur(){var b=document.getElementById('copy');
+      navigator.clipboard&&navigator.clipboard.writeText(raw[cur]).then(function(){
+        b.classList.add('done');b.lastChild.textContent=' Copied';
+        setTimeout(function(){b.classList.remove('done');b.lastChild.textContent=' Copy';},1500);});}
+  </script>
+</body></html>

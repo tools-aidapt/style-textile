@@ -1,0 +1,531 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aidapt.co/schemas/kenafric/requisition-submission-1.0.json",
+  "title": "Kenafric requisition submission",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "submissionId",
+    "submittedAt",
+    "client",
+    "submitter",
+    "position",
+    "reporting",
+    "jobDescription",
+    "businessCase",
+    "provisioning",
+    "hiringProcess"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "submissionId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    },
+    "submittedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "client": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "app",
+        "appVersion"
+      ],
+      "properties": {
+        "app": {
+          "const": "kenafric-requisition-web"
+        },
+        "appVersion": {
+          "type": "string",
+          "maxLength": 20
+        }
+      }
+    },
+    "submitter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "email",
+        "clickupUserId",
+        "displayName"
+      ],
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "clickupUserId": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "displayName": {
+          "$ref": "#/$defs/nullableText120"
+        }
+      }
+    },
+    "position": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jobTitle",
+        "company",
+        "department",
+        "section",
+        "costCentre",
+        "location",
+        "jobGrade",
+        "jobCodeNo",
+        "positionType",
+        "newOrReplacement",
+        "replacingEmployee",
+        "totalSubPositions",
+        "recruitmentType",
+        "agencyName"
+      ],
+      "properties": {
+        "jobTitle": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 80
+        },
+        "company": {
+          "enum": [
+            "Kenafric Beverages & Bottling Limited",
+            "Kenafric Biscuits Limited",
+            "Kenafric Industries Limited",
+            "Kenafric Industries Limited - Shared Services",
+            "Kenafric Manufacturing Limited",
+            "Kenafric Manufacturing Limited - Shared Services",
+            "Kenafric Manufacturing Limited- Footwear",
+            "Kenafric Manufacturing Limited - Stationery",
+            "Kenafric Properties Limited"
+          ]
+        },
+        "department": {
+          "$ref": "#/$defs/department"
+        },
+        "section": {
+          "$ref": "#/$defs/nullableText80"
+        },
+        "costCentre": {
+          "$ref": "#/$defs/department"
+        },
+        "location": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "jobGrade": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "jobCodeNo": {
+          "$ref": "#/$defs/nullableText40"
+        },
+        "positionType": {
+          "enum": [
+            "Outsourced",
+            "Permanent",
+            "Intern",
+            "Fixed Term Contract"
+          ]
+        },
+        "newOrReplacement": {
+          "enum": [
+            "New",
+            "Replacement"
+          ]
+        },
+        "replacingEmployee": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "clickupTaskId",
+                "displayName"
+              ],
+              "properties": {
+                "clickupTaskId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 20
+                },
+                "displayName": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 120
+                }
+              }
+            }
+          ]
+        },
+        "totalSubPositions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "recruitmentType": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "Internal Recruitment",
+              "Recruitment Agency",
+              "External Recruitment"
+            ]
+          }
+        },
+        "agencyName": {
+          "$ref": "#/$defs/nullableText120"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "newOrReplacement": {
+                "const": "Replacement"
+              }
+            },
+            "required": [
+              "newOrReplacement"
+            ]
+          },
+          "then": {
+            "properties": {
+              "replacingEmployee": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "recruitmentType": {
+                "contains": {
+                  "const": "Recruitment Agency"
+                }
+              }
+            },
+            "required": [
+              "recruitmentType"
+            ]
+          },
+          "then": {
+            "properties": {
+              "agencyName": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "reporting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestingManager",
+        "reportingTo",
+        "othersReportingIndirectly"
+      ],
+      "properties": {
+        "requestingManager": {
+          "$ref": "#/$defs/userRef"
+        },
+        "reportingTo": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "othersReportingIndirectly": {
+          "$ref": "#/$defs/nullableText2000"
+        }
+      }
+    },
+    "jobDescription": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jobOverview",
+        "keyResponsibilitiesRows",
+        "keyResponsibilitiesMarkdown",
+        "educationalQualification",
+        "relevantSkillsExperienceAttributes"
+      ],
+      "properties": {
+        "jobOverview": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "keyResponsibilitiesRows": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "responsibility",
+              "outcome"
+            ],
+            "properties": {
+              "responsibility": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              "outcome": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            }
+          }
+        },
+        "keyResponsibilitiesMarkdown": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12000
+        },
+        "educationalQualification": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "relevantSkillsExperienceAttributes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        }
+      }
+    },
+    "businessCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "previousFailuresSuccesses",
+        "competitiveAdvantage",
+        "sixMonthsObjectives",
+        "potentialCareerPath"
+      ],
+      "properties": {
+        "previousFailuresSuccesses": {
+          "$ref": "#/$defs/longText"
+        },
+        "competitiveAdvantage": {
+          "$ref": "#/$defs/longText"
+        },
+        "sixMonthsObjectives": {
+          "$ref": "#/$defs/longText"
+        },
+        "potentialCareerPath": {
+          "$ref": "#/$defs/longText"
+        }
+      }
+    },
+    "provisioning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "positionRequirements"
+      ],
+      "properties": {
+        "positionRequirements": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 9,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "Business Cards - Role Based",
+              "Email Address",
+              "Fuel Allowance",
+              "Laptop/Computer/Connectivity",
+              "Office Space & Accessories",
+              "Pick-up",
+              "Saloon Vehicle",
+              "SAP Credentials",
+              "N/A"
+            ]
+          },
+          "not": {
+            "allOf": [
+              {
+                "contains": {
+                  "const": "N/A"
+                }
+              },
+              {
+                "minItems": 2
+              }
+            ]
+          }
+        }
+      }
+    },
+    "hiringProcess": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assessmentStagesRequired",
+        "interviewPanel"
+      ],
+      "properties": {
+        "assessmentStagesRequired": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "Telephone",
+              "Stage 1",
+              "Stage 2",
+              "Stage 3"
+            ]
+          }
+        },
+        "interviewPanel": {
+          "type": "array",
+          "maxItems": 10,
+          "items": {
+            "$ref": "#/$defs/userRef"
+          }
+        }
+      }
+    },
+    "advisoriesAcknowledged": {
+      "type": "array",
+      "maxItems": 10,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^A-[0-9]{1,2}$"
+      }
+    }
+  },
+  "$defs": {
+    "department": {
+      "enum": [
+        "Administration",
+        "Audit",
+        "Consumer Insight",
+        "Engineering",
+        "Finance",
+        "Human Resource",
+        "ICT",
+        "Insurance",
+        "Legal",
+        "Marketing",
+        "Production",
+        "Quality & Product Development",
+        "Sales & Distribution",
+        "Supply Chain",
+        "N/A"
+      ]
+    },
+    "longText": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000
+    },
+    "nullableText40": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        }
+      ]
+    },
+    "nullableText80": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        }
+      ]
+    },
+    "nullableText120": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        }
+      ]
+    },
+    "nullableText2000": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      ]
+    },
+    "userRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clickupUserId",
+        "email",
+        "displayName"
+      ],
+      "properties": {
+        "clickupUserId": {
+          "type": "integer"
+        },
+        "email": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 3,
+              "format": "email"
+            }
+          ]
+        },
+        "displayName": {
+          "$ref": "#/$defs/nullableText120"
+        }
+      }
+    }
+  }
+}

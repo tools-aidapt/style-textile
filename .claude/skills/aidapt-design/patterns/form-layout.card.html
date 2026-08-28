@@ -1,0 +1,61 @@
+<!-- @dsCard group="Patterns" viewport="700x520" name="Form layout" subtitle="A real project form — fields, help, validation, and a single primary action" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  html,body{margin:0}
+  body{background:var(--bg-subtle);color:var(--text-primary);padding:24px}
+  .panel{max-width:560px;margin:0 auto;background:var(--surface-card);border:1px solid var(--border-default);
+    border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);overflow:hidden}
+  .panel__head{padding:22px 26px 0}
+  .panel__head h2{font:var(--fw-bold) var(--fs-h4)/1.1 var(--font-display);letter-spacing:var(--ls-snug);margin:0}
+  .panel__head p{font-size:var(--fs-body-sm);color:var(--text-secondary);margin:6px 0 0}
+  .panel__body{padding:22px 26px;display:flex;flex-direction:column;gap:18px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .panel__foot{display:flex;justify-content:flex-end;gap:12px;padding:16px 26px;border-top:1px solid var(--border-subtle);background:var(--mist-50)}
+  .switchrow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--border-subtle)}
+  .switchrow .lbl{font-size:var(--fs-body-sm);font-weight:var(--fw-medium)}
+  .switchrow .hint{font-size:var(--fs-caption);color:var(--text-secondary);margin-top:2px}
+</style></head><body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="../_ds_bundle.js"></script>
+  <script type="text/babel">
+    const { FormField, Input, Select, Textarea, Switch, Button } = window.AidaptDesignSystem_0090ec;
+    function Demo(){
+      return (
+        <div className="panel">
+          <div className="panel__head">
+            <h2>New translation project</h2>
+            <p>Set the basics — your memory and glossary attach automatically.</p>
+          </div>
+          <div className="panel__body">
+            <FormField label="Project name" htmlFor="n" required>
+              <Input id="n" defaultValue="Spring launch" />
+            </FormField>
+            <div className="two">
+              <FormField label="Source language" htmlFor="s">
+                <Select id="s" defaultValue="en"><option value="en">English</option><option value="ja">Japanese</option></Select>
+              </FormField>
+              <FormField label="Target language" htmlFor="t">
+                <Select id="t" defaultValue="ja"><option value="ja">Japanese</option><option value="de">German</option><option value="ko">Korean</option></Select>
+              </FormField>
+            </div>
+            <FormField label="Brief" htmlFor="b" optional help="Tone, audience, and any do-not-translate terms.">
+              <Textarea id="b" placeholder="Warm but precise. Keep product names in English…" />
+            </FormField>
+            <div className="switchrow">
+              <div><div className="lbl">Auto-publish approved segments</div><div className="hint">Push to production as soon as a reviewer signs off.</div></div>
+              <Switch defaultChecked />
+            </div>
+          </div>
+          <div className="panel__foot">
+            <Button variant="ghost">Cancel</Button>
+            <Button variant="primary">Create project</Button>
+          </div>
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+  </script>
+</body></html>

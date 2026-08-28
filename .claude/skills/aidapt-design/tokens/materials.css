@@ -1,0 +1,66 @@
+/* ============================================================
+   Aidapt — Materials & depth
+   ------------------------------------------------------------
+   Translucency is a functional layer, not decoration: material
+   weight encodes hierarchy. Thick separates structure (sidebars,
+   sheets); thin draws attention to floating controls. Never
+   stack two light materials. Color lives on solid layers —
+   over a material, use vibrant text tokens + a touch more
+   weight. Bigger surfaces read thicker: pair thick with
+   --shadow-lg, thin with --shadow-sm.
+   ============================================================ */
+
+:root {
+  /* ---- Material fills (light) ---- */
+  --material-thick-bg:   color-mix(in srgb, var(--white) 82%, transparent);
+  --material-regular-bg: color-mix(in srgb, var(--white) 64%, transparent);
+  --material-thin-bg:    color-mix(in srgb, var(--white) 46%, transparent);
+  --material-blur-thick: 28px; /* @kind other */
+  --material-blur-regular: 20px; /* @kind other */
+  --material-blur-thin: 12px; /* @kind other */
+  --material-saturate: 180%; /* @kind other */
+  /* bright top hairline = light catching the material's edge */
+  --material-edge: color-mix(in srgb, var(--white) 55%, transparent);
+
+  /* ---- Vibrancy — text over materials ---- */
+  --text-vibrant:           var(--ink-900);
+  --text-vibrant-secondary: color-mix(in srgb, var(--ink-900) 74%, transparent);
+
+  /* ---- Scrims — dim to focus ---- */
+  --scrim-modal: color-mix(in oklch, var(--deepflow-900) 55%, transparent);
+  --scrim-soft:  color-mix(in oklch, var(--deepflow-900) 30%, transparent);
+}
+
+[data-theme="dark"] {
+  --material-thick-bg:   color-mix(in srgb, var(--deepflow-800) 80%, transparent);
+  --material-regular-bg: color-mix(in srgb, var(--deepflow-800) 62%, transparent);
+  --material-thin-bg:    color-mix(in srgb, var(--deepflow-800) 44%, transparent);
+  --material-edge: color-mix(in srgb, var(--white) 14%, transparent);
+  --text-vibrant:           var(--white);
+  --text-vibrant-secondary: color-mix(in srgb, var(--white) 76%, transparent);
+  --scrim-modal: color-mix(in oklch, #000 62%, transparent);
+  --scrim-soft:  color-mix(in oklch, #000 36%, transparent);
+}
+
+/* ---- Utilities ---- */
+.ads-material-thick{background:var(--material-thick-bg);-webkit-backdrop-filter:blur(var(--material-blur-thick)) saturate(var(--material-saturate));backdrop-filter:blur(var(--material-blur-thick)) saturate(var(--material-saturate));border-top:1px solid var(--material-edge);box-shadow:var(--shadow-lg);}
+.ads-material-regular{background:var(--material-regular-bg);-webkit-backdrop-filter:blur(var(--material-blur-regular)) saturate(var(--material-saturate));backdrop-filter:blur(var(--material-blur-regular)) saturate(var(--material-saturate));border-top:1px solid var(--material-edge);box-shadow:var(--shadow-md);}
+.ads-material-thin{background:var(--material-thin-bg);-webkit-backdrop-filter:blur(var(--material-blur-thin)) saturate(var(--material-saturate));backdrop-filter:blur(var(--material-blur-thin)) saturate(var(--material-saturate));border-top:1px solid var(--material-edge);box-shadow:var(--shadow-sm);}
+
+/* Scroll edge — fade content under floating chrome instead of a
+   hard 1px divider. Put on the SCROLLING container. */
+.ads-scroll-edge-top{-webkit-mask-image:linear-gradient(to bottom, transparent 0, #000 28px);mask-image:linear-gradient(to bottom, transparent 0, #000 28px);}
+.ads-scroll-edge-bottom{-webkit-mask-image:linear-gradient(to top, transparent 0, #000 28px);mask-image:linear-gradient(to top, transparent 0, #000 28px);}
+
+/* ---- Adaptive fallbacks ---- */
+@media (prefers-reduced-transparency: reduce) {
+  :root, [data-theme="dark"] {
+    --material-thick-bg: var(--surface-card);
+    --material-regular-bg: var(--surface-card);
+    --material-thin-bg: var(--surface-card);
+  }
+  .ads-material-thick,.ads-material-regular,.ads-material-thin{-webkit-backdrop-filter:none;backdrop-filter:none;}
+}
+@media (prefers-contrast: more) {
+  .ads-material-thick,.ads-material-regular,.ads-material-thin{background:var(--surface-card);-webkit-backdrop-filter:none;backdrop-filter:none;border:1px solid var(--border-strong, var(--border-default));}
+}

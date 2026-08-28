@@ -1,0 +1,286 @@
+/* ============================================================
+   Aidapt — Colour System  (Metal 金 → Water 水 → Wood 木 cycle)
+   ------------------------------------------------------------
+   Anchor hexes are LOCKED and never altered. 50→900 ramps are
+   generated in OKLCH from each anchor (hue held, chroma tapered
+   at the extremes, lightness on a shared scale) so every ramp is
+   perceptually even and traces back to its anchor.
+   Anchor step is noted on each ramp.
+   ============================================================ */
+
+:root {
+  /* ---- WATER 水 — the hero, always present -------------------- */
+  /* Aidapt Teal — primary brand colour / chevron (anchor @ 400) */
+  --teal-50:  #DCFEFA;
+  --teal-100: #C0F4EF;
+  --teal-200: #94E3DC;
+  --teal-300: #65CDC5;
+  --teal-400: #11A8A0;   /* ANCHOR — Aidapt Teal */
+  --teal-500: #009A92;
+  --teal-600: #007F78;
+  --teal-700: #00645E;
+  --teal-800: #004843;
+  --teal-900: #002F2C;
+
+  /* Current Cyan — bright accent / luminous core (anchor @ 300) */
+  --cyan-50:  #D5FEFF;
+  --cyan-100: #B5F4FF;
+  --cyan-200: #81E2F8;
+  --cyan-300: #36C5E0;   /* ANCHOR — Current Cyan */
+  --cyan-400: #00B3D2;
+  --cyan-500: #0098B8;
+  --cyan-600: #007D9C;
+  --cyan-700: #00627E;
+  --cyan-800: #00465D;
+  --cyan-900: #002E40;
+
+  /* Deep Flow — dark floor / dark-mode ground (anchor @ 900) */
+  --deepflow-50:  #E8F9FF;
+  --deepflow-100: #D3ECFC;
+  --deepflow-200: #B2D8EE;
+  --deepflow-300: #91C0DC;
+  --deepflow-400: #70A6C5;
+  --deepflow-500: #538CAB;
+  --deepflow-600: #3A7290;
+  --deepflow-700: #245873;
+  --deepflow-800: #113E54;
+  --deepflow-900: #062A3B;   /* ANCHOR — Deep Flow */
+
+  /* ---- WOOD 木 — growth accents, support, never lead ---------- */
+  /* Spring (anchor @ 300) */
+  --spring-50:  #D8FFEF;
+  --spring-100: #BAF8DE;
+  --spring-200: #8AE8C3;
+  --spring-300: #4FD1A5;   /* ANCHOR — Spring */
+  --spring-400: #00BB8B;
+  --spring-500: #00A06F;
+  --spring-600: #008558;
+  --spring-700: #006940;
+  --spring-800: #004C2B;
+  --spring-900: #003319;
+
+  /* Sage (anchor @ 200) */
+  --sage-50:  #E1FDF4;
+  --sage-100: #C8F3E5;
+  --sage-200: #9AD9C5;   /* ANCHOR — Sage */
+  --sage-300: #7ACCB3;
+  --sage-400: #51B398;
+  --sage-500: #28987D;
+  --sage-600: #007E65;
+  --sage-700: #00634D;
+  --sage-800: #004735;
+  --sage-900: #002F21;
+
+  /* Frost (anchor @ 100) */
+  --frost-50:  #E9FAF6;
+  --frost-100: #D6F0E9;   /* ANCHOR — Frost */
+  --frost-200: #B5DBD1;
+  --frost-300: #95C5B9;
+  --frost-400: #75AB9E;
+  --frost-500: #579183;
+  --frost-600: #3F776B;
+  --frost-700: #295D52;
+  --frost-800: #154239;
+  --frost-900: #072B24;
+
+  /* ---- EARTH 土 — grounding, sparing warmth ------------------- */
+  /* Sand (anchor @ 200) */
+  --sand-50:  #FDF5E3;
+  --sand-100: #F2E7CC;
+  --sand-200: #E8D8B0;   /* ANCHOR — Sand */
+  --sand-300: #CBB785;
+  --sand-400: #B39C63;
+  --sand-500: #988145;
+  --sand-600: #7E682D;
+  --sand-700: #634F17;
+  --sand-800: #473704;
+  --sand-900: #2F2300;
+
+  /* Warm Mist (anchor @ 100) */
+  --warmmist-50:  #F9F5EC;
+  --warmmist-100: #F4EEE0;   /* ANCHOR — Warm Mist */
+  --warmmist-200: #DAD1BD;
+  --warmmist-300: #C3B89F;
+  --warmmist-400: #A99D81;
+  --warmmist-500: #8F8366;
+  --warmmist-600: #756A4F;
+  --warmmist-700: #5B5138;
+  --warmmist-800: #413824;
+  --warmmist-900: #2A2414;
+
+  /* ---- FIRE 火 — the spark. ≤5%, CTAs / recognition ONLY ------ */
+  /* Ember (anchor @ 300) */
+  --ember-50:  #FFEAD9;
+  --ember-100: #FFD6BC;
+  --ember-200: #FFB691;
+  --ember-300: #FF8A5B;   /* ANCHOR — Ember */
+  --ember-400: #F67138;
+  --ember-500: #DB5100;
+  --ember-600: #BB3500;
+  --ember-700: #991A00;
+  --ember-800: #720100;
+  --ember-900: #500000;
+
+  /* ---- METAL 金 — neutrals, spend generously ------------------ */
+  /* Ink — primary text (anchor @ 900) — cool, traces to Water */
+  --ink-50:  #EEF7FD;
+  --ink-100: #DCEAF2;
+  --ink-200: #C1D5E0;
+  --ink-300: #A4BDCB;
+  --ink-400: #87A3B3;
+  --ink-500: #6B8998;
+  --ink-600: #546F7E;
+  --ink-700: #3D5663;
+  --ink-800: #283C47;
+  --ink-900: #0A1A22;   /* ANCHOR — Ink */
+
+  /* Steel — secondary text (anchor @ 600) */
+  --steel-50:  #F1F7F9;
+  --steel-100: #E1EAED;
+  --steel-200: #C7D4D9;
+  --steel-300: #ACBCC3;
+  --steel-400: #90A2A9;
+  --steel-500: #75878F;
+  --steel-600: #5A6B72;   /* ANCHOR — Steel */
+  --steel-700: #45555B;
+  --steel-800: #2F3C41;
+  --steel-900: #1C262A;
+
+  /* Mist Grey — surfaces (anchor @ 50) */
+  --mist-50:  #EDF1F2;   /* ANCHOR — Mist Grey */
+  --mist-100: #E3E9EB;
+  --mist-200: #CBD3D6;
+  --mist-300: #B1BBBE;
+  --mist-400: #95A1A4;
+  --mist-500: #7A8689;
+  --mist-600: #626D70;
+  --mist-700: #4A5457;
+  --mist-800: #323B3D;
+  --mist-900: #1F2627;
+
+  /* Pure */
+  --white: #FFFFFF;
+  --black: #000000;
+
+  /* ---- Named anchor aliases (use these to speak the brand) ---- */
+  --water-deep:    var(--deepflow-900);  /* Deep Flow  #062A3B */
+  --water-teal:    var(--teal-400);      /* Aidapt Teal #11A8A0 */
+  --water-cyan:    var(--cyan-300);      /* Current Cyan #36C5E0 */
+  --wood-spring:   var(--spring-300);    /* #4FD1A5 */
+  --wood-sage:     var(--sage-200);      /* #9AD9C5 */
+  --wood-frost:    var(--frost-100);     /* #D6F0E9 */
+  --earth-sand:    var(--sand-200);      /* #E8D8B0 */
+  --earth-mist:    var(--warmmist-100);  /* #F4EEE0 */
+  --fire-ember:    var(--ember-300);     /* #FF8A5B */
+  --metal-ink:     var(--ink-900);       /* #0A1A22 */
+  --metal-steel:   var(--steel-600);     /* #5A6B72 */
+  --metal-mist:    var(--mist-50);       /* #EDF1F2 */
+
+  /* ============================================================
+     SEMANTIC — derived from the palette.
+     success → Wood/Spring (growth)
+     info    → Water/Cyan (the hero family)
+     warning → Earth→Fire bridge, amber pushed for legibility
+     error   → Fire anchor rotated to true red for danger
+     (warning & error are functional states — exempt from the
+      decorative Fire ≤5% cap, but still used sparingly.)
+     ============================================================ */
+  --success-50:  #D8FFEF;
+  --success-100: #BAF8DE;
+  --success-500: #00A06F;   /* = spring-500 */
+  --success-600: #008558;   /* AA on white (4.67:1) */
+  --success-700: #006940;
+  --success:        var(--success-600);
+  --success-surface: var(--success-50);
+  --success-text:    var(--success-700);
+
+  --info-50:  #D5FEFF;
+  --info-100: #B5F4FF;
+  --info-500: #0098B8;      /* = cyan-500 */
+  --info-600: #007D9C;      /* AA on white (4.76:1) */
+  --info-700: #00627E;
+  --info:        var(--info-600);
+  --info-surface: var(--info-50);
+  --info-text:    var(--info-700);
+
+  --warning-50:  #FFF1D6;
+  --warning-100: #FFE0B7;
+  --warning-400: #D98A1E;   /* anchor — amber */
+  --warning-500: #BF6D00;
+  --warning-700: #823C00;
+  --warning:        var(--warning-400);   /* Ink label on warning = 6.42:1 */
+  --warning-surface: var(--warning-50);
+  --warning-text:    var(--warning-700);
+
+  --error-50:  #FFE8DE;
+  --error-100: #FFD3C4;
+  --error-500: #DF482F;
+  --error-600: #CE3A22;     /* anchor — warm red, white = 4.94:1 */
+  --error-700: #9C0800;
+  --error:        var(--error-600);
+  --error-surface: var(--error-50);
+  --error-text:    var(--error-700);
+
+  /* ============================================================
+     SEMANTIC SURFACE / TEXT / BORDER — light theme (default)
+     ============================================================ */
+  --bg-base:        var(--white);          /* lead with white */
+  --bg-subtle:      var(--mist-50);         /* page-level wash */
+  --bg-muted:       var(--mist-100);
+  --surface-card:   var(--white);
+  --surface-raised: var(--white);
+  --surface-sunken: var(--mist-50);
+  --surface-inverse: var(--deepflow-900);
+
+  --text-primary:   var(--ink-900);         /* 17.7:1 on white */
+  --text-secondary: var(--steel-600);       /* 5.55:1 on white */
+  --text-tertiary:  var(--steel-500);
+  --text-disabled:  var(--mist-400);
+  --text-inverse:   var(--white);
+  --text-link:      var(--teal-600);
+  --text-on-teal:   var(--ink-900);         /* never white on teal */
+  --text-on-ember:  var(--ink-900);         /* never white on ember */
+
+  --border-subtle:  var(--mist-100);
+  --border-default: var(--mist-200);
+  --border-strong:  var(--steel-300);
+  --border-focus:   var(--teal-400);
+
+  --brand-hero:     var(--teal-400);        /* Water hero — every layout */
+  --brand-accent:   var(--cyan-300);
+  --brand-cta:      var(--ember-300);       /* Fire spark — CTAs only */
+  --brand-cta-hover: var(--ember-400);
+  --brand-cta-active: var(--ember-500);
+
+  /* focus ring */
+  --ring: 0 0 0 3px color-mix(in oklch, var(--teal-400) 45%, transparent);
+}
+
+/* ============================================================
+   DARK THEME — Deep Flow ground, White text (16:1).
+   Apply with [data-theme="dark"] on any container or :root.
+   ============================================================ */
+[data-theme="dark"] {
+  --bg-base:        var(--deepflow-900);
+  --bg-subtle:      #08323F;
+  --bg-muted:       var(--deepflow-800);
+  --surface-card:   #0B3343;
+  --surface-raised: #0E3A4C;
+  --surface-sunken: #052331;
+  --surface-inverse: var(--white);
+
+  --text-primary:   var(--white);           /* 16:1 on Deep Flow */
+  --text-secondary: var(--deepflow-200);
+  --text-tertiary:  var(--deepflow-300);
+  --text-disabled:  var(--deepflow-600);
+  --text-inverse:   var(--ink-900);
+  --text-link:      var(--cyan-300);
+
+  --border-subtle:  rgba(255,255,255,0.08);
+  --border-default: rgba(255,255,255,0.14);
+  --border-strong:  rgba(255,255,255,0.26);
+  --border-focus:   var(--cyan-300);
+
+  --brand-accent:   var(--cyan-300);
+  --ring: 0 0 0 3px color-mix(in oklch, var(--cyan-300) 50%, transparent);
+}

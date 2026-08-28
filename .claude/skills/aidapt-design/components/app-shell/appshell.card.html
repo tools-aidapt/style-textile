@@ -1,0 +1,56 @@
+<!-- @dsCard group="Components" viewport="700x420" name="Top nav & sidebar" subtitle="App shell chrome — top navigation bar and grouped sidebar rail" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<style>
+  html,body{margin:0}
+  body{background:var(--bg-subtle);color:var(--text-primary);padding:0}
+  .shell{height:420px;display:flex;flex-direction:column}
+  .below{flex:1;display:flex;min-height:0}
+  .content{flex:1;padding:24px;background:var(--bg-subtle)}
+  .content h2{font:var(--fw-bold) var(--fs-h4)/1.1 var(--font-display);margin:0 0 6px}
+  .content p{font-size:var(--fs-body-sm);color:var(--text-secondary);margin:0}
+</style></head><body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="../../_ds_bundle.js"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script type="text/babel">
+    const { TopNav, Sidebar, Button, Avatar } = window.AidaptDesignSystem_0090ec;
+    const Ico = ({n}) => { const r=React.useRef(null);
+      React.useEffect(()=>{ if(r.current){ const e=document.createElement('i'); e.setAttribute('data-lucide',n); r.current.appendChild(e); window.lucide.createIcons(); }},[]);
+      return <span ref={r} style={{display:'inline-flex'}}/>; };
+    function Demo(){
+      return (
+        <div className="shell">
+          <TopNav
+            logo={<img src="../../assets/logo/aidapt-logo.png" alt="Aidapt" />}
+            items={[{label:'Projects',active:true},{label:'Memory'},{label:'Glossaries'},{label:'Reports'}]}
+            actions={<><Button variant="ghost" size="sm">Docs</Button><Avatar name="Aiko Tanaka" size="sm" status="online"/></>}
+          />
+          <div className="below">
+            <Sidebar
+              groups={[
+                {items:[
+                  {label:'Dashboard',icon:<Ico n="layout-dashboard"/>,active:true},
+                  {label:'Projects',icon:<Ico n="folder"/>,badge:12},
+                  {label:'In review',icon:<Ico n="clock"/>,badge:4},
+                ]},
+                {title:'Library',items:[
+                  {label:'Translation memory',icon:<Ico n="database"/>},
+                  {label:'Glossaries',icon:<Ico n="book-open"/>},
+                  {label:'Settings',icon:<Ico n="settings"/>},
+                ]},
+              ]}
+            />
+            <div className="content">
+              <h2>Projects</h2>
+              <p>12 active · 4 awaiting review</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+  </script>
+</body></html>

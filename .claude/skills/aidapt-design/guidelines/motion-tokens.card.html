@@ -1,0 +1,39 @@
+<!-- @dsCard group="Motion" viewport="700x330" name="Motion tokens" subtitle="Springs first: damping + response, not duration. Fixed curves only for non-gesture state changes." -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  html,body{margin:0}
+  body{background:var(--white);color:var(--text-primary);padding:20px}
+  .sec{font:600 10px/1 var(--font-sans);letter-spacing:var(--ls-wider);text-transform:uppercase;color:var(--text-tertiary);margin:0 0 8px}
+  .blk{display:grid;grid-template-columns:150px 1fr 110px;align-items:center;gap:14px;padding:7px 0;border-top:1px solid var(--border-subtle)}
+  .blk.first{border-top:none}
+  .nm{font:500 12px/1.3 var(--font-mono);color:var(--text-primary)}
+  .track{height:12px;background:var(--mist-100);border-radius:var(--radius-pill);position:relative;overflow:hidden}
+  .dot{position:absolute;top:1px;left:1px;width:10px;height:10px;border-radius:50%;background:var(--teal-400)}
+  .spring .dot{background:var(--cyan-500,var(--teal-500))}
+  .d{font:500 11px/1.4 var(--font-mono);color:var(--text-tertiary);text-align:right}
+  @keyframes runS{0%{left:1px}38%{left:calc(100% - 11px)}62%{left:calc(100% - 11px)}100%{left:1px}}
+  @keyframes run{0%{left:1px}45%{left:calc(100% - 11px)}55%{left:calc(100% - 11px)}100%{left:1px}}
+  .sp1 .dot{animation:runS 2.8s infinite;animation-timing-function:var(--ease-spring)}
+  .sp2 .dot{animation:runS 2.8s infinite;animation-timing-function:var(--ease-spring-bounce)}
+  .forward .dot{animation:run 2.6s var(--ease-forward) infinite}
+  .entrance .dot{animation:run 2.6s var(--ease-entrance) infinite}
+  .standard .dot{animation:run 2.6s var(--ease-standard) infinite}
+  .chevron .dot{animation:run 2.6s var(--ease-chevron) infinite}
+  @media (prefers-reduced-motion:reduce){.dot{animation:none!important;left:calc(100% - 11px)}}
+  .chips{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .chip{font:500 11px/1 var(--font-mono);color:var(--text-secondary);background:var(--mist-50);border:1px solid var(--border-default);border-radius:var(--radius-pill);padding:6px 11px}
+  .rule{font:400 11px/1.5 var(--font-sans);color:var(--text-tertiary);margin:12px 0 0}
+</style></head><body>
+  <p class="sec">Springs — anything a user touches (interruptible, velocity-aware)</p>
+  <div class="blk first spring sp1"><span class="nm">--ease-spring</span><div class="track"><div class="dot"></div></div><span class="d">ζ 1.0 · no overshoot</span></div>
+  <div class="blk spring sp2"><span class="nm">--ease-spring-bounce</span><div class="track"><div class="dot"></div></div><span class="d">ζ 0.8 · momentum only</span></div>
+  <p class="sec" style="margin-top:16px">Fixed curves — non-gesture state changes</p>
+  <div class="blk first forward"><span class="nm">--ease-forward</span><div class="track"><div class="dot"></div></div><span class="d">workhorse</span></div>
+  <div class="blk entrance"><span class="nm">--ease-entrance</span><div class="track"><div class="dot"></div></div><span class="d">arrivals</span></div>
+  <div class="blk standard"><span class="nm">--ease-standard</span><div class="track"><div class="dot"></div></div><span class="d">state change</span></div>
+  <div class="blk chevron"><span class="nm">--ease-chevron</span><div class="track"><div class="dot"></div></div><span class="d">momentum</span></div>
+  <div class="chips">
+    <span class="chip">press 90ms</span><span class="chip">fast 140ms</span><span class="chip">base 220ms</span><span class="chip">slow 340ms</span><span class="chip">spring 500ms</span><span class="chip">fade 160ms · survives reduced-motion</span>
+  </div>
+  <p class="rule">Gesture-driven motion never uses these curves — it uses <code style="font-family:var(--font-mono)">window.AidaptMotion</code> springs so it can be grabbed and reversed mid-flight. Bounce (ζ 0.8) is earned by a flick or throw, never granted to a menu.</p>
+</body></html>

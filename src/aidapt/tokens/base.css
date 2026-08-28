@@ -1,0 +1,76 @@
+/* ============================================================
+   Aidapt — Base element defaults
+   Applies the system's foundations to bare HTML so documents
+   and prototypes inherit the brand without extra classes.
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
+  font-weight: var(--fw-regular);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
+  color: var(--text-primary);
+  text-wrap: balance;
+}
+h1 { font-weight: var(--fw-extrabold); font-size: var(--fs-h1); line-height: var(--lh-h1); letter-spacing: var(--ls-tight); }
+h2 { font-size: var(--fs-h2); line-height: var(--lh-h2); letter-spacing: var(--ls-tight); }
+h3 { font-size: var(--fs-h3); line-height: var(--lh-h3); letter-spacing: var(--ls-snug); }
+h4 { font-size: var(--fs-h4); line-height: var(--lh-h4); letter-spacing: var(--ls-snug); }
+h5 { font-size: var(--fs-h5); line-height: var(--lh-h5); letter-spacing: var(--ls-snug); }
+h6 { font-size: var(--fs-h6); line-height: var(--lh-h6); letter-spacing: var(--ls-snug); }
+
+p { margin: 0; text-wrap: pretty; }
+
+a {
+  color: var(--text-link);
+  text-decoration: none;
+  transition: var(--transition-colors);
+}
+a:hover { color: var(--teal-700); text-decoration: underline; text-underline-offset: 0.15em; }
+
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
+  font-size: var(--fs-code);
+}
+
+:where(button, input, select, textarea) { font-family: inherit; }
+
+/* Kill tap latency: no double-tap-zoom wait, no grey tap flash.
+   Feedback belongs to the component, on pointer-DOWN. */
+:where(button, [role="button"], a, label, summary, input, select, textarea) {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection { background: var(--teal-200); color: var(--ink-900); }
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: var(--radius-sm);
+}
+
+hr {
+  border: none;
+  border-top: var(--border-hairline) solid var(--border-default);
+  margin: var(--space-8) 0;
+}

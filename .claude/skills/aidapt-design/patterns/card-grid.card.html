@@ -1,0 +1,42 @@
+<!-- @dsCard group="Patterns" viewport="700x340" name="Content card grid" subtitle="Project cards — interactive surfaces with status, languages, and progress" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  html,body{margin:0}
+  body{background:var(--bg-subtle);color:var(--text-primary);padding:22px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .meta{display:flex;align-items:center;gap:8px;margin-top:2px;font:500 12px/1 var(--font-mono);color:var(--text-secondary)}
+  .meta .ar{color:var(--teal-500);font-weight:700}
+  .foot{display:flex;align-items:center;justify-content:space-between;width:100%}
+  .ppl{display:flex}
+</style></head><body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="../_ds_bundle.js"></script>
+  <script type="text/babel">
+    const { Card, Badge, Progress, Avatar, AvatarGroup } = window.AidaptDesignSystem_0090ec;
+    const items=[
+      {name:'Spring launch',pair:'EN › JA',status:'In review',tone:'warning',pct:72,team:['Aiko Tanaka','Lev Petrov','Mei Lin']},
+      {name:'Support centre',pair:'EN › KO',status:'Approved',tone:'success',pct:100,team:['Sam Ortiz','Noa Berg']},
+      {name:'Investor update',pair:'EN › DE',status:'Draft',tone:'neutral',pct:18,team:['Dana Cole']},
+    ];
+    function Demo(){
+      return (
+        <div className="grid">
+          {items.map((it,i)=>(
+            <Card key={i} interactive eyebrow={<span><span className="ar" style={{marginRight:6}}>{it.pair}</span></span>} title={it.name}>
+              <div style={{marginTop:4}}><Badge variant={it.tone} dot>{it.status}</Badge></div>
+              <div style={{marginTop:16}}><Progress value={it.pct} size="sm" variant={it.pct===100?'success':'teal'} /></div>
+              <div className="foot" style={{marginTop:16}}>
+                <AvatarGroup max={3} size="sm">{it.team.map((n,j)=><Avatar key={j} name={n}/>)}</AvatarGroup>
+                <span style={{font:'500 12px/1 var(--font-mono)',color:'var(--text-tertiary)'}}>{it.pct}%</span>
+              </div>
+            </Card>
+          ))}
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+  </script>
+</body></html>

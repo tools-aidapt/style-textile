@@ -1,0 +1,129 @@
+/* ============================================================
+   Aidapt — Typography
+   ------------------------------------------------------------
+   Manrope 700/800 ...... wordmark + headlines (sentence case,
+                          no trailing periods)
+   Inter 400/500/600 .... body / UI / captions (the workhorse)
+   Source Serif 4 ....... 2nd-level headings + pull quotes ONLY
+                          (the Earth warmth; never headlines)
+   IBM Plex Mono ........ code / data tables / design tokens
+   Base: 16px = 1rem. Scale is a tuned ~1.2–1.25 modular ramp.
+   ============================================================ */
+
+:root {
+  /* ---- Families ---- */
+  --font-display: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans:    "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif:   "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-mono:    "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* ---- Weights ---- */
+  --fw-regular:  400; /* @kind font */
+  --fw-medium:   500; /* @kind font */
+  --fw-semibold: 600; /* @kind font */
+  --fw-bold:     700; /* @kind font */
+  --fw-extrabold:800; /* @kind font */
+
+  /* ---- Line heights ---- */
+  --lh-none:    1;    /* @kind font */
+  --lh-tight:   1.1;  /* @kind font */
+  --lh-snug:    1.25; /* @kind font */
+  --lh-normal:  1.5;  /* @kind font */
+  --lh-relaxed: 1.65; /* @kind font */
+
+  /* ---- Letter spacing ---- */
+  --ls-tighter: -0.022em;   /* @kind font */
+  --ls-tight:   -0.014em;   /* @kind font */
+  --ls-snug:    -0.006em;   /* @kind font */
+  --ls-normal:  0;          /* @kind font */
+  --ls-plus:    0.008em;    /* @kind font */  /* small text (≤13px) tracks slightly OPEN */
+  --ls-wide:    0.02em;     /* @kind font */
+  --ls-wider:   0.14em;     /* @kind font */
+
+  /* Tracking is SIZE-SPECIFIC, never one value for all sizes:
+     display/headings tighten as they grow (see --ls-tighter…snug),
+     body sits at 0, captions/overlines open up (--ls-plus/wider). */
+
+  /* ---- Type scale: size / line-height (px @ 16px root) ----
+     display  64 / 68   Manrope 800
+     h1       48 / 54   Manrope 800
+     h2       38 / 44   Manrope 700
+     h3       30 / 38   Manrope 700
+     h4       24 / 32   Manrope 700
+     h5       20 / 28   Manrope 700
+     h6       17 / 24   Manrope 700
+     body-lg  18 / 30   Inter 400
+     body     16 / 26   Inter 400   (default)
+     body-sm  14 / 22   Inter 400
+     caption  13 / 18   Inter 500
+     overline 12 / 16   Inter 600  +0.14em uppercase
+     code     14 / 22   IBM Plex Mono 400
+  */
+  --fs-display:  4rem;      /* 64 */
+  --fs-h1:       3rem;      /* 48 */
+  --fs-h2:       2.375rem;  /* 38 */
+  --fs-h3:       1.875rem;  /* 30 */
+  --fs-h4:       1.5rem;    /* 24 */
+  --fs-h5:       1.25rem;   /* 20 */
+  --fs-h6:       1.0625rem; /* 17 */
+  --fs-body-lg:  1.125rem;  /* 18 */
+  --fs-body:     1rem;      /* 16 */
+  --fs-body-sm:  0.875rem;  /* 14 */
+  --fs-caption:  0.8125rem; /* 13 */
+  --fs-overline: 0.75rem;   /* 12 */
+  --fs-code:     0.875rem;  /* 14 */
+
+  --lh-display: 4.25rem;    /* 68 */
+  --lh-h1:      3.375rem;   /* 54 */
+  --lh-h2:      2.75rem;    /* 44 */
+  --lh-h3:      2.375rem;   /* 38 */
+  --lh-h4:      2rem;       /* 32 */
+  --lh-h5:      1.75rem;    /* 28 */
+  --lh-h6:      1.5rem;     /* 24 */
+}
+
+/* ============================================================
+   Optional helper classes — apply the scale directly.
+   Tokens above are the source of truth; these are conveniences.
+   ============================================================ */
+.t-display {
+  font-family: var(--font-display); font-weight: var(--fw-extrabold);
+  font-size: var(--fs-display); line-height: var(--lh-display);
+  letter-spacing: var(--ls-tighter); color: var(--text-primary);
+}
+.t-h1 { font-family: var(--font-display); font-weight: var(--fw-extrabold);
+  font-size: var(--fs-h1); line-height: var(--lh-h1); letter-spacing: var(--ls-tight); }
+.t-h2 { font-family: var(--font-display); font-weight: var(--fw-bold);
+  font-size: var(--fs-h2); line-height: var(--lh-h2); letter-spacing: var(--ls-tight); }
+.t-h3 { font-family: var(--font-display); font-weight: var(--fw-bold);
+  font-size: var(--fs-h3); line-height: var(--lh-h3); letter-spacing: var(--ls-snug); }
+.t-h4 { font-family: var(--font-display); font-weight: var(--fw-bold);
+  font-size: var(--fs-h4); line-height: var(--lh-h4); letter-spacing: var(--ls-snug); }
+.t-h5 { font-family: var(--font-display); font-weight: var(--fw-bold);
+  font-size: var(--fs-h5); line-height: var(--lh-h5); letter-spacing: var(--ls-snug); }
+.t-h6 { font-family: var(--font-display); font-weight: var(--fw-bold);
+  font-size: var(--fs-h6); line-height: var(--lh-h6); letter-spacing: var(--ls-snug); }
+
+/* Source Serif 4 — second-level headings & pull quotes only */
+.t-serif { font-family: var(--font-serif); font-weight: var(--fw-regular); }
+.t-quote {
+  font-family: var(--font-serif); font-weight: var(--fw-regular);
+  font-size: var(--fs-h3); line-height: var(--lh-snug);
+  letter-spacing: var(--ls-snug); color: var(--text-primary);
+}
+
+.t-body-lg { font-family: var(--font-sans); font-weight: var(--fw-regular);
+  font-size: var(--fs-body-lg); line-height: var(--lh-relaxed); }
+.t-body { font-family: var(--font-sans); font-weight: var(--fw-regular);
+  font-size: var(--fs-body); line-height: var(--lh-normal); }
+.t-body-sm { font-family: var(--font-sans); font-weight: var(--fw-regular);
+  font-size: var(--fs-body-sm); line-height: 1.57; }
+.t-caption { font-family: var(--font-sans); font-weight: var(--fw-medium);
+  font-size: var(--fs-caption); line-height: 1.38; letter-spacing: var(--ls-plus); color: var(--text-secondary); }
+.t-overline { font-family: var(--font-sans); font-weight: var(--fw-semibold);
+  font-size: var(--fs-overline); line-height: 1.33;
+  letter-spacing: var(--ls-wider); text-transform: uppercase; color: var(--text-secondary); }
+.t-mono { font-family: var(--font-mono); font-weight: var(--fw-regular);
+  font-size: var(--fs-code); line-height: 1.57; }
+/* Data & numerals — tabular figures so columns align and live values don't jitter */
+.t-num { font-variant-numeric: tabular-nums lining-nums; }

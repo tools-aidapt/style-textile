@@ -1,0 +1,348 @@
+{
+  "name": "Requisition - Submit",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "requisition-submit",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://aidapt.co,https://www.aidapt.co"
+        },
+        "authentication": "basicAuth"
+      },
+      "id": "d3a1f5d2-0000-4000-8000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        0
+      ],
+      "webhookId": "requisition-submit",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Requisition Webhook (Basic Auth)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.clickup.com/api/v2/list/901220480011/field",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": false
+            }
+          }
+        }
+      },
+      "id": "d3a1f5d2-0000-4000-8000-000000000002",
+      "name": "ClickUp - List Fields",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -260,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "ClickUp API Token (Header Auth)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.clickup.com/api/v2/list/901220480011/task",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "include_closed",
+              "value": "false"
+            },
+            {
+              "name": "subtasks",
+              "value": "false"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": false
+            }
+          },
+          "pagination": {
+            "pagination": {
+              "paginationMode": "updateAParameterInEachRequest",
+              "parameters": {
+                "parameters": [
+                  {
+                    "type": "qs",
+                    "name": "page",
+                    "value": "={{ $pageCount }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ $response.body.last_page === true }}",
+              "limitPagesFetched": true,
+              "maxRequests": 20
+            }
+          }
+        }
+      },
+      "id": "d3a1f5d2-0000-4000-8000-000000000003",
+      "name": "ClickUp - Open Requisitions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -40,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "ClickUp API Token (Header Auth)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Turn a submitted requisition into a ClickUp task body.\n//\n// The app sends labels, never option UUIDs, so this is where labels become\n// UUIDs against the live field list. It also decides three things before\n// anything is created: is this submissionId one we have already accepted, is\n// there an open requisition that looks like this one, and does the workspace\n// actually carry every field this payload needs.\n\nconst NAME_TO_KEY = {\n  'company': 'company',\n  'department': 'department',\n  'cost centre': 'costCentre',\n  'cost center': 'costCentre',\n  'section': 'section',\n  'work location': 'location',\n  'location': 'location',\n  'job grade': 'jobGrade',\n  'job code no': 'jobCodeNo',\n  'job code': 'jobCodeNo',\n  'position type': 'positionType',\n  'position new replacement': 'newOrReplacement',\n  'total sub positions': 'totalSubPositions',\n  'recruitment type': 'recruitmentType',\n  'requesting manager': 'requestingManager',\n  'reporting to': 'reportingTo',\n  'others reporting indirectly': 'othersReportingIndirectly',\n  'job overview': 'jobOverview',\n  'key responsibilities outcomes': 'keyResponsibilitiesOutcomes',\n  'key responsibilities and outcomes': 'keyResponsibilitiesOutcomes',\n  'educational qualification': 'educationalQualification',\n  'relevant skills experience attributes': 'relevantSkillsExperienceAttributes',\n  'relevant skills experience and attributes': 'relevantSkillsExperienceAttributes',\n  'previous failures successes': 'previousFailuresSuccesses',\n  'competitive advantage': 'competitiveAdvantage',\n  '6 months objectives': 'sixMonthsObjectives',\n  'potential career path': 'potentialCareerPath',\n  'position requirements': 'positionRequirements',\n  'assessment stages required': 'assessmentStagesRequired',\n  'interview panel': 'interviewPanel',\n  'requisition raised': 'requisitionRaised',\n};\n\nconst norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();\n\n// ---- contract guard, v1.0 ------------------------------------------------\n// The wire contract is docs/requisition-submission-1.0.schema.json. Validate\n// the body against it in a JSON Schema node ahead of this one and return the\n// 422 shape from §8; what follows assumes a body that already passed.\n// 1.1 loosened section, jobGrade and jobCodeNo to nullable when the form\n// stopped asking for them. 1.0 is still accepted for a stale tab.\nconst SUPPORTED_SCHEMA_VERSIONS = ['1.0', '1.1'];\n\nconst incoming = $('Webhook').first().json.body || {};\nif (!SUPPORTED_SCHEMA_VERSIONS.includes(incoming.schemaVersion)) {\n  // n8n must never mis-map a future version into the v1.0 branch\n  throw new Error(`Unsupported schemaVersion \"${incoming.schemaVersion}\"`);\n}\n\nconst body = incoming;\nconst submissionId = body.submissionId;\nif (!submissionId) {\n  throw new Error('submissionId is required — refusing a submission that cannot be deduplicated');\n}\n\nconst position = body.position || {};\nconst reporting = body.reporting || {};\nconst jd = body.jobDescription || {};\nconst businessCase = body.businessCase || {};\nconst provisioning = body.provisioning || {};\nconst hiring = body.hiringProcess || {};\n\n// The marker that makes this endpoint idempotent. ClickUp has no natural\n// place for an external key, so it rides in the description and is matched\n// against tasks already on the list.\nconst MARKER = `<!-- submissionId:${submissionId} -->`;\n\nconst existing = $('ClickUp - Open Requisitions').first().json.tasks || [];\n\nconst duplicate = existing.find((task) =>\n  (task.description || '').includes(MARKER) || (task.text_content || '').includes(MARKER));\nif (duplicate) {\n  return [{ json: { action: 'duplicate', taskId: duplicate.id, taskUrl: duplicate.url } }];\n}\n\n// A-6 · the same title in the same company and department, still open. The\n// manager decides whether that is a collision; we only report it.\nconst advisories = [];\nconst acknowledged = body.advisoriesAcknowledged || [];\nif (!acknowledged.includes('A-6')) {\n  const fieldValue = (task, name) => {\n    const field = (task.custom_fields || []).find((f) => norm(f.name) === norm(name));\n    if (!field) return undefined;\n    const options = field.type_config?.options || [];\n    const option = options.find((o) => o.id === field.value || o.orderindex === field.value);\n    return option ? (option.name ?? option.label) : field.value;\n  };\n\n  const similar = existing.find((task) =>\n    norm(task.name) === norm(position.jobTitle) &&\n    fieldValue(task, 'Company') === position.company &&\n    fieldValue(task, 'Department') === position.department);\n\n  if (similar) {\n    // v1.0 §8: A-6 travels with the 201 rather than blocking the submission.\n    // The requisition is filed, and the manager is told what HR will also see.\n    advisories.push({\n      code: 'A-6',\n      message: 'A similar requisition is already open.',\n      taskUrl: similar.url,\n    });\n  }\n}\n\n// ---- resolve labels to option UUIDs ------------------------------------\nconst fields = {};\nfor (const field of ($('ClickUp - List Fields').first().json.fields || [])) {\n  const key = NAME_TO_KEY[norm(field.name)];\n  if (key) fields[key] = field;\n}\n\nconst optionId = (key, label) => {\n  const options = fields[key]?.type_config?.options || [];\n  const match = options.find((o) => (o.name ?? o.label) === label);\n  if (!match) {\n    throw new Error(`\"${label}\" is not an option on ${fields[key]?.name || key} — the form and the workspace disagree`);\n  }\n  return match.id;\n};\n\nconst custom = [];\nconst put = (key, value) => {\n  if (value === null || value === undefined || value === '') return;\n  if (!fields[key]) {\n    // Refusing loudly beats writing a requisition that is missing an answer\n    throw new Error(`The Positions list has no field for \"${key}\" — create it before accepting requisitions`);\n  }\n  custom.push({ id: fields[key].id, value });\n};\n\nconst putChoice = (key, label) => { if (label) put(key, optionId(key, label)); };\nconst putLabels = (key, labels) => {\n  if (Array.isArray(labels) && labels.length) put(key, labels.map((l) => optionId(key, l)));\n};\n\nputChoice('company', position.company);\nputChoice('department', position.department);\nputChoice('costCentre', position.costCentre);\nputChoice('location', position.location);\nputChoice('positionType', position.positionType);\nputChoice('newOrReplacement', position.newOrReplacement);\nputLabels('recruitmentType', position.recruitmentType);\nput('section', position.section);\nput('jobGrade', position.jobGrade);\nput('jobCodeNo', position.jobCodeNo);\nput('totalSubPositions', Number(position.totalSubPositions));\n\nif (reporting.requestingManager?.clickupUserId) {\n  put('requestingManager', { add: [reporting.requestingManager.clickupUserId], rem: [] });\n}\nput('reportingTo', reporting.reportingTo);\nput('othersReportingIndirectly', reporting.othersReportingIndirectly);\n\nput('jobOverview', jd.jobOverview);\nconst escapeCell = (s) => String(s).replace(/\\s*\\r?\\n\\s*/g, ' ').trim().replace(/\\|/g, '\\\\|');\nconst rederived = [\n  '| Key responsibility | Outcome – indicator of success |',\n  '|---|---|',\n  ...(jd.keyResponsibilitiesRows || []).map(\n    (r) => `| ${escapeCell(r.responsibility)} | ${escapeCell(r.outcome)} |`),\n].join('\\n');\nif (rederived !== jd.keyResponsibilitiesMarkdown) {\n  throw new Error('keyResponsibilitiesMarkdown does not match the rows it claims to describe');\n}\nput('keyResponsibilitiesOutcomes', rederived);\nput('educationalQualification', jd.educationalQualification);\nput('relevantSkillsExperienceAttributes', jd.relevantSkillsExperienceAttributes);\n\nput('previousFailuresSuccesses', businessCase.previousFailuresSuccesses);\nput('competitiveAdvantage', businessCase.competitiveAdvantage);\nput('sixMonthsObjectives', businessCase.sixMonthsObjectives);\nput('potentialCareerPath', businessCase.potentialCareerPath);\n\nputLabels('positionRequirements', provisioning.positionRequirements);\nputLabels('assessmentStagesRequired', hiring.assessmentStagesRequired);\n\nconst panel = (hiring.interviewPanel || []).map((p) => p.clickupUserId).filter(Boolean);\nif (panel.length) put('interviewPanel', { add: panel, rem: [] });\n\nput('requisitionRaised', new Date(body.submittedAt || Date.now()).getTime());\n\n// Agency name and who-is-being-replaced have no field of their own yet, so\n// they travel in the description where HR can still read them.\nconst notes = [MARKER];\nif (position.agencyName) notes.push(`Recruitment agency: ${position.agencyName}`);\nif (position.replacingEmployee?.displayName) {\n  notes.push(`Replacing: ${position.replacingEmployee.displayName}`);\n}\nif (body.advisoriesAcknowledged?.length) {\n  notes.push(`Advisories acknowledged: ${body.advisoriesAcknowledged.join(', ')}`);\n}\n\nreturn [{\n  json: {\n    action: 'create',\n    advisories,\n    task: {\n      name: position.jobTitle,\n      description: notes.join('\\n'),\n      status: 'Draft',\n      tags: ['requisition'],\n      custom_fields: custom,\n    },\n  },\n}];\n"
+      },
+      "id": "d3a1f5d2-0000-4000-8000-000000000004",
+      "name": "Build Task",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        180,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "version": 2,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "create-only",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "create"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d3a1f5d2-0000-4000-8000-000000000005",
+      "name": "Create it?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.clickup.com/api/v2/list/901220480011/task",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.task) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": false
+            }
+          }
+        }
+      },
+      "id": "d3a1f5d2-0000-4000-8000-000000000006",
+      "name": "ClickUp - Create Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        620,
+        -100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "ClickUp API Token (Header Auth)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// The §8 success body. `duplicate: true` is the idempotent replay, and the app\n// treats it as the success it is — never an error.\nconst created = $input.first().json;\nconst decision = $('Build Task').first().json;\nconst body = $('Webhook').first().json.body || {};\n\nreturn [{\n  json: {\n    ok: true,\n    submissionId: body.submissionId,\n    taskId: created.id,\n    taskUrl: created.url,\n    // TODO(kenafric): `reference` is the human-readable REQ-YYYY-NNNN. Generate\n    // it here once the numbering scheme is agreed; the app falls back to the\n    // task id until it exists.\n    reference: null,\n    duplicate: decision.action === 'duplicate',\n    advisories: decision.advisories || [],\n  },\n}];\n"
+      },
+      "id": "d3a1f5d2-0000-4000-8000-000000000007",
+      "name": "Receipt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Nothing was created because we have already accepted this submissionId.\n// That is still a success: the app shows the original receipt.\nconst decision = $input.first().json;\nconst body = $('Webhook').first().json.body || {};\n\nreturn [{\n  json: {\n    ok: true,\n    submissionId: body.submissionId,\n    taskId: decision.taskId,\n    taskUrl: decision.taskUrl,\n    reference: null,\n    duplicate: true,\n    advisories: decision.advisories || [],\n  },\n}];\n"
+      },
+      "id": "d3a1f5d2-0000-4000-8000-000000000008",
+      "name": "Nothing Created",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "X-Content-Type-Options",
+                "value": "nosniff"
+              }
+            ]
+          }
+        }
+      },
+      "id": "d3a1f5d2-0000-4000-8000-000000000009",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1060,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "ClickUp - List Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ClickUp - List Fields": {
+      "main": [
+        [
+          {
+            "node": "ClickUp - Open Requisitions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ClickUp - Open Requisitions": {
+      "main": [
+        [
+          {
+            "node": "Build Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Task": {
+      "main": [
+        [
+          {
+            "node": "Create it?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create it?": {
+      "main": [
+        [
+          {
+            "node": "ClickUp - Create Task",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Nothing Created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ClickUp - Create Task": {
+      "main": [
+        [
+          {
+            "node": "Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receipt": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nothing Created": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "requisition-submit"
+  }
+}

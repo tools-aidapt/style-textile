@@ -1,0 +1,42 @@
+<!-- @dsCard group="Patterns" viewport="700x210" name="Dashboard stat row" subtitle="Metric cards with deltas — Water-led, colour earned, one focal number each" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>
+  html,body{margin:0}
+  body{background:var(--bg-subtle);color:var(--text-primary);padding:22px}
+  .row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .stat{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-sm);padding:18px}
+  .stat .ov{font:600 11px/1 var(--font-sans);letter-spacing:var(--ls-wider);text-transform:uppercase;color:var(--text-tertiary);margin:0}
+  .stat .num{font:var(--fw-extrabold) 34px/1 var(--font-display);letter-spacing:-.02em;margin:12px 0 0;color:var(--text-primary)}
+  .stat .num small{font:500 16px/1 var(--font-mono);color:var(--text-tertiary);margin-left:3px}
+  .delta{display:inline-flex;align-items:center;gap:4px;margin-top:12px;font:600 12px/1 var(--font-sans);
+    padding:4px 9px;border-radius:var(--radius-pill)}
+  .up{background:var(--success-surface);color:var(--success-text)}
+  .down{background:var(--error-surface);color:var(--error-text)}
+  .flat{background:var(--mist-100);color:var(--steel-700)}
+  .delta svg{width:13px;height:13px}
+  .accent{border-top:3px solid var(--teal-400)}
+</style></head><body>
+  <div class="row">
+    <div class="stat accent">
+      <p class="ov">Active projects</p>
+      <p class="num">28</p>
+      <span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"/></svg>+6 this week</span>
+    </div>
+    <div class="stat">
+      <p class="ov">Words translated</p>
+      <p class="num">1.24<small>M</small></p>
+      <span class="delta up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"/></svg>+12%</span>
+    </div>
+    <div class="stat">
+      <p class="ov">Terminology accuracy</p>
+      <p class="num">98.6<small>%</small></p>
+      <span class="delta flat">Steady</span>
+    </div>
+    <div class="stat">
+      <p class="ov">Awaiting review</p>
+      <p class="num">4</p>
+      <span class="delta down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>-2 today</span>
+    </div>
+  </div>
+</body></html>

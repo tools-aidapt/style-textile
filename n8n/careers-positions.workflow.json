@@ -1,0 +1,176 @@
+{
+  "name": "Careers Page - Open Positions",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "careers-positions",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://aidapt.co,https://www.aidapt.co"
+        },
+        "authentication": "basicAuth"
+      },
+      "id": "b1a1f5d2-0000-4000-8000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        0
+      ],
+      "webhookId": "careers-positions",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Careers Webhook (Basic Auth)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.clickup.com/api/v2/list/901220480011/task",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "statuses[]",
+              "value": "live"
+            },
+            {
+              "name": "include_closed",
+              "value": "false"
+            },
+            {
+              "name": "subtasks",
+              "value": "false"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": false
+            }
+          },
+          "pagination": {
+            "pagination": {
+              "paginationMode": "updateAParameterInEachRequest",
+              "parameters": {
+                "parameters": [
+                  {
+                    "type": "qs",
+                    "name": "page",
+                    "value": "={{ $pageCount }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ $response.body.last_page === true }}",
+              "limitPagesFetched": true,
+              "maxRequests": 20
+            }
+          }
+        }
+      },
+      "id": "b1a1f5d2-0000-4000-8000-000000000002",
+      "name": "ClickUp - Live Positions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        60,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "ClickUp API Token (Header Auth)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Strip internal and commercially confidential fields before this leaves n8n.\n// The response is publicly fetchable, so filtering must happen here rather than\n// in the browser, which only decides what to *render*.\nconst CONFIDENTIAL = new Set([\n  'proposed salary',\n  'existing salary band',\n  'hr head decision',\n  'director decision',\n  'hr head rejection reason',\n  'director rejection reason',\n  'approving director',\n  'approving hr head',\n  'hr responsible',\n  'requesting manager',\n  'interview panel',\n  'internal jd file',\n  'v1 record',\n  'job advert email',\n  'job advert whatsapp',\n  'date approved',\n  'time to fill days',\n  'positions filled',\n  'cost centre',\n  'position requirements',\n  'previous failures successes',\n]);\n\nconst norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();\n\n// One item per page fetched, so fold them all \u2014 reading only the first item\n// truncated the board at ClickUp's 100-task page size.\nconst sourceTasks = $input\n  .all()\n  .flatMap((item) => (Array.isArray(item.json.tasks) ? item.json.tasks : []));\n\n// custom_fields are kept whole (including type_config) because the careers page\n// resolves dropdown values and label ids against their options client-side.\nconst tasks = sourceTasks.map((task) => ({\n  id: task.id,\n  name: task.name,\n  status: task.status?.status,\n  description: task.description,\n  text_content: task.text_content,\n  date_created: task.date_created,\n  date_updated: task.date_updated,\n  custom_fields: (task.custom_fields || []).filter(\n    (field) => !CONFIDENTIAL.has(norm(field.name)),\n  ),\n}));\n\nreturn [{ json: { tasks } }];"
+      },
+      "id": "b1a1f5d2-0000-4000-8000-000000000003",
+      "name": "Strip Confidential Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Cache-Control",
+                "value": "public, max-age=60, stale-while-revalidate=300"
+              },
+              {
+                "name": "X-Content-Type-Options",
+                "value": "nosniff"
+              }
+            ]
+          }
+        }
+      },
+      "id": "b1a1f5d2-0000-4000-8000-000000000004",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        500,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "ClickUp - Live Positions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ClickUp - Live Positions": {
+      "main": [
+        [
+          {
+            "node": "Strip Confidential Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Strip Confidential Fields": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "careers-positions"
+  }
+}

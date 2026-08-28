@@ -1,101 +1,332 @@
+/* ============================================================
+   Aidapt careers — theme entry point
+   ------------------------------------------------------------
+   The Aidapt design system is the source of truth for tokens and
+   the four self-hosted families. The shadcn HSL contract below is
+   REMAPPED onto those anchors, so every primitive (button, input,
+   card, dialog, badge) inherits the brand without being rewritten.
+
+   Anchors are locked — never edit a hex here. Change the token.
+
+   Cascade: the design system ships unlayered element rules (h1
+   sizes, focus ring, links). Imported into its own `aidapt` layer
+   they stay overridable by Tailwind utilities, which is what lets
+   components size their own headings.
+   ============================================================ */
+
+@layer aidapt, base, components, utilities;
+
+@import "./aidapt/styles.css" layer(aidapt);
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 220 25% 15%;
+    /* --- shadcn contract, expressed in Aidapt anchors ---------
+       HSL triplets (the form shadcn's utilities expect) converted
+       from the locked hexes noted alongside. */
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 25% 15%;
+    --background: 0 0% 100%; /* white — lead with white */
+    --foreground: 200 55% 9%; /* Ink #0A1A22 */
+
+    --card: 0 0% 100%; /* white surface */
+    --card-foreground: 200 55% 9%; /* Ink */
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 15%;
+    --popover-foreground: 200 55% 9%;
 
-    --primary: 200 85% 45%;
-    --primary-foreground: 0 0% 100%;
+    /* Water is the hero. Ink label on teal — never white. */
+    --primary: 177 82% 36%; /* Aidapt Teal #11A8A0 */
+    --primary-foreground: 200 55% 9%; /* Ink */
 
-    --secondary: 210 20% 96%;
-    --secondary-foreground: 220 25% 20%;
+    --secondary: 192 16% 94%; /* Mist Grey #EDF1F2 */
+    --secondary-foreground: 200 55% 9%;
 
-    --muted: 210 15% 95%;
-    --muted-foreground: 220 15% 45%;
+    --muted: 192 16% 94%; /* Mist Grey */
+    --muted-foreground: 197 12% 40%; /* Steel #5A6B72 */
 
-    --accent: 200 85% 45%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 173 94% 93%; /* teal-50 — the faint wash */
+    --accent-foreground: 200 55% 9%;
 
-    --destructive: 0 75% 55%;
+    --destructive: 8 72% 47%; /* error-600 #CE3A22 */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 20% 88%;
-    --input: 210 20% 92%;
-    --ring: 200 85% 45%;
+    --border: 196 12% 82%; /* Mist 200 — the hairline */
+    --input: 196 12% 82%;
+    --ring: 177 82% 36%; /* teal focus ring */
 
+    /* 12px cards; buttons and inputs land on 8px via calc() */
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 220 25% 20%;
-    --sidebar-primary: 200 85% 45%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 20% 96%;
-    --sidebar-accent-foreground: 220 25% 20%;
-    --sidebar-border: 210 20% 88%;
-    --sidebar-ring: 200 85% 45%;
+    --sidebar-background: 192 16% 94%;
+    --sidebar-foreground: 200 55% 9%;
+    --sidebar-primary: 177 82% 36%;
+    --sidebar-primary-foreground: 200 55% 9%;
+    --sidebar-accent: 173 94% 93%;
+    --sidebar-accent-foreground: 200 55% 9%;
+    --sidebar-border: 196 12% 82%;
+    --sidebar-ring: 177 82% 36%;
+
+    /* The design system's own --ring is a complete box-shadow
+       value; shadcn's is a bare triplet. Both are needed, so the
+       brand ring keeps a separate name. */
+    --ring-brand: 0 0 0 3px
+      color-mix(in oklch, var(--teal-400) 45%, transparent);
   }
 
-  .dark {
-    --background: 220 25% 8%;
-    --foreground: 210 20% 98%;
+  /* Deep Flow ground. Mirrors the design system's own
+     [data-theme="dark"] scope so both switches agree. */
+  .dark,
+  [data-theme="dark"] {
+    --background: 199 82% 13%; /* Deep Flow #062A3B */
+    --foreground: 0 0% 100%;
 
-    --card: 220 20% 12%;
-    --card-foreground: 210 20% 98%;
+    --card: 199 74% 15%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 220 20% 12%;
-    --popover-foreground: 210 20% 98%;
+    --popover: 199 74% 15%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 200 85% 55%;
-    --primary-foreground: 220 25% 8%;
+    --primary: 177 82% 36%;
+    --primary-foreground: 200 55% 9%;
 
-    --secondary: 220 15% 18%;
-    --secondary-foreground: 210 20% 98%;
+    --secondary: 199 65% 20%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 15% 18%;
-    --muted-foreground: 210 15% 60%;
+    --muted: 199 65% 20%;
+    --muted-foreground: 203 60% 82%;
 
-    --accent: 200 85% 55%;
-    --accent-foreground: 220 25% 8%;
+    --accent: 199 65% 20%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 75% 55%;
-    --destructive-foreground: 210 20% 98%;
+    --destructive: 8 72% 47%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 22%;
-    --input: 220 15% 18%;
-    --ring: 200 85% 55%;
-    --sidebar-background: 220 25% 8%;
-    --sidebar-foreground: 210 20% 98%;
-    --sidebar-primary: 200 85% 55%;
-    --sidebar-primary-foreground: 220 25% 8%;
-    --sidebar-accent: 220 15% 18%;
-    --sidebar-accent-foreground: 210 20% 98%;
-    --sidebar-border: 220 15% 22%;
-    --sidebar-ring: 200 85% 55%;
+    --border: 199 40% 26%;
+    --input: 199 40% 26%;
+    --ring: 190 73% 55%; /* cyan ring in dark */
+
+    --ring-brand: 0 0 0 3px
+      color-mix(in oklch, var(--cyan-300) 50%, transparent);
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sans);
+    font-size: var(--fs-body);
+    line-height: var(--lh-normal);
+  }
+
+  /* Headlines are Manrope; each view sets its own size */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  /* Focus is always visible, never removed */
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--ring-brand);
+  }
+
+  /* The focus ring is a box-shadow, and a box-shadow is clipped by
+     an ancestor's overflow: hidden. Accordion triggers and card
+     interiors sit inside clipping surfaces, so their ring was
+     being cut off — an outline is not clipped, and paints the
+     same 3px teal. */
+  :focus-visible:where(.ring-outline, .ring-outline *) {
+    box-shadow: none;
+    outline: 3px solid var(--teal-400);
+    outline-offset: -3px;
+  }
+
+  /* tailwindcss-animate drives the shadcn overlays with its own
+     keyframes and its own durations, so zeroing --dur-* did not
+     reach them: a viewer who asked for reduced motion still got
+     the zoom and the slide. Enter and exit collapse to the
+     crossfade the tokens keep for exactly this case. */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-in,
+    .animate-out {
+      animation-duration: var(--dur-fade) !important;
+      --tw-enter-translate-x: 0 !important;
+      --tw-enter-translate-y: 0 !important;
+      --tw-enter-scale: 1 !important;
+      --tw-exit-translate-x: 0 !important;
+      --tw-exit-translate-y: 0 !important;
+      --tw-exit-scale: 1 !important;
+    }
   }
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@layer utilities {
+  /* ---- Gradient surfaces (locked recipes, always cropped) ----
+     Hero moments only. Pair with .has-grain — shipped by the
+     design system — so large ramps never band. */
+  .surface-flow-dark {
+    background-color: var(--deepflow-900);
+    background-image: var(--grad-flow-dark);
+  }
+
+  .surface-flow-light {
+    background-image: var(--grad-light);
+  }
+
+  /* The diagonal sweep — the system's workhorse gradient, at panel strength.
+     Frost into white, so a tile earns colour without competing with the copy. */
+  .surface-sweep-light {
+    background-image: var(--grad-sweep-light);
+  }
+
+  /* Reading measure — body copy caps at ~66ch */
+  .measure {
+    max-width: var(--measure);
+  }
+
+  /* Press feedback lands on pointer-down and springs home on
+     release. For the surfaces the primitives don't cover. */
+  .press {
+    transition:
+      var(--transition-colors),
+      transform var(--dur-spring) var(--ease-spring),
+      box-shadow var(--dur-base) var(--ease-standard);
+  }
+
+  .press:active:not(:disabled) {
+    transform: translateY(1px) scale(0.995);
+    transition:
+      var(--transition-colors),
+      transform var(--dur-press) var(--ease-press);
+  }
+
+  /* ---- Floating chrome -------------------------------------
+     The design system's .ads-material-* classes put their bright
+     edge on the TOP, which is right for a bottom toolbar and
+     wrong for a page header: the lit edge landed off-screen and
+     content met the nav on a hard line. These carry the edge on
+     the side the content actually arrives from. */
+
+  /* Top nav. Content scrolls beneath a regular material. */
+  .chrome-top {
+    background: var(--material-regular-bg);
+    -webkit-backdrop-filter: blur(var(--material-blur-regular))
+      saturate(var(--material-saturate));
+    backdrop-filter: blur(var(--material-blur-regular))
+      saturate(var(--material-saturate));
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  /* A secondary bar docking under the nav — thinner, so two
+     materials sit in a hierarchy rather than competing. Never
+     stack two of the same weight. */
+  .chrome-sub {
+    background: var(--material-thick-bg);
+    -webkit-backdrop-filter: blur(var(--material-blur-thin))
+      saturate(var(--material-saturate));
+    backdrop-filter: blur(var(--material-blur-thin))
+      saturate(var(--material-saturate));
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  /* A control that floats over content — the apply bar, the
+     preview toggle. Bigger surfaces read thicker, so this pairs
+     a thick fill with the deeper shadow. */
+  .chrome-float {
+    background: var(--material-thick-bg);
+    -webkit-backdrop-filter: blur(var(--material-blur-thick))
+      saturate(var(--material-saturate));
+    backdrop-filter: blur(var(--material-blur-thick))
+      saturate(var(--material-saturate));
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-lg);
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .chrome-top,
+    .chrome-sub,
+    .chrome-float {
+      background: var(--surface-card);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+
+  /* A spring-driven element settles instantly under reduced
+     motion, which would hard-cut its opacity as well as its
+     travel. Reduced motion means no vestibular movement, not no
+     feedback, so opacity is handed back to CSS for a crossfade —
+     --dur-fade is deliberately not zeroed for exactly this. */
+  @media (prefers-reduced-motion: reduce) {
+    .motion-crossfade {
+      transition: opacity var(--dur-fade) linear;
+    }
+  }
+
+  /* ---- Hit area --------------------------------------------
+     A 26px-tall text button is a fine mouse target and a poor
+     finger one. This grows the *hit* area to 44px without
+     changing a single pixel of layout, so a quiet inline
+     control stays quiet. */
+  .tap-44 {
+    position: relative;
+  }
+
+  .tap-44::after {
+    content: "";
+    position: absolute;
+    inset: 50% 0 0 0;
+    min-height: 44px;
+    min-width: 44px;
+    transform: translateY(-50%);
+  }
+
+  /* ---- Dense form ------------------------------------------
+     The shared control spec is 44px tall with 16px type, sized
+     for the candidate application form: eight fields, often on a
+     phone, where a generous target is the whole point. The
+     requisition is thirty fields laid out three across on a
+     desk, and at that spec the page became a scroll long enough
+     to lose the thread of. This steps the controls down one
+     notch — 40px, 14px type — for that form only, so the shared
+     primitives keep the bigger targets everywhere else.
+
+     Textareas keep only a min-height: `autoGrow` writes an
+     inline height per keystroke, and a fixed height here would
+     fight it. */
+  .form-dense input:not([type="checkbox"]):not([type="radio"]),
+  .form-dense [role="combobox"] {
+    height: 2.5rem;
+  }
+
+  .form-dense input:not([type="checkbox"]):not([type="radio"]),
+  .form-dense textarea,
+  .form-dense [role="combobox"] {
+    font-size: 0.875rem;
+    line-height: 1.375rem;
+  }
+
+  .form-dense textarea {
+    min-height: 4.25rem;
+  }
+
+  /* A hairline that fades out — quieter than a full-width rule */
+  .rule-fade {
+    height: 1px;
+    background-image: linear-gradient(
+      to right,
+      var(--border-default),
+      transparent
+    );
+  }
+}
