@@ -56,6 +56,69 @@ describe("parseJobDescription", () => {
     });
   });
 
+  it("attaches an Outcome written on its own line to the bullet above it", () => {
+    const blocks = parseJobDescription(
+      [
+        "Responsibilities",
+        "• Run the weekly ops review",
+        "Outcome: decisions logged same day",
+        "• Publish the shift handover",
+        "Outcome: the next shift starts without a call",
+      ].join("\n"),
+    );
+    const lists = blocks.filter((b) => b.kind === "list") as {
+      items: { text: string; outcome?: string }[];
+    }[];
+    // One list, not a list broken in half by the outcome lines
+    expect(lists).toHaveLength(1);
+    expect(lists[0].items).toEqual([
+      { text: "Run the weekly ops review", outcome: "decisions logged same day" },
+      { text: "Publish the shift handover", outcome: "the next shift starts without a call" },
+    ]);
+    // And no outcome left behind as prose
+    expect(paragraphs(blocks)).toEqual([]);
+  });
+
+  it("attaches an own-line Outcome across a blank line", () => {
+    const blocks = parseJobDescription(
+      ["Responsibilities", "• Run the weekly ops review", "", "Outcome: decisions logged"].join(
+        "\n",
+      ),
+    );
+    const list = blocks.find((b) => b.kind === "list") as {
+      items: { text: string; outcome?: string }[];
+    };
+    expect(list.items[0].outcome).toBe("decisions logged");
+  });
+
+  it("reads a wrapped outcome as one outcome, not a trailing paragraph", () => {
+    const blocks = parseJobDescription(
+      [
+        "Responsibilities",
+        "• Investigate quality holds",
+        "Outcome: each hold closed with a corrective action",
+        "that prevents the same cause recurring",
+      ].join("\n"),
+    );
+    const list = blocks.find((b) => b.kind === "list") as {
+      items: { text: string; outcome?: string }[];
+    };
+    expect(list.items[0].outcome).toBe(
+      "each hold closed with a corrective action that prevents the same cause recurring",
+    );
+    expect(paragraphs(blocks)).toEqual([]);
+  });
+
+  it("leaves a paragraph that merely mentions an outcome alone", () => {
+    const blocks = parseJobDescription(
+      ["Job overview", "Outcome: this opens a section with no bullet above it"].join("\n"),
+    );
+    expect(blocks.some((b) => b.kind === "list")).toBe(false);
+    expect(paragraphs(blocks)).toEqual([
+      "Outcome: this opens a section with no bullet above it",
+    ]);
+  });
+
   it("joins hard-wrapped lines into one paragraph but keeps blank-line breaks", () => {
     const blocks = parseJobDescription(
       ["Overview", "This role owns the", "operations pod.", "", "It reports to the MD."].join("\n"),

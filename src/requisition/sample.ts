@@ -62,11 +62,11 @@ const pick = (
 
 /** Long enough to clear the advisory that asks for more than one sentence. */
 const JOB_OVERVIEW =
-  "This is sample content. The role runs a single production line for a full shift: the output plan, the crew on it, and the quality of what comes off it. It owns the handover to the next shift, so the incoming supervisor can act on it without a phone call. It reports into plant operations and sits alongside the quality and maintenance leads.";
+  "This is sample content. The role holds product release for a manufacturing site: in-process checks on the line, finished-goods testing in the laboratory, and the decision on whether a batch ships or is held. It keeps the site audit-ready against HACCP and FSSC 22000, and owns the records an auditor asks for. It reports into quality management and works daily with production and product development.";
 
 /** The new joiner reads D3 in week one, and advisory A-3 asks for detail. */
 const SIX_MONTH_OBJECTIVES =
-  "This is sample content. By the end of month six you should be running your shift without daily direction, and we will look at four things. First, line efficiency on your shift at or above the plant average for three consecutive months. Second, no repeat of any quality hold caused by a process step under your control. Third, every operator on your crew signed off on the standard operating procedures for their station. Fourth, a written handover the incoming shift can act on without a phone call.";
+  "This is sample content. By the end of month six you should be releasing product on your own authority, and we will look at four things. First, every batch released against a complete and signed check record, with no gaps found on internal audit. Second, no customer complaint traced to a specification breach an in-process check should have caught. Third, the site HACCP documentation current and defensible without preparation time before an audit. Fourth, a monthly quality report production acts on rather than files.";
 
 export const sampleValues = ({
   schema,
@@ -82,7 +82,7 @@ export const sampleValues = ({
   // A-1 is an advisory that fires when the cost centre differs from the
   // department, and it has to be acknowledged before a submit. Matching them
   // keeps the sample submittable without a tick.
-  const department = pick(schema, "department");
+  const department = pick(schema, "department", ["Quality & Product Development"]);
   const costCentre = pick(schema, "costCentre", [department]);
 
   // The submitter's email is a required string on the wire, so a manager
@@ -99,11 +99,15 @@ export const sampleValues = ({
 
   return {
     // ---- A · Position identity ----------------------------------------
-    jobTitle: "Production Supervisor (sample)",
+    jobTitle: "Quality Assurance Officer (sample)",
     company: pick(schema, "company"),
     department,
     costCentre,
-    location: pick(schema, "location"),
+    // ClickUp's Work Location options are country-level while the schema serves
+    // city-level ones, so a city label is written to the task as its country and
+    // the full string survives only in the description. Prefer a country label
+    // where the workspace offers one.
+    location: pick(schema, "location", ["Kenya"]),
     positionType: pick(schema, "positionType", ["Permanent"], [
       "Fixed Term Contract",
       "Intern",
@@ -119,54 +123,54 @@ export const sampleValues = ({
     // ---- B · Reporting lines ------------------------------------------
     requestingManager: manager?.clickupUserId ?? null,
     reportingTo: reportsTo?.name ?? "",
-    othersReportingIndirectly: "Line operators, packing crew, shift cleaners",
+    othersReportingIndirectly: "Quality analysts, line QC checkers, laboratory assistants",
 
     // ---- C · Job description ------------------------------------------
     jobOverview: JOB_OVERVIEW,
     keyResponsibilitiesRows: [
       {
         ...emptyRow(),
-        responsibility: "Run the assigned line for the full shift against the production plan",
-        outcome: "Shift output within agreed tolerance of plan, line efficiency at or above plant average",
+        responsibility: "Run in-process quality checks across the production lines against specification",
+        outcome: "Every check completed and recorded on shift, deviations raised before the batch completes",
       },
       {
         ...emptyRow(),
-        responsibility: "Supervise and allocate the shift operating crew",
-        outcome: "Every station manned by a signed-off operator on every shift",
+        responsibility: "Test and release finished goods from the laboratory",
+        outcome: "No batch shipped without a documented release, and no release reversed on retest",
       },
       {
         ...emptyRow(),
-        responsibility: "Enforce in-process quality checks and product specification at the line",
-        outcome: "No quality hold traced to a missed in-process check on the shift",
+        responsibility: "Keep the site audit-ready against HACCP and FSSC 22000",
+        outcome: "External audits passed with no major non-conformance, records produced on request",
       },
       {
         ...emptyRow(),
-        responsibility: "Hand the line over to the incoming shift in writing",
-        outcome: "The incoming supervisor starts without needing a call back",
+        responsibility: "Investigate quality holds and customer complaints to root cause",
+        outcome: "Each hold closed with a corrective action that prevents the same cause recurring",
       },
     ],
     qualifications: [
-      "Diploma in food technology, production or mechanical engineering",
-      "HACCP or FSSC 22000 certification, or completed within six months",
-      "Membership of a relevant professional body is welcome but not expected",
+      "Degree or diploma in food science, food technology or analytical chemistry",
+      "HACCP and FSSC 22000 certification, or completed within six months",
+      "Internal auditor training is welcome but not expected",
     ],
     experience:
-      "Five years in an FMCG manufacturing plant, at least one of them in a supervisory or team-leader role on a packaging or processing line.",
+      "Four years in a food or beverage manufacturing quality function, at least one of them holding release authority for finished product.",
     skills: [
-      "High-speed packaging or processing equipment",
-      "In-process quality checks and shift documentation",
-      "SAP or an equivalent ERP for production entries",
-      "Presence on the floor rather than in an office",
+      "Laboratory testing methods for food and beverage products",
+      "HACCP plans, product specifications and audit documentation",
+      "Root cause investigation on quality holds and complaints",
+      "Willingness to stop a line and hold a batch under pressure",
     ],
 
     // ---- D · Business case --------------------------------------------
     previousFailuresSuccesses:
-      "This is sample content. The two supervisors who lasted in this role came off the line themselves and already knew the machines. The two external hires who did not last were strong on paper but arrived expecting to manage from an office. The failure mode is not technical knowledge, it is willingness to stand at the machine.",
+      "This is sample content. The officers who lasted in this role were comfortable holding a batch when production wanted it released. The two who did not last were technically sound but deferred to the shift manager every time there was a deadline. The failure mode is not analytical skill, it is willingness to be unpopular on the day.",
     competitiveAdvantage:
-      "This is sample content. You run a full line end to end, with your own crew and your own numbers, in a plant where the shift supervisor is trusted to make the call rather than escalate it. Supervisors here move into production management.",
+      "This is sample content. You hold genuine release authority rather than recommending it to someone else, across a site making several product categories, with a laboratory that is properly equipped. Quality officers here move into quality management or product development.",
     sixMonthsObjectives: SIX_MONTH_OBJECTIVES,
     potentialCareerPath:
-      "This is sample content. The route from here is Senior Shift Supervisor, then Production Manager for a line group, then Plant Operations.",
+      "This is sample content. The route from here is Senior Quality Officer, then Quality Assurance Manager for a site, then Group Quality and Compliance.",
 
     // ---- E · Provisioning ---------------------------------------------
     positionRequirements: multi("positionRequirements", 3),

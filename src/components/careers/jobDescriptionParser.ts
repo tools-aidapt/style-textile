@@ -28,6 +28,16 @@ export interface JdSection {
 const RULE = /^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/;
 const BULLET = /^\s*[•·▪‣]\s*|^\s*[-*–]\s+/;
 const OUTCOME = /\s{2,}Outcome:\s*/;
+/**
+ * An outcome written on a line of its own, rather than after two spaces on the
+ * bullet it belongs to.
+ *
+ * Both shapes come out of the same ClickUp field. A document author who wraps
+ * the line, or a table pasted as one row per cell, produces this one — and
+ * read literally it turns every outcome into a paragraph of its own, which
+ * breaks the list in half and loses which responsibility it was describing.
+ */
+const OUTCOME_LINE = /^Outcome:\s*/i;
 
 /**
  * Headings the page already presents as its own section or in the meta list.
@@ -53,6 +63,10 @@ const isHeading = (line: string, next?: string): boolean => {
   const t = line.trim();
   if (!t || t.length > 64) return false;
   if (BULLET.test(line)) return false;
+  // "Outcome: decisions logged same day" is short, capitalised and unpunctuated,
+  // so every heuristic below reads it as a heading. It is the tail of the bullet
+  // above it, and mistaking it for a heading splits the list at every item.
+  if (OUTCOME_LINE.test(t)) return false;
   if (/[.!?,;:]$/.test(t)) return false;
   if (/^[a-z]/.test(t)) return false;
   if (t.split(/\s+/).length > 8) return false;
@@ -78,6 +92,8 @@ export const parseJobDescription = (raw: string, positionName?: string): Block[]
   let paragraph: string[] = [];
   let items: { text: string; outcome?: string }[] = [];
   let skipping = false; // inside a section shown elsewhere on the page
+  /** The item an own-line outcome is being read into, so it can wrap. */
+  let openOutcome: { text: string; outcome?: string } | null = null;
 
   const flushParagraph = () => {
     if (paragraph.length) {
@@ -105,6 +121,7 @@ export const parseJobDescription = (raw: string, positionName?: string): Block[]
 
     if (!trimmed) {
       flush();
+      openOutcome = null;
       continue;
     }
 
@@ -114,6 +131,7 @@ export const parseJobDescription = (raw: string, positionName?: string): Block[]
 
     if (isHeading(trimmed, nextNonEmpty(index))) {
       flush();
+      openOutcome = null;
       skipping = COVERED_ELSEWHERE.includes(normalize(trimmed));
       if (!skipping) blocks.push({ kind: "heading", text: trimmed });
       continue;
@@ -126,6 +144,29 @@ export const parseJobDescription = (raw: string, positionName?: string): Block[]
       const body = line.replace(BULLET, "").trim();
       const [text, outcome] = body.split(OUTCOME);
       items.push({ text: text.trim(), outcome: outcome?.trim() });
+      openOutcome = null;
+      continue;
+    }
+
+    // An outcome on its own line belongs to the bullet above it. The bullet is
+    // either still being collected, or — if a blank line came between them —
+    // already sitting in the list block just pushed.
+    const marker = OUTCOME_LINE.exec(trimmed);
+    if (marker && !paragraph.length) {
+      const last = blocks[blocks.length - 1];
+      const target =
+        items[items.length - 1] ??
+        (last?.kind === "list" ? last.items[last.items.length - 1] : undefined);
+      if (target) {
+        target.outcome = trimmed.slice(marker[0].length).trim();
+        openOutcome = target;
+        continue;
+      }
+    }
+
+    // A wrapped continuation of the outcome above, not a new paragraph
+    if (openOutcome && !paragraph.length) {
+      openOutcome.outcome = [openOutcome.outcome, trimmed].filter(Boolean).join(" ");
       continue;
     }
 

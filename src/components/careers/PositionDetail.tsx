@@ -114,6 +114,7 @@ export const PositionDetail = ({
 
   return (
     <PageShell
+      width="wide"
       crumbs={[
         { label: "All roles", to: "/" },
         { label: position.name, compactHidden: true },
@@ -131,7 +132,7 @@ export const PositionDetail = ({
             <ChevronRight className="h-3 w-3 text-teal-400" aria-hidden="true" />
             Job title
           </p>
-          <h1 className="mt-2 max-w-[24ch] text-h2 font-extrabold tracking-tighter text-ink-900">
+          <h1 className="mt-2 max-w-[40ch] text-balance text-h2 font-extrabold tracking-tighter text-ink-900">
             {position.name}
           </h1>
 
@@ -169,7 +170,7 @@ export const PositionDetail = ({
 
       {/* The role, read top to bottom. Long-form copy first, then the
           supporting facts as tiles so the page stops being one flat column. */}
-      <div className="max-w-[56rem] space-y-5 py-8 lg:py-10">
+      <div className="max-w-container space-y-5 py-8 lg:py-10">
         {position.description ? (
           <div className="space-y-3">
             <Eyebrow>The role</Eyebrow>
@@ -276,7 +277,7 @@ export const PositionDetail = ({
         ) : null}
       </div>
 
-      <div className="max-w-[56rem]">
+      <div className="max-w-container">
         <ApplicationForm
           position={position}
           onDirtyChange={onDirtyChange}
