@@ -262,6 +262,14 @@ export const ApplicationForm = ({
     try {
       const formData = new FormData();
       formData.append("openPosition", data.openPosition);
+      /**
+       * The same ClickUp task id, under the two names the downstream workflow
+       * reads it by. This page knows one identifier for a role — the id of its
+       * task on the Positions list — so taskId and positionId are that value,
+       * not two different things.
+       */
+      formData.append("taskId", data.openPosition);
+      formData.append("positionId", data.openPosition);
       formData.append("fullName", data.fullName);
       formData.append("email", data.email);
       formData.append("mobile", data.mobile);
