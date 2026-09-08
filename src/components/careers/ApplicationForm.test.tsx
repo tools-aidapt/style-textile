@@ -14,7 +14,7 @@ const fillForm = async (
   const values: Record<string, string> = {
     "Full name": "Aisha Khan",
     Email: "aisha@example.com",
-    Mobile: "+92 300 000 0000",
+    Mobile: "300 000 0000",
     "Current or last salary": "150,000",
     "Expected salary": "200000",
     "Notice period": "30",
@@ -29,6 +29,12 @@ const fillForm = async (
   }
 };
 
+/**
+ * Typing is done without the inter-keystroke delay. This form re-renders on
+ * every keystroke to drive its progress meter, so a seven-field fill at the
+ * default delay was pushing the whole test past the 5s timeout once the suite
+ * ran under load.
+ */
 const submit = async (user: ReturnType<typeof userEvent.setup>) =>
   user.click(screen.getByRole("button", { name: /submit application/i }));
 
@@ -37,32 +43,49 @@ describe("ApplicationForm validation", () => {
     vi.stubGlobal("fetch", vi.fn());
   });
 
-  it("accepts a normally spaced international mobile number", async () => {
-    const user = userEvent.setup();
+  it("accepts a normally spaced national mobile number", async () => {
+    const user = userEvent.setup({ delay: null });
     render(<ApplicationForm position={position} />);
 
-    await fillForm(user, { Mobile: "+92 300 000 0000" });
+    await fillForm(user, { Mobile: "712 345 678" });
     await submit(user);
 
     // It fails on the missing resume, not on the phone number
     await waitFor(() =>
-      expect(screen.queryByText(/at least 10 digits/i)).not.toBeInTheDocument(),
+      expect(screen.queryByText(/at least 6 digits/i)).not.toBeInTheDocument(),
     );
-    expect(screen.queryByText(/at most 15 character/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/digits, spaces/i)).not.toBeInTheDocument();
   });
 
   it("rejects a mobile number with too few digits", async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     render(<ApplicationForm position={position} />);
 
     await fillForm(user, { Mobile: "12345" });
     await submit(user);
 
-    expect(await screen.findByText(/at least 10 digits/i)).toBeInTheDocument();
+    expect(await screen.findByText(/at least 6 digits/i)).toBeInTheDocument();
+  });
+
+  it("keeps the country code out of the number field, where it now has its own", async () => {
+    const user = userEvent.setup({ delay: null });
+    render(<ApplicationForm position={position} />);
+
+    await fillForm(user, { Mobile: "+254 712 345 678" });
+    await submit(user);
+
+    expect(await screen.findByText(/digits, spaces, and \( \) - only/i)).toBeInTheDocument();
+  });
+
+  it("defaults the country code to Kenya and the salary currency to shillings", () => {
+    render(<ApplicationForm position={position} />);
+
+    expect(screen.getByLabelText(/country code/i)).toHaveTextContent("+254");
+    expect(screen.getByLabelText(/salary currency/i)).toHaveTextContent("KES");
   });
 
   it("rejects a salary written as a word", async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     render(<ApplicationForm position={position} />);
 
     await fillForm(user, { "Expected salary": "negotiable" });
@@ -72,7 +95,7 @@ describe("ApplicationForm validation", () => {
   });
 
   it("rejects a notice period that is not a whole number of days", async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     render(<ApplicationForm position={position} />);
 
     await fillForm(user, { "Notice period": "two months" });
@@ -82,7 +105,7 @@ describe("ApplicationForm validation", () => {
   });
 
   it("rejects an implausible notice period", async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     render(<ApplicationForm position={position} />);
 
     await fillForm(user, { "Notice period": "9999" });
@@ -92,7 +115,7 @@ describe("ApplicationForm validation", () => {
   });
 
   it("rejects an invalid email address", async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     render(<ApplicationForm position={position} />);
 
     await fillForm(user, { Email: "aisha@" });
@@ -102,7 +125,7 @@ describe("ApplicationForm validation", () => {
   });
 
   it("never posts an application while any field is invalid", async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     render(<ApplicationForm position={position} />);
 
     await fillForm(user, { "Current or last salary": "" });

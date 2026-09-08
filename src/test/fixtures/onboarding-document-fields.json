@@ -1,0 +1,18 @@
+{
+  "_comment": "The pairing contract with WF-15 Trigger B, held apart from the code so a change to either side fails documents.test.ts. Taken from kenafric-v2-field-id-register.md, Onboarding Submissions block. Do not tidy the spelling: the slash in NHIF/SHA, the apostrophe and -ce in Driver's Licence, and the numeral in Last 3 Payslips are all load-bearing.",
+  "fields": {
+    "national-id": "National ID",
+    "kra-pin": "KRA PIN",
+    "nssf": "NSSF",
+    "nhif-sha": "NHIF/SHA",
+    "helb-status": "HELB Status Document",
+    "education-certs": "Educational Certificates",
+    "good-conduct": "Certificate of Good Conduct",
+    "public-health-cert": "Public Health Certificate",
+    "payslips": "Last 3 Payslips",
+    "passport-photo": "Passport Photo",
+    "signed-offer-letter": "Signed Offer Letter",
+    "separation-letters": "Separation Letters",
+    "drivers-licence": "Driver's Licence"
+  }
+}

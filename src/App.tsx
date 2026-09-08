@@ -42,6 +42,16 @@ const router = createBrowserRouter([
     errorElement: <RouteError />,
   },
   {
+    /**
+     * Employee onboarding. The path segment is the new hire's ClickUp Employee
+     * task id — there is no login in front of it. `?id=` is honoured too, for
+     * email clients that mangle a path segment.
+     */
+    path: "/onboarding/:employeeId?",
+    lazy: async () => ({ Component: (await import("./pages/OnboardingPage")).default }),
+    errorElement: <RouteError />,
+  },
+  {
     path: "*",
     lazy: async () => ({ Component: (await import("./pages/NotFound")).default }),
     errorElement: <RouteError />,

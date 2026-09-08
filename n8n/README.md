@@ -8,6 +8,8 @@ serves the browser two endpoints, because everything a Vite build inlines under
 | --- | --- | --- |
 | `careers-positions.workflow.json` | `GET /webhook/careers-positions` | Live positions, with confidential fields stripped |
 | `validate-application.js` | — | Code-node snippet for the application webhook |
+| `onboarding-token.cjs` | — | Signed-link tokens. NOT in use — see "The id is a name" |
+| `send-test-submission.mjs` | — | Posts a whole submission to the webhook, as the app does |
 | `requisition-schema.workflow.json` | `GET /webhook/requisition-schema` | The requisition form's option lists and member directory |
 | `requisition-submit.workflow.json` | `POST /webhook/requisition-submit` | Creates a requisition from a submitted form |
 
@@ -185,3 +187,144 @@ Three things it does not do yet, and should:
 Agency name and who-is-being-replaced have no ClickUp field of their own yet, so
 they are written into the task description where HR can still read them. Give
 them fields and they should move.
+
+## Employee onboarding
+
+Two endpoints, and no workflow JSON in this repo yet — WF-15 owns them. The
+app that calls them is `/onboarding/{clickupTaskId}`; the wire contract is
+`docs/onboarding-submission-1.0.schema.json` and the ClickUp field register is
+`docs/onboarding-field-ids.md`.
+
+| Endpoint | Method | Purpose |
+| --- | --- | --- |
+| `GET /webhook/kenafric/onboarding-session?id={clickupTaskId}` | GET | Returns THAT ONE employee |
+| `POST /webhook/onboarding-form-submission` | POST, multipart | The whole submission: metadata and every document |
+
+### The id is a name, not a secret
+
+A new hire has no ClickUp account and no password. WF-15 builds the link as
+`…/onboarding/{clickupTaskId}` — `?id=` is accepted too — and that id is what
+identifies them.
+
+A ClickUp task id is nine characters from a small alphabet. Anyone who tries a
+few opens somebody's form, and this form both shows a name, position and
+joining date AND accepts documents and bank details onto the record. The
+browser cannot change that, so the safeguards live here and are not optional:
+
+- **Rate-limit hard, per id and per IP**, on both endpoints. Enumeration has
+  to be expensive.
+- **Serve a session only for an employee who is actually onboarding** — status
+  `preboarding`, with documents still outstanding. That keeps the window open
+  for the few weeks it needs to be rather than for ever, and it is the single
+  most effective thing on this list.
+- **Answer 404, 403 or 410** for anything else. The app renders a dead end on
+  all three — "We can't open this form. Ask HR to send you a new one." — with
+  no form, no field list and no name. A 500 gets "try again", which is advice
+  that cannot help.
+- **Log every session hit with its id and IP.** A sweep cannot be prevented,
+  but it must be visible afterwards.
+- **`Employee ID` comes from your own request, not from the payload.** The
+  submit echoes `employee.clickupTaskId` for readability; re-read it from the
+  request you validated rather than trusting the body.
+
+`onboarding-token.cjs` holds a signed, expiring-link implementation if the
+above is ever judged too thin. Switching to it changes two lines in
+`src/onboarding/session.ts` and nothing else in the app.
+
+### session
+
+Returns one employee and nothing else. Never a list, and no shape for anybody
+else's anything.
+
+```json
+{
+  "ok": true,
+  "employee": {
+    "clickupTaskId": "869evrmhx",
+    "fullName": "Stephen Gachoka Wahito",
+    "personalEmail": "stephen.wahito@gmail.com",
+    "mobile": "",
+    "joiningDate": "2026-10-01",
+    "positionTitle": "Production Supervisor",
+    "company": "Kenafric Industries"
+  },
+  "requiredDocuments": [],
+  "optionalDocuments": [],
+  "alreadyReceived": ["signed-offer-letter"],
+  "manifest": [],
+  "expiresAt": "2026-09-29T00:00:00.000Z"
+}
+```
+
+- **`requiredDocuments` / `optionalDocuments`** decide the two conditional
+  documents. A `conditional` document the session does not mention is hidden
+  entirely — showing a food-handling certificate to an accountant and leaving
+  them to work out it is not for them is how a form generates a support call.
+  TODO(kenafric): until WF-15 derives these from the position's
+  `Position Requirements` and department, serve them empty; the app then hides
+  the Public Health Certificate and the Driver's Licence, which is the safe
+  default.
+- **`alreadyReceived`** renders a satisfied tile with no upload control. WF-14
+  can pre-fill the signed offer letter and the passport photo from the
+  candidate card. TODO(kenafric): confirm WF-14 actually attaches the offer
+  letter; until then the app treats it as a normal required upload.
+- **`manifest`** is the server-side record of what this `submissionId` already
+  holds, and it is the source of truth on resume. A tab closed mid-upload must
+  not be able to show a document as missing when the bytes arrived.
+
+### submit
+
+Everything arrives in ONE `multipart/form-data` request:
+
+| Part | Content |
+| --- | --- |
+| `payload` | The JSON in `docs/onboarding-submission-1.0.schema.json` |
+| `file0`, `file1`, … | One document each, mapped by `documents[].field` |
+
+So in n8n: parse `payload` with `JSON.parse($json.body.payload)`, and read the
+binaries as `file0`, `file1`… Indexed rather than named after the document,
+because a binary property called `file_drivers-licence` is awkward to reach in
+an expression and one called `file3` is not. `documents[].field` is the mapping,
+and `documents[].clickupFieldName` is what WF-15 Trigger B pairs on.
+
+To build against it before the app is pointed at you:
+
+```
+node n8n/send-test-submission.mjs \
+  --url https://aidapt.app.n8n.cloud/webhook/onboarding-form-submission \
+  --employee 869eykhcg --name "Amina Otieno" \
+  --docs national-id=./id.pdf,kra-pin=./pin.pdf
+```
+
+It reads `clickupFieldName` from the same fixture the app's contract test pins,
+so the two cannot drift. With no `--docs` it attaches one generated PDF. Re-run
+with the same `--submission` to prove a repeat is rejected rather than filed
+twice.
+
+Creates the task in Onboarding Submissions at status `new`, named
+`{fullName} — Onboarding`, writes the personal fields, attaches each document,
+then hands off to WF-15 Trigger B.
+
+- **Raise `N8N_PAYLOAD_SIZE_MAX` to match.** It defaults to 16 MB, which is
+  where `LIMITS.totalBytes` in `src/onboarding/contract.ts` is set. The app
+  blocks the submit above that figure so the employee is told BEFORE a
+  four-minute upload rather than by a 413 at the end of it. If you raise one,
+  raise the other; a mismatch is either a self-inflicted rejection or a
+  rejection nobody can act on.
+- **There is no partial success.** One request means a drop at 95% re-sends
+  everything, so be quick to answer and slow to time out.
+- **Reject a repeated `submissionId`** — or replay the original receipt, which
+  the app treats as the success it is. Somebody on a slow connection will
+  double-tap Submit, and the whole request will arrive twice.
+- **Return `{ ok, submissionId, taskId }` and no ClickUp URL.** The employee has
+  no account; a link they cannot open reads as a broken system, so the app has
+  nowhere to put one.
+- **Answer 413 if it is too large** rather than truncating. The app turns that
+  into "remove the largest one, submit, and send that one to HR by email".
+- `personalEmailChanged: true` means they edited the address the link was sent
+  to — write it back to the Employee record.
+- `bank.bankNameBranch`, `bank.accountName` and `bank.accountNumber` are three
+  values on the wire and one `Bank Account Details` text field in ClickUp.
+  Concatenate in that order, newline between.
+- **Log no PII.** `submissionId`, `documentKey`, byte counts and outcomes are
+  fine. A filename contains a surname and a given name.

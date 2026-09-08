@@ -36,6 +36,33 @@ export const config = {
   employeesWebhookUrl: read(import.meta.env.VITE_EMPLOYEES_WEBHOOK_URL),
   usersWebhookUrl: read(import.meta.env.VITE_USERS_WEBHOOK_URL),
 
+  /**
+   * The employee onboarding form's two endpoints, both on n8n.
+   *
+   * The first exchanges the employee's ClickUp task id for their own details
+   * and the list of documents they owe. The second takes the whole submission
+   * in one multipart request — the metadata and every document together.
+   *
+   * Neither carries a ClickUp field id. The employee's id is not configured
+   * here either; it arrives in the URL WF-15 emailed to the new hire.
+   */
+  onboardingSessionUrl: read(import.meta.env.VITE_ONBOARDING_SESSION_URL),
+  onboardingSubmitUrl: read(import.meta.env.VITE_ONBOARDING_SUBMIT_URL),
+  onboardingWebhookUser: read(import.meta.env.VITE_ONBOARDING_WEBHOOK_USER),
+  onboardingWebhookPassword: read(import.meta.env.VITE_ONBOARDING_WEBHOOK_PASSWORD),
+
+  /**
+   * Kenafric's privacy notice, and the address HR reads.
+   *
+   * Deliberately unset by default and never guessed. The onboarding form asks
+   * a Kenyan employee for their national ID, their bank details and a
+   * photograph of their face; a wrong privacy-notice link on that screen is
+   * worse than no link, and an invented HR address sends a document nowhere.
+   * The app renders each only when it is configured.
+   */
+  onboardingPrivacyUrl: read(import.meta.env.VITE_ONBOARDING_PRIVACY_URL),
+  onboardingHrEmail: read(import.meta.env.VITE_ONBOARDING_HR_EMAIL),
+
   /** Absolute origin used to build canonical URLs and JobPosting structured data. */
   siteUrl: read(import.meta.env.VITE_SITE_URL) || "https://aidapt.co",
 

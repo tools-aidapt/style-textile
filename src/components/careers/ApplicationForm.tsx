@@ -12,8 +12,22 @@ import { cn } from "@/lib/utils";
 import { basicAuthFor, config, reportMissingConfig } from "@/lib/config";
 import { reportSubmissionFailure } from "@/lib/telemetry";
 import { Eyebrow } from "./primitives";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { FileDrop } from "./FileDrop";
 import { IMAGE_TYPES, RESUME_TYPES } from "./files";
+import {
+  CURRENCIES,
+  DEFAULT_COUNTRY,
+  DEFAULT_CURRENCY,
+  DIAL_CODES,
+  dialFor,
+} from "./locale";
 import type { Position } from "./position";
 
 /** How long a genuine application takes to fill in, at the absolute fastest. */
@@ -25,17 +39,21 @@ const SUBMIT_TIMEOUT_MS = 60_000;
 const digitsOf = (value: string) => value.replace(/\D/g, "");
 
 /**
- * Phone numbers are validated on their digits, not their characters. Counting
- * characters rejected "+92 300 000 0000" for being one space too long, which
- * is a perfectly ordinary way to write a number.
+ * The number without its country code, which now travels in its own field.
+ *
+ * Validated on digits rather than characters, because "300 000 0000" is a
+ * perfectly ordinary way to write a number and counting characters rejected
+ * it for being one space too long. The bounds are wide: national numbers run
+ * from 7 digits in parts of the Gulf to 11 in Nigeria, and a candidate who
+ * types their leading 0 should not be corrected for it.
  */
 const phone = z
   .string()
   .trim()
   .min(1, "Please enter your mobile number")
-  .refine((v) => /^[+()\d\s-]+$/.test(v), "Use digits, spaces, and + ( ) - only")
-  .refine((v) => digitsOf(v).length >= 10, "Please enter at least 10 digits")
-  .refine((v) => digitsOf(v).length <= 15, "That is more than 15 digits");
+  .refine((v) => /^[()\d\s-]+$/.test(v), "Use digits, spaces, and ( ) - only")
+  .refine((v) => digitsOf(v).length >= 6, "Please enter at least 6 digits")
+  .refine((v) => digitsOf(v).length <= 14, "That is more than 14 digits");
 
 /**
  * An amount, typed the way people type money: "150000", "150,000", "150 000".
@@ -65,6 +83,10 @@ const formSchema = z.object({
     .max(255, "Please keep this under 255 characters")
     .email("Please enter a valid email address"),
   mobile: phone,
+  /** Alpha-2, resolved to a dial code on submit. See locale.ts. */
+  mobileCountry: z.string().min(1, "Please choose a country code"),
+  /** ISO 4217, and the unit both salary amounts are read in. */
+  salaryCurrency: z.string().min(1, "Please choose a currency"),
   currentSalary: amount("current or last salary"),
   currentBenefits: z
     .string()
@@ -117,35 +139,127 @@ const Field = ({
   </div>
 );
 
-/** Salary input with the currency set as a prefix rather than repeated in the label. */
+/**
+ * A field whose left edge is a chooser rather than a fixed label — currency on
+ * the salaries, country code on the mobile. The select and the input share one
+ * border so the pair reads as a single control; the border carries the hover,
+ * focus and invalid states the Input would normally paint on itself, which is
+ * why the Input inside is stripped of its own.
+ */
+const PrefixedField = ({
+  invalid,
+  children,
+}: {
+  invalid: boolean;
+  children: React.ReactNode;
+}) => (
+  <div
+    className={cn(
+      "flex h-11 w-full items-center rounded-md border border-mist-200 bg-white transition-colors duration-fast",
+      "hover:border-mist-300 focus-within:border-teal-400",
+      invalid && "border-destructive hover:border-destructive",
+    )}
+  >
+    {children}
+  </div>
+);
+
+/** The hairline between the chooser and the value it qualifies. */
+const PrefixDivider = () => <span className="h-5 w-px shrink-0 bg-mist-200" aria-hidden="true" />;
+
+/** The Input, stripped of the chrome PrefixedField now owns. */
+const prefixedInputClass =
+  "h-full flex-1 border-0 bg-transparent pl-2.5 font-mono tabular-nums hover:border-0 focus-visible:border-0";
+
+/**
+ * The chooser itself. Closed, it shows the short code — "KES", "+254" — because
+ * that is what the value beside it needs qualifying by. Open, every row is
+ * written out, so nobody has to know that RWF is Rwandan or that +255 is
+ * Tanzania.
+ */
+const PrefixSelect = ({
+  label,
+  value,
+  onChange,
+  width,
+  children,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  width: string;
+  children: React.ReactNode;
+}) => (
+  <Select value={value} onValueChange={onChange}>
+    <SelectTrigger
+      aria-label={label}
+      className={cn(
+        "h-full shrink-0 justify-between gap-1 rounded-l-md rounded-r-none border-0 bg-transparent pl-3 pr-2",
+        "font-mono text-caption font-medium text-ink-900 hover:border-0 focus-visible:border-0",
+        width,
+      )}
+    >
+      <SelectValue />
+    </SelectTrigger>
+    <SelectContent className="max-h-72">{children}</SelectContent>
+  </Select>
+);
+
+/** Salary input with the currency chosen in the field rather than assumed. */
 const SalaryInput = ({
   id,
   registration,
   invalid,
   placeholder,
+  currency,
+  onCurrencyChange,
 }: {
   id: string;
   registration: ReturnType<ReturnType<typeof useForm<FormData>>["register"]>;
   invalid: boolean;
   placeholder: string;
+  currency: string;
+  /**
+   * Only the first salary field carries the chooser. One application is quoted
+   * in one currency, so a second selector could only ever disagree with the
+   * first; the expected-salary field shows the choice instead of repeating it.
+   */
+  onCurrencyChange?: (value: string) => void;
 }) => (
-  <div className="relative">
-    <span
-      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-mono text-caption font-medium text-steel-500"
-      aria-hidden="true"
-    >
-      PKR
-    </span>
+  <PrefixedField invalid={invalid}>
+    {onCurrencyChange ? (
+      <PrefixSelect
+        label="Salary currency"
+        value={currency}
+        onChange={onCurrencyChange}
+        width="w-[5.25rem]"
+      >
+        {CURRENCIES.map((c) => (
+          <SelectItem key={c.code} value={c.code}>
+            <span className="font-mono font-medium">{c.code}</span>
+            <span className="ml-2 text-steel-600">{c.name}</span>
+          </SelectItem>
+        ))}
+      </PrefixSelect>
+    ) : (
+      <span
+        className="w-[5.25rem] shrink-0 pl-3 font-mono text-caption font-medium text-steel-500"
+        aria-hidden="true"
+      >
+        {currency}
+      </span>
+    )}
+    <PrefixDivider />
     <Input
       id={id}
       inputMode="numeric"
       placeholder={placeholder}
       aria-invalid={invalid || undefined}
       aria-describedby={invalid ? `${id}-error` : undefined}
-      className="pl-14 font-mono tabular-nums"
+      className={prefixedInputClass}
       {...registration}
     />
-  </div>
+  </PrefixedField>
 );
 
 /**
@@ -199,7 +313,13 @@ export const ApplicationForm = ({
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: { openPosition: position.id, companyWebsite: "" },
+    defaultValues: {
+      openPosition: position.id,
+      companyWebsite: "",
+      // The roles are Kenyan; a Kenyan candidate should not have to choose
+      mobileCountry: DEFAULT_COUNTRY,
+      salaryCurrency: DEFAULT_CURRENCY,
+    },
   });
 
   // A form completed faster than a person can read it was not filled by one
@@ -211,6 +331,8 @@ export const ApplicationForm = ({
   }, [position.id, setValue]);
 
   const values = watch();
+  /** Both salary fields read in this unit; only the first one can change it. */
+  const currency = values.salaryCurrency ?? DEFAULT_CURRENCY;
   const textFields: (keyof FormData)[] = [
     "fullName",
     "email",
@@ -272,7 +394,18 @@ export const ApplicationForm = ({
       formData.append("positionId", data.openPosition);
       formData.append("fullName", data.fullName);
       formData.append("email", data.email);
-      formData.append("mobile", data.mobile);
+      /**
+       * The number goes out three ways: assembled into its full international
+       * form, which is what a recruiter dials, and as its two parts, which is
+       * what a workflow can filter or normalise on.
+       */
+      const dial = dialFor(data.mobileCountry);
+      formData.append("mobile", `${dial} ${data.mobile}`.trim());
+      formData.append("mobileCountry", data.mobileCountry);
+      formData.append("mobileDialCode", dial);
+      formData.append("mobileNumber", data.mobile);
+      /** Amounts stay bare numbers; the unit they are in travels beside them. */
+      formData.append("salaryCurrency", data.salaryCurrency);
       formData.append("currentSalary", data.currentSalary);
       formData.append("currentBenefits", data.currentBenefits);
       formData.append("expectedSalary", data.expectedSalary);
@@ -420,16 +553,35 @@ export const ApplicationForm = ({
             </Field>
 
             <Field id="mobile" label="Mobile" error={errors.mobile?.message}>
-              <Input
-                id="mobile"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                placeholder="+92 300 0000000"
-                aria-invalid={errors.mobile ? true : undefined}
-                aria-describedby={errors.mobile ? "mobile-error" : undefined}
-                {...register("mobile")}
-              />
+              <PrefixedField invalid={!!errors.mobile}>
+                <PrefixSelect
+                  label="Country code"
+                  value={values.mobileCountry ?? DEFAULT_COUNTRY}
+                  onChange={(v) =>
+                    setValue("mobileCountry", v, { shouldValidate: true })
+                  }
+                  width="w-[5.25rem]"
+                >
+                  {DIAL_CODES.map((c) => (
+                    <SelectItem key={c.country} value={c.country}>
+                      <span className="font-mono font-medium">{c.dial}</span>
+                      <span className="ml-2 text-steel-600">{c.name}</span>
+                    </SelectItem>
+                  ))}
+                </PrefixSelect>
+                <PrefixDivider />
+                <Input
+                  id="mobile"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel-national"
+                  placeholder="712 345 678"
+                  aria-invalid={errors.mobile ? true : undefined}
+                  aria-describedby={errors.mobile ? "mobile-error" : undefined}
+                  className={prefixedInputClass}
+                  {...register("mobile")}
+                />
+              </PrefixedField>
             </Field>
           </div>
         </fieldset>
@@ -450,6 +602,10 @@ export const ApplicationForm = ({
                 registration={register("currentSalary")}
                 invalid={!!errors.currentSalary}
                 placeholder="150,000"
+                currency={currency}
+                onCurrencyChange={(v) =>
+                  setValue("salaryCurrency", v, { shouldValidate: true })
+                }
               />
             </Field>
 
@@ -464,6 +620,7 @@ export const ApplicationForm = ({
                 registration={register("expectedSalary")}
                 invalid={!!errors.expectedSalary}
                 placeholder="200,000"
+                currency={currency}
               />
             </Field>
 

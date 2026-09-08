@@ -42,9 +42,19 @@ export default defineConfig(({ mode }) => ({
       VITE_REQUISITION_WEBHOOK_URL: "https://webhook.test/requisition-submit",
       VITE_EMPLOYEES_WEBHOOK_URL: "https://webhook.test/kenafric/employees-with-avatars",
       VITE_USERS_WEBHOOK_URL: "https://webhook.test/kenafric/users",
+      VITE_ONBOARDING_SESSION_URL: "https://webhook.test/kenafric/onboarding-session",
+      VITE_ONBOARDING_SUBMIT_URL: "https://webhook.test/kenafric/onboarding-submit",
     },
     globals: true,
     css: false,
+    /*
+     * 5s is not enough once the suite runs in parallel on a loaded machine.
+     * The onboarding tests decode and re-encode real JPEGs and build real
+     * PDFs, and the contention was tipping typing-heavy form tests elsewhere
+     * over the default — a timeout that says nothing about the code under
+     * test. Individual slow tests still declare their own.
+     */
+    testTimeout: 20_000,
     coverage: {
       provider: "v8",
       // The vendored shadcn catalogue and the design tokens are not this

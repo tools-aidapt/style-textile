@@ -1,6 +1,14 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach, vi } from "vitest";
+import { installCanvasShim } from "./canvasShim";
+
+/**
+ * Canvas, for real. jsdom has none, which left the onboarding form's
+ * compression ladder and photo checks testable only by their error messages.
+ * See canvasShim.ts for what it does and does not stand in for.
+ */
+installCanvasShim();
 
 afterEach(() => {
   cleanup();
@@ -51,4 +59,21 @@ if (!window.IntersectionObserver) {
     rootMargin = "";
     thresholds = [];
   } as unknown as typeof IntersectionObserver;
+}
+
+/**
+ * jsdom ships Blob and File without `arrayBuffer()`, which every browser has
+ * had for years. The onboarding upload pipeline reads a chosen file that way,
+ * so without this the tests would be asserting the absence of a standard API
+ * rather than the behaviour of the code.
+ */
+if (!Blob.prototype.arrayBuffer) {
+  Blob.prototype.arrayBuffer = function arrayBuffer(this: Blob) {
+    return new Promise<ArrayBuffer>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as ArrayBuffer);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsArrayBuffer(this);
+    });
+  };
 }

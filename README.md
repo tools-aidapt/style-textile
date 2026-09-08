@@ -136,6 +136,84 @@ Worth knowing before changing it:
 - **Submits are idempotent.** One `submissionId` per requisition, reused by every
   attempt including a retry, and n8n rejects the repeat.
 
+## The onboarding form
+
+`/onboarding/{clickupTaskId}`. A new hire signs their offer letter, WF-14 creates their
+record at `preboarding` and spawns thirteen document subtasks, and WF-15 emails
+them a personalised link to this page. They fill in their own details and upload
+their own documents, once, from wherever they are. HR's job shrinks from chasing
+thirteen documents by WhatsApp to verifying thirteen already filed against the
+right subtask.
+
+It is an app rather than a ClickUp form view because of four things a form view
+cannot do:
+
+1. **Compress in the browser.** Phone photos are 4-12 MB each, and thirteen of
+   them is a 60 MB upload over Nairobi mobile data. The bytes have to shrink
+   before they leave the device.
+2. **Name files at capture.** A phone calls its photos `IMG_20260904_113402.jpg`,
+   and thirteen of those across a hundred employees is a folder HR cannot work in.
+3. **Guide a passport photo.** `src/onboarding/media/photo.ts` checks the image
+   against the standard rather than printing it and hoping.
+4. **Survive being abandoned.** This gets filled over two or three sittings on a
+   phone, between hunting for an NSSF card.
+
+Worth knowing before changing it:
+
+- **The link identifies, it does not authenticate.** There is no login: the
+  path segment is the employee's ClickUp task id, sent to the session endpoint
+  as `?id=`. That id is nine characters from a small alphabet, so it is a name
+  rather than a secret, and the safeguards live in n8n — rate limiting, serving
+  a session only for an employee at status `preboarding` with documents
+  outstanding, and logging every hit. An id that does not answer renders a dead
+  end with no form, no field list and no name. `n8n/onboarding-token.cjs` holds
+  a signed-link implementation if that is ever judged too thin; it would change
+  two lines in `src/onboarding/session.ts` and nothing else.
+- **The thirteen `clickupFieldName` strings are a contract**, pinned by
+  `src/onboarding/documents.test.ts` against a fixture. WF-15 pairs on them, and
+  a rename on either side breaks that pairing silently. The filename is for
+  humans; nothing may be made to parse it.
+- **No file over 5 MB ever leaves the browser** — the cap is on the finished
+  document, after compression and after any merge. Over it, the refusal offers
+  three things that actually work rather than failing the whole submission.
+  Everything together is capped at 16 MB (`LIMITS.totalBytes`), which is what
+  the webhook will accept in one request; the submit is blocked above that
+  rather than failing at 95% of a long upload.
+- **Everything is sent in ONE multipart request** — a `payload` part with the
+  JSON and one part per document. So there is no partial success: a drop at 95%
+  re-sends everything, which is why the submit owns the only progress bar on
+  the page and says not to close the tab.
+- **IndexedDB is the only durability.** Nothing exists server-side until the
+  submit succeeds, so each document is written to IndexedDB as it is prepared
+  and read back on the next visit — otherwise a locked phone screen costs
+  somebody the ten minutes they spent compressing thirteen photos.
+- **Compression runs in a Web Worker.** Four 12 MP photos on the main thread is
+  ten seconds of frozen phone, and a frozen phone reads as a broken form — so
+  people tap the button again and now there are eight.
+- **No analytics, session recording or error reporter here.** `src/onboarding/log.ts`
+  exists instead of `lib/telemetry.ts`: this page collects national IDs and bank
+  details, and a session recorder on it is a breach with a subscription fee.
+  Log `submissionId`, `documentKey`, byte counts and outcomes — never a
+  filename or a field value.
+- **Face detection never leaves the device.** `FaceDetector` where the browser
+  has it, skipped in silence where it does not, and no third-party face API
+  under any circumstances. It is biometric data belonging to a Kenyan employee.
+- **Two values the app refuses to invent**: the privacy-notice URL and the HR
+  address, both from `VITE_ONBOARDING_*`. On the screen that asks for a
+  national ID, a guessed privacy link is worse than no link and a guessed
+  address sends a document nowhere, so each renders only when configured.
+- **The image pipeline is tested on real pixels.** `src/test/canvasShim.ts`
+  gives Node a working `createImageBitmap` and `OffscreenCanvas` so the
+  compression ladder, the photo checks and the PDF merge run for real.
+  `src/test/images.ts` generates the fixtures rather than committing a
+  photograph of somebody. Three paths still need a browser and are listed at
+  the top of `src/onboarding/media/media.test.ts`.
+
+The wire contract is `docs/onboarding-submission-1.0.schema.json`, asserted by
+`src/onboarding/payload.test.ts`. The ClickUp field register is
+`docs/onboarding-field-ids.md`, which is documentation for whoever builds WF-15
+and is deliberately not importable.
+
 ## Deploying
 
 Build with `npm run build` and serve `dist/` as a static site with an SPA

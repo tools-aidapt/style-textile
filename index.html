@@ -6,6 +6,11 @@
     <link rel="icon" href="/fav.png" type="image/png" />
     <meta name="theme-color" content="#062A3B" />
 
+    <!-- The onboarding form's URL carries a signed token that is the new
+         hire's only credential. Sent as a Referer it would leak into another
+         host's access log, so no request from this site ever carries one. -->
+    <meta name="referrer" content="no-referrer" />
+
     <title>Careers at Aidapt</title>
     <meta
       name="description"

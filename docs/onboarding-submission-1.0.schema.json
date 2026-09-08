@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aidapt.co/schemas/kenafric/onboarding-submission-1.0.json",
+  "title": "Kenafric employee onboarding submission (1.0)",
+  "description": "The employee onboarding submission. Sent as the `payload` part of one multipart/form-data request; each document travels in the same request as its own part, named file0, file1, ... and mapped by documents[].field. additionalProperties is false throughout and every listed property is required even when its value is null, so the builder always writes the whole object.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "submissionId",
+    "submittedAt",
+    "client",
+    "employee",
+    "personal",
+    "bank",
+    "documents",
+    "notProvided",
+    "advisoriesAcknowledged",
+    "consent"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "submissionId": {
+      "description": "UUID v4, generated on first mount and reused by every document upload and every submit attempt. A repeat must be rejected, not filed twice.",
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    },
+    "submittedAt": { "type": "string", "format": "date-time" },
+    "client": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["app", "appVersion"],
+      "properties": {
+        "app": { "const": "kenafric-onboarding-web" },
+        "appVersion": { "type": "string", "maxLength": 20 }
+      }
+    },
+    "employee": {
+      "description": "Only the task id, and only ever the one the signed link token established. There is deliberately no shape here for an id the browser was told rather than given.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clickupTaskId"],
+      "properties": {
+        "clickupTaskId": { "type": "string", "minLength": 1, "maxLength": 20 }
+      }
+    },
+    "personal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fullName", "personalEmail", "personalEmailChanged", "mobile", "address"],
+      "properties": {
+        "fullName": { "type": "string", "minLength": 3, "maxLength": 80 },
+        "personalEmail": { "type": "string", "format": "email", "maxLength": 254 },
+        "personalEmailChanged": {
+          "description": "True when the employee changed the address the link was sent to. WF-15 writes it back to the Employee record.",
+          "type": "boolean"
+        },
+        "mobile": {
+          "description": "E.164. The form asks for the country and the national digits separately and composes them. A Kenyan number is checked properly by the app (nine digits after +254, starting 7 or 1); other countries get a length check only, because this form has no business deciding what a valid Ugandan mobile looks like.",
+          "type": "string",
+          "pattern": "^\\+[1-9][0-9]{6,17}$"
+        },
+        "address": { "type": "string", "minLength": 1, "maxLength": 500 }
+      }
+    },
+    "bank": {
+      "description": "Three answers on the wire; n8n concatenates them into the single Bank Account Details text field, in the order listed here. Asked separately because one box produced \"Stephen Wahito 0110123456789\", which a payroll clerk cannot safely split back up.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bankNameBranch", "accountName", "accountNumber", "helbLoanStatus"],
+      "properties": {
+        "bankNameBranch": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "accountName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "accountNumber": {
+          "description": "Whitespace removed by the app — people group the digits, and a payroll file cannot.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 34
+        },
+        "helbLoanStatus": {
+          "description": "A label, never an option UUID. n8n resolves it against the live field schema.",
+          "enum": ["Pending Clearance", "Cleared Loan", "No Loan"]
+        }
+      }
+    },
+    "documents": {
+      "description": "What is attached to this request. `field` names the multipart part carrying the bytes. clickupFieldName is the pairing key WF-15 Trigger B matches on; the filename is for humans and must never be parsed.",
+      "type": "array",
+      "maxItems": 13,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "documentKey",
+          "clickupFieldName",
+          "field",
+          "filename",
+          "bytes",
+          "originalBytes",
+          "sourceCount",
+          "note",
+          "status"
+        ],
+        "properties": {
+          "documentKey": { "$ref": "#/$defs/documentKey" },
+          "clickupFieldName": { "$ref": "#/$defs/clickupFieldName" },
+          "field": {
+            "description": "The multipart part holding this document's bytes. Indexed rather than named after the document, because a binary property called file_drivers-licence is awkward to reach in an n8n expression and one called file3 is not.",
+            "type": "string",
+            "pattern": "^file[0-9]{1,2}$"
+          },
+          "filename": { "type": "string", "maxLength": 120, "pattern": "^[a-z0-9_.-]+$" },
+          "bytes": { "type": "integer", "minimum": 1, "maximum": 5242880 },
+          "originalBytes": { "type": "integer", "minimum": 1 },
+          "sourceCount": { "type": "integer", "minimum": 1, "maximum": 8 },
+          "note": { "type": ["string", "null"], "maxLength": 200 },
+          "status": { "const": "attached" }
+        }
+      }
+    },
+    "notProvided": {
+      "description": "Why each missing document is missing. HR reads this list, so \"skipped\" and \"too-large\" have to mean different things.",
+      "type": "array",
+      "maxItems": 13,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["documentKey", "reason"],
+        "properties": {
+          "documentKey": { "$ref": "#/$defs/documentKey" },
+          "reason": { "enum": ["not-applicable", "first-job", "too-large", "skipped"] },
+          "note": { "type": "string", "maxLength": 200 }
+        }
+      }
+    },
+    "advisoriesAcknowledged": {
+      "description": "Codes of the warnings the employee was shown and explicitly waved through.",
+      "type": "array",
+      "maxItems": 20,
+      "items": { "type": "string", "pattern": "^[AP]-[0-9]{1,2}$" }
+    },
+    "consent": {
+      "description": "\"They consented\" is only meaningful alongside what they were shown, so the wording's own version travels with it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["given", "at", "version"],
+      "properties": {
+        "given": { "const": true },
+        "at": { "type": "string", "format": "date-time" },
+        "version": { "type": "string", "maxLength": 20 }
+      }
+    }
+  },
+  "$defs": {
+    "documentKey": {
+      "enum": [
+        "national-id",
+        "kra-pin",
+        "nssf",
+        "nhif-sha",
+        "helb-status",
+        "education-certs",
+        "good-conduct",
+        "public-health-cert",
+        "payslips",
+        "passport-photo",
+        "signed-offer-letter",
+        "separation-letters",
+        "drivers-licence"
+      ]
+    },
+    "clickupFieldName": {
+      "description": "The contract with WF-15 Trigger B. Note the slash in NHIF/SHA, the apostrophe and -ce in Driver's Licence, and the numeral in Last 3 Payslips.",
+      "enum": [
+        "National ID",
+        "KRA PIN",
+        "NSSF",
+        "NHIF/SHA",
+        "HELB Status Document",
+        "Educational Certificates",
+        "Certificate of Good Conduct",
+        "Public Health Certificate",
+        "Last 3 Payslips",
+        "Passport Photo",
+        "Signed Offer Letter",
+        "Separation Letters",
+        "Driver's Licence"
+      ]
+    }
+  }
+}

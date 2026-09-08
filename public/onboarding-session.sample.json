@@ -1,0 +1,21 @@
+{
+  "_comment": "A stand-in for the onboarding session endpoint, for looking at the form without n8n. Point VITE_ONBOARDING_SESSION_URL at /onboarding-session.sample.json and any id in the URL opens it, because a static file cannot look anything up — so this belongs on a local or preview build only, never on the deployment a new hire is sent to. Everything below is invented: there is no employee called Amina Otieno, and 869evrmhx is not a real task. Same convention as requisition-schema.sample.json.",
+  "ok": true,
+  "employee": {
+    "clickupTaskId": "869evrmhx",
+    "fullName": "Amina Otieno",
+    "personalEmail": "amina.otieno.sample@example.com",
+    "mobile": "",
+    "joiningDate": "2026-10-01",
+    "positionTitle": "Production Supervisor",
+    "company": "Kenafric Industries"
+  },
+  "_requirements": "Both conditionals are served here so the two tiles that are normally hidden can be reviewed. In production n8n derives these from the position's Position Requirements and department, and anything it does not name stays hidden.",
+  "requiredDocuments": ["public-health-cert"],
+  "optionalDocuments": ["drivers-licence"],
+  "_alreadyReceived": "Renders the satisfied tile — a teal check, 'Already on file', and no upload control. WF-14 can pre-fill the offer letter from the candidate card.",
+  "alreadyReceived": ["signed-offer-letter"],
+  "_manifest": "What this submissionId has already uploaded. Empty here; on a real resume it is the source of truth for which documents have arrived.",
+  "manifest": [],
+  "expiresAt": "2026-10-22T00:00:00.000Z"
+}
