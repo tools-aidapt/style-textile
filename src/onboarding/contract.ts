@@ -109,9 +109,12 @@ export interface OnboardingSubmission {
   submittedAt: string;
   client: { app: typeof CLIENT_APP; appVersion: string };
   /**
-   * The ClickUp Employee task id the link carried, echoed back by the session
-   * endpoint. n8n re-reads it from its own request rather than trusting this
-   * copy — see docs/onboarding-field-ids.md.
+   * The ClickUp Employee task id the link carried, taken from the URL.
+   *
+   * The submit is a POST with no query string, so unlike the session call this
+   * payload is the only place n8n can learn who the submission belongs to.
+   * Validate it the same way the session endpoint validates `?id=` — that it
+   * names a record you are actually expecting documents for.
    */
   employee: { clickupTaskId: string };
   personal: {

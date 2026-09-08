@@ -35,6 +35,15 @@ import { dialFor } from "./dialCodes";
 
 export interface PayloadInput {
   values: OnboardingValues;
+  /**
+   * The ClickUp Employee task id the URL carried.
+   *
+   * This, rather than the id the session echoed back. The submit is a POST
+   * with no query string, so the payload is n8n's ONLY source for who this
+   * submission belongs to — and the answer has to be the id the employee's own
+   * link established, not a value that arrived in a response body.
+   */
+  employeeId: string;
   session: OnboardingSession;
   requirements: DocumentRequirement[];
   entries: DocumentEntries;
@@ -88,6 +97,7 @@ const reasonFor = (entry: DocumentEntry, requirement: DocumentRequirement): NotP
 
 export const buildPayload = ({
   values,
+  employeeId,
   session,
   requirements,
   entries,
@@ -134,8 +144,8 @@ export const buildPayload = ({
     submissionId,
     submittedAt,
     client: { app: CLIENT_APP, appVersion: APP_VERSION },
-    // Echoed from the session, which is the only place the app learns it
-    employee: { clickupTaskId: session.clickupTaskId },
+    // From the URL. See `employeeId` above for why it is not the session's copy.
+    employee: { clickupTaskId: employeeId },
     personal: {
       fullName: trimmed(values.fullName),
       personalEmail,

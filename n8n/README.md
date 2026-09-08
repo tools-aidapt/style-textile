@@ -223,9 +223,11 @@ browser cannot change that, so the safeguards live here and are not optional:
   that cannot help.
 - **Log every session hit with its id and IP.** A sweep cannot be prevented,
   but it must be visible afterwards.
-- **`Employee ID` comes from your own request, not from the payload.** The
-  submit echoes `employee.clickupTaskId` for readability; re-read it from the
-  request you validated rather than trusting the body.
+- **`employee.clickupTaskId` in the payload is the id the link carried**, and
+  on the submit it is the only copy — a POST has no query string to read it
+  from. So validate it here exactly as the session endpoint validates `?id=`:
+  that it names a record you are expecting documents for, rate-limited, and
+  logged.
 
 `onboarding-token.cjs` holds a signed, expiring-link implementation if the
 above is ever judged too thin. Switching to it changes two lines in

@@ -27,11 +27,13 @@ const REQUIRED: DocumentKey[] = DOCUMENTS.filter((spec) => spec.tier === "requir
 const build = ({
   values = testValues(),
   session = testSession(),
+  employeeId = "869evrmhx",
   entries = entriesFor([...REQUIRED, "passport-photo"]) as DocumentEntries,
   advisoriesAcknowledged = [] as string[],
 } = {}) =>
   buildPayload({
     values,
+    employeeId,
     session,
     requirements: visibleDocuments(session, values),
     entries,
@@ -66,8 +68,17 @@ describe("buildPayload", () => {
     );
   });
 
-  it("carries only the task id the token established", () => {
+  it("carries the id from the URL, not the one the session echoed", () => {
+    // The submit is a POST with no query string, so the payload is n8n's only
+    // source for who this belongs to — and the answer is the id the
+    // employee's own link established
     expect(build().employee).toEqual({ clickupTaskId: "869evrmhx" });
+
+    const payload = build({
+      employeeId: "869eykhcg",
+      session: testSession({ clickupTaskId: "869evrmhx" }),
+    });
+    expect(payload.employee).toEqual({ clickupTaskId: "869eykhcg" });
   });
 
   it("normalises the mobile number", () => {

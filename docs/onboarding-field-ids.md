@@ -33,11 +33,12 @@ Task name: `{fullName} — Onboarding`.
 
 Two notes n8n has to honour:
 
-- **`Employee ID` comes from the request your webhook validated, not from the
-  payload's own say-so.** The app identifies the new hire by their ClickUp task
-  id in the URL and echoes it back for readability; re-read it from the request
-  you rate-limited and status-checked. A task id is guessable, and this list
-  holds national IDs and bank details.
+- **`Employee ID` is `employee.clickupTaskId` from the payload, and that is the
+  id the employee's link carried.** The submit is a POST with no query string,
+  so unlike the session call there is no other copy to cross-check against —
+  validate it here the same way the session endpoint validates `?id=`, that it
+  names a record you are actually expecting documents for. A task id is
+  guessable, and this list holds national IDs and bank details.
 - **`Bank Account Details` is a text field, not an attachment**, and the app
   deliberately sends three values. Concatenate them server-side, in this
   order, newline between:

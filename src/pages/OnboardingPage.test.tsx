@@ -16,10 +16,20 @@ import OnboardingPage from "./OnboardingPage";
  * are ready and file a submission that names the right ClickUp field for each.
  */
 
-const EMPLOYEE_ID = "869evrmhx";
+const EMPLOYEE_ID = "869eykhcg";
+
+/**
+ * The session below deliberately echoes a DIFFERENT task id.
+ *
+ * The employee's link is what establishes who they are, so the id in the URL
+ * has to win — in the payload, because the submit is a POST with no query
+ * string, and in the filename, so the two can never disagree about whose
+ * document this is.
+ */
+const SESSION_ECHOED_ID = "869evrmhx";
 
 /** Built from the same clock the app uses, so this does not fail tomorrow. */
-const EXPECTED_FILENAME = `869evrmhx_kra-pin_wahito-stephen_${nairobiDate()}.pdf`;
+const EXPECTED_FILENAME = `${EMPLOYEE_ID}_kra-pin_wahito-stephen_${nairobiDate()}.pdf`;
 
 /** Everything Section D would ask for, minus the one the test uploads. */
 const ALL_KEYS = [...DOCUMENTS.map((spec) => spec.key), "passport-photo" as const];
@@ -27,7 +37,7 @@ const ALL_KEYS = [...DOCUMENTS.map((spec) => spec.key), "passport-photo" as cons
 const sessionBody = (overrides: Record<string, unknown> = {}) => ({
   ok: true,
   employee: {
-    clickupTaskId: "869evrmhx",
+    clickupTaskId: SESSION_ECHOED_ID,
     fullName: "Stephen Gachoka Wahito",
     personalEmail: "stephen.wahito@gmail.com",
     joiningDate: "2026-10-01",
@@ -224,7 +234,9 @@ describe("OnboardingPage", () => {
     expect(file).toBeInstanceOf(File);
     expect(file.name).toBe(EXPECTED_FILENAME);
 
+    // From the URL, not the session's echo
     expect(payload.employee).toEqual({ clickupTaskId: EMPLOYEE_ID });
+    expect(payload.employee.clickupTaskId).not.toBe(SESSION_ECHOED_ID);
     expect(payload.personal.mobile).toBe("+254712345678");
     expect(payload.bank.helbLoanStatus).toBe("Cleared Loan");
     // Two fields on screen, three values on the wire, spaces gone

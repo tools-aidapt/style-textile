@@ -1,5 +1,5 @@
 {
-  "_comment": "A stand-in for the onboarding session endpoint, for looking at the form without n8n. Point VITE_ONBOARDING_SESSION_URL at /onboarding-session.sample.json and any id in the URL opens it, because a static file cannot look anything up — so this belongs on a local or preview build only, never on the deployment a new hire is sent to. Everything below is invented: there is no employee called Amina Otieno, and 869evrmhx is not a real task. Same convention as requisition-schema.sample.json.",
+  "_comment": "A stand-in for the onboarding session endpoint, for looking at the form without n8n. Point VITE_ONBOARDING_SESSION_URL at /onboarding-session.sample.json and any id in the URL opens it, because a static file cannot look anything up — so this belongs on a local or preview build only, never on the deployment a new hire is sent to. The id in the URL is what identifies the employee and what travels in the submission; the clickupTaskId below is only echoed back, so this fixture opens for any id you put in the link. Everything here is invented: there is no employee called Amina Otieno, and 869evrmhx is not a real task. Same convention as requisition-schema.sample.json.",
   "ok": true,
   "employee": {
     "clickupTaskId": "869evrmhx",

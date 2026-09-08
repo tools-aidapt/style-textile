@@ -18,7 +18,6 @@ import {
   type SourceFile,
 } from "@/onboarding/uploads";
 import { clearPending, readAllPending, savePending } from "@/onboarding/draft";
-import type { OnboardingSession } from "@/onboarding/session";
 
 /** One document's finished bytes, ready to be attached to the submit. */
 export interface PreparedFile {
@@ -54,7 +53,12 @@ export interface UseOnboardingUploads {
 
 interface Options {
   submissionId: string;
-  session: OnboardingSession | null;
+  /**
+   * The ClickUp Employee task id from the URL. It prefixes every filename, so
+   * HR can sort a folder by employee — and it is the URL's id rather than the
+   * session's echo, so a filename and its payload always agree.
+   */
+  employeeId: string;
   /** Read at prepare time, for the filename. */
   fullName: string;
 }
@@ -81,7 +85,7 @@ const DOCUMENT_ORDER: DocumentKey[] = [
  */
 export const useOnboardingUploads = ({
   submissionId,
-  session,
+  employeeId,
   fullName,
 }: Options): UseOnboardingUploads => {
   const [entries, setEntries] = useState<DocumentEntries>({});
@@ -212,7 +216,7 @@ export const useOnboardingUploads = ({
       }
 
       const filename = documentFilename({
-        clickupTaskId: session?.clickupTaskId ?? "",
+        clickupTaskId: employeeId,
         documentKey: key,
         fullName: nameRef.current,
         extension: result.extension,
@@ -257,7 +261,7 @@ export const useOnboardingUploads = ({
         originalBytes: result.originalBytes,
       });
     },
-    [patch, session, submissionId],
+    [employeeId, patch, submissionId],
   );
 
   const addFiles = useCallback(
@@ -317,7 +321,7 @@ export const useOnboardingUploads = ({
     (key: DocumentKey, blob: Blob, meta: { originalBytes: number; extension: "jpg" | "pdf" }) => {
       const spec = documentSpec(key);
       const filename = documentFilename({
-        clickupTaskId: session?.clickupTaskId ?? "",
+        clickupTaskId: employeeId,
         documentKey: key,
         fullName: nameRef.current,
         extension: meta.extension,
@@ -344,7 +348,7 @@ export const useOnboardingUploads = ({
       void savePending({ submissionId, documentKey: key, ...output, blob });
       logOnboarding("prepared", { submissionId, documentKey: key, bytes: blob.size });
     },
-    [patch, session, submissionId],
+    [employeeId, patch, submissionId],
   );
 
   const preparedFiles = useCallback((): PreparedFile[] => {

@@ -158,7 +158,7 @@ export const OnboardingForm = ({
 
   const uploads = useOnboardingUploads({
     submissionId: submissionId.current,
-    session,
+    employeeId,
     fullName: values.fullName,
   });
 
@@ -298,6 +298,7 @@ export const OnboardingForm = ({
     void submit(
       buildPayload({
         values,
+        employeeId,
         session,
         requirements,
         entries: uploads.entries,
