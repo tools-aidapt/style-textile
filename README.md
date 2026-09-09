@@ -53,11 +53,16 @@ src/
   components/
     careers/      The board, a role, the application form
     requisition/  The new-requisition form: fields, repeater, rail, JD preview
+    onboarding/   The new-hire form: document tiles, photo, progress rail
+    feedback/     The feedback forms: the generic renderer, fields, states
     ui/           Vendored shadcn/ui — not written here, not modified here
   hooks/          usePositions, useRequisitionSchema, useRequisitionSubmit, useApi
   lib/            config, seo, telemetry, utils
   requisition/    The requisition's model: schema contract, fields, validation,
                   payload, draft. No JSX — all of it is unit-testable
+  onboarding/     The onboarding model: documents, media pipeline, contract
+  feedback/       The feedback model: form specs, token/context, validation,
+                  payload. One spec per instrument; no JSX
   aidapt/         Design tokens and fonts. Vendored from the design system
 n8n/              The workflows that serve the board and the requisition form
 ```
@@ -213,6 +218,84 @@ The wire contract is `docs/onboarding-submission-1.0.schema.json`, asserted by
 `src/onboarding/payload.test.ts`. The ClickUp field register is
 `docs/onboarding-field-ids.md`, which is documentation for whoever builds WF-15
 and is deliberately not importable.
+
+## The feedback forms
+
+Five instruments collect the experience data behind the TA Metrics report. The
+first two are built: `/feedback/candidate-review`, which serves both the
+external candidate review (F1) and its internal twin (F2).
+
+V1 ran these out of Airtable and they produced almost nothing usable — not
+because the questions were wrong, but because **no send was triggered, nothing
+was prefilled, and therefore nothing was linked.** Every design choice here
+serves those three things:
+
+- **Nothing is asked that Kenafric already holds.** Name, email, payroll
+  number, department, company and the role applied for are rendered read-only
+  from the context endpoint. The Airtable forms asked for all six, and a typo
+  or a nickname made a response unmatchable to a candidate record for ever.
+- **One route serves both variants.** `formType` comes back as `CRR` or
+  `ICRR`; the only difference on screen is the payroll number an internal
+  applicant is shown. The Airtable pair were two forms, they drifted, and the
+  internal one shipped with no form tag — so every internal response ever
+  submitted reports as nothing.
+- **The link identifies AND authenticates.** `?t=` is a signed token minted by
+  WF-15 against the `LINK_SECRET` already used by WF-11d/11e. The app never
+  decodes it and never trusts it: `formType` decides which field the response
+  is tagged with, so it is read from the endpoint, not from a claim the
+  recipient could have rewritten. The token is an opaque string here from the
+  URL to the POST body.
+
+Worth knowing before changing it:
+
+- **`answers` is keyed by ClickUp custom field id.** This is the decision the
+  whole layer rests on. WF-14 holds no question-text mapping table, so
+  rewording a question never breaks the workflow and adding the remaining
+  instruments needs no workflow change. The question text and its field id sit
+  side by side in `src/feedback/candidateReview.ts` and nowhere else.
+- **An id is a complete UUID or the question is not asked.** A wrong id writes
+  a real answer to the wrong field, and neither that nor a silent drop fails
+  loudly. `isFieldId` is the only thing that decides, and `askableSections`
+  withholds anything that fails it. Four free-text ids reached us abbreviated
+  to eight characters and are held verbatim; those four questions do not
+  render, and a development-only notice on the form says which. Completing an
+  id is one edit and needs no other change. `candidateReview.test.ts` pins the
+  list, so it fails the day they arrive — which is the point.
+- **Option names, never option UUIDs.** WF-14 resolves a name against the live
+  field schema. An option UUID changes if anyone rebuilds a field, and a public
+  bundle has no business holding one.
+- **The app sends four keys and no structural field.** Form Type, Position,
+  Person, Company, Department, Recruitment Type, Submitted On, Response Token
+  and Overall Rating are all WF-14's, derived from the token and the tasks it
+  loads. A browser that cannot be trusted to say who it is must not be the
+  source of who a response belongs to.
+- **The token is the idempotency key.** WF-14 refuses a `Response Token`
+  already on the list and answers 409, which the app treats as the success it
+  is — the answers are filed. That is also what makes an n8n retry harmless.
+- **`Overall Rating` is computed by WF-14, not sent.** The app's own copy is
+  for what the candidate is shown and for the log line. Two computations of one
+  number is one too many.
+- **The five free-text answers are optional** (`FREE_TEXT_REQUIRED`). Airtable
+  made them mandatory; mandatory prose is the biggest driver of survey
+  abandonment and the 13 ratings carry the report. Still open with HR as D-14,
+  and it is one boolean because that is the whole cost of changing our minds.
+- **No analytics, session recording or error reporter here.**
+  `src/feedback/log.ts` exists instead of `lib/telemetry.ts`. A recorder on
+  this page captures a candidate saying their interviewer was unprepared,
+  attributed, in a third party's console. Log the form type, counts, a rating,
+  a status — never an answer, a name, or the token.
+- **Errors show on blur, never on keystroke**, and a dead end gives nothing
+  away: bad signature, expired and unknown all render the same screen, with no
+  name, role or company on it, because distinguishing them tells somebody
+  holding a guessed token which part of the guess was wrong.
+
+The wire contract is `docs/feedback-submission-1.0.schema.json`, asserted by
+`src/feedback/payload.test.ts` with Ajv against that file.
+
+For local work without n8n, point `VITE_FEEDBACK_CONTEXT_URL` at the
+checked-in `public/feedback-context.sample.json`. Any token-shaped `?t=` then
+opens the form, because a static file cannot verify a signature — so that
+value belongs on a local or preview build only.
 
 ## Deploying
 

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aidapt.co/schemas/kenafric/feedback-submission-1.0.json",
+  "title": "Kenafric feedback submission (v1.0)",
+  "description": "The body of a POST to WF-14 (kenafric-wf14), for every one of the five feedback instruments. Four keys and nothing else: additionalProperties is false, so a stray key is rejected rather than ignored. Validated against real payloads by src/feedback/payload.test.ts with Ajv — against this file, not against the app's opinion of it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["t", "formType", "submittedAt", "answers"],
+  "properties": {
+    "t": {
+      "description": "The signed token from the link, passed through verbatim. base64url payload, '.', base64url HMAC-SHA256. The app never decodes it: a claim read from an unverified token is a claim the recipient could have rewritten. n8n verifies it against LINK_SECRET. It is also the idempotency key — WF-14 stores it as Response Token and refuses one already on the list.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{16,1024}\\.[A-Za-z0-9_-]{16,512}$"
+    },
+    "formType": {
+      "description": "Which instrument this is, echoed back from what the context endpoint said. Never a value the browser chose. WF-14 branches on it and maps it to the Form Type option name.",
+      "type": "string",
+      "enum": ["CRR", "ICRR", "MRR", "MNHR", "EEC"]
+    },
+    "submittedAt": {
+      "description": "ISO 8601 with the local UTC offset, never Z. Every one of these is submitted in Nairobi, and a 09:00 EAT response filed as 06:00 UTC reads as somebody answering before the email went out.",
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}[+-]\\d{2}:\\d{2}$"
+    },
+    "answers": {
+      "description": "The answers, keyed by ClickUp custom field id. This is the decision the whole layer rests on: WF-14 carries no question-text mapping table, so rewording a question never breaks it and a new instrument needs no workflow change. Sparse — an unanswered optional question is ABSENT, never null and never an empty string, because an empty string is a value ClickUp will write and 'skipped' reports differently from 'answered nothing'.",
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "description": "A complete ClickUp custom field UUID. An abbreviated id is refused here rather than guessed at: a wrong id writes a real answer to the wrong field, and neither that nor a silent drop fails loudly.",
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+      },
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "description": "A five-star (ClickUp emoji) answer. An integer 1-5, which is what the API takes and returns.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          {
+            "description": "Everything else: a drop_down option NAME, or a text answer. Never an option UUID — those change if anyone rebuilds a field, and a public bundle has no business holding one. WF-14 resolves the name against the live field schema. Trimmed, and never empty.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          }
+        ]
+      }
+    }
+  }
+}

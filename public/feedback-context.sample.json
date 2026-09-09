@@ -1,0 +1,20 @@
+{
+  "_comment": "A stand-in for the feedback context endpoint, for looking at the form without n8n. Point VITE_FEEDBACK_CONTEXT_URL at /feedback-context.sample.json and any token-shaped ?t= in the URL opens it, because a static file cannot verify a signature — so this belongs on a local or preview build only, never on the deployment a candidate is sent to. Everything here is invented: there is no candidate called Amina Otieno and no such requisition. Same convention as onboarding-session.sample.json.",
+  "ok": true,
+  "_formType": "CRR is the external candidate review; change this to ICRR to see the internal variant, which shows the payroll number back to the applicant. The app takes formType from here and never from the token, so this is the only switch.",
+  "formType": "CRR",
+  "_alreadySubmitted": "Set this to true to see the already-answered screen instead of the form.",
+  "alreadySubmitted": false,
+  "_prefill": "Every value here is rendered read-only and none of it is ever asked for. payroll is null for CRR; give it a value when testing ICRR. jobTitle and reviewPoint belong to the manager and check-in forms and are unused by Build A.",
+  "prefill": {
+    "fullName": "Amina Otieno",
+    "email": "amina.otieno.sample@example.com",
+    "payroll": null,
+    "positionTitle": "Sales Operations Coordinator",
+    "jobTitle": null,
+    "company": "Kenafric Manufacturing Limited",
+    "department": "Sales & Distribution",
+    "recruitmentType": "External Recruitment",
+    "reviewPoint": null
+  }
+}

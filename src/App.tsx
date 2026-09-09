@@ -52,6 +52,18 @@ const router = createBrowserRouter([
     errorElement: <RouteError />,
   },
   {
+    /**
+     * F1 / F2 — the candidate recruitment review, external and internal.
+     *
+     * One route for both. The signed token is `?t=` rather than a path
+     * segment: it is long, and the form it opens is chosen by what the
+     * context endpoint says the token is for, not by the address.
+     */
+    path: "/feedback/candidate-review",
+    lazy: async () => ({ Component: (await import("./pages/CandidateReviewPage")).default }),
+    errorElement: <RouteError />,
+  },
+  {
     path: "*",
     lazy: async () => ({ Component: (await import("./pages/NotFound")).default }),
     errorElement: <RouteError />,

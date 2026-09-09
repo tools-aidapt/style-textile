@@ -63,6 +63,22 @@ export const config = {
   onboardingPrivacyUrl: read(import.meta.env.VITE_ONBOARDING_PRIVACY_URL),
   onboardingHrEmail: read(import.meta.env.VITE_ONBOARDING_HR_EMAIL),
 
+  /**
+   * The feedback forms' two endpoints, shared by all five instruments.
+   *
+   * The first exchanges the signed token in the link for that one person's
+   * prefilled details and whether they have already answered. The second
+   * takes the completed response.
+   *
+   * Neither carries a ClickUp field id, and the token is never configured
+   * here — it arrives in the URL WF-15 emailed. See `feedback/session.ts` for
+   * why the app refuses to decode it.
+   */
+  feedbackContextUrl: read(import.meta.env.VITE_FEEDBACK_CONTEXT_URL),
+  feedbackSubmitUrl: read(import.meta.env.VITE_FEEDBACK_SUBMIT_URL),
+  feedbackWebhookUser: read(import.meta.env.VITE_FEEDBACK_WEBHOOK_USER),
+  feedbackWebhookPassword: read(import.meta.env.VITE_FEEDBACK_WEBHOOK_PASSWORD),
+
   /** Absolute origin used to build canonical URLs and JobPosting structured data. */
   siteUrl: read(import.meta.env.VITE_SITE_URL) || "https://aidapt.co",
 
