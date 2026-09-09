@@ -14,11 +14,16 @@
  * asked here and the cap is ClickUp's problem rather than the candidate's.
  *
  * ---
- * FIELD IDS. Four of the five free-text fields reached us abbreviated to
- * their first eight characters, so they are held below exactly as received.
- * They fail `isFieldId`, which means those four questions are **not asked**
- * until the full ids arrive — see `withheldQuestions` in schema.ts. Completing
- * them is one edit each and needs no other change anywhere.
+ * FIELD IDS. Every id below is a complete ClickUp custom field UUID, verified
+ * against the live `Feedback Responses` list (901220480198). Four of the five
+ * free-text fields first reached us abbreviated to eight characters and were
+ * held that way — `isFieldId` rejected them, so `askableSections` withheld the
+ * questions rather than asking them and dropping the answers. They were
+ * completed on 2026-09-09 and all twenty questions now render.
+ *
+ * The mechanism stays: an id that is not a complete UUID withholds its own
+ * question. That is what stops a careless paste from silently filing a real
+ * answer against nothing.
  * ---
  */
 
@@ -189,24 +194,21 @@ const SECTIONS: FormSection[] = [
         ],
       },
       {
-        // PENDING id — abbreviated in the field audit. Not asked until complete.
-        id: "006db82e",
+        id: "006db82e-6dfe-4554-ab17-29d0fed62b9f",
         label: "What aspects of our recruitment process impressed you the most?",
         type: "text",
         required: FREE_TEXT_REQUIRED,
         maxLength: TEXT_MAX,
       },
       {
-        // PENDING id
-        id: "f109d805",
+        id: "f109d805-06dc-4870-b59b-64bd4868a3e8",
         label: "What could we improve in our recruitment process?",
         type: "text",
         required: FREE_TEXT_REQUIRED,
         maxLength: TEXT_MAX,
       },
       {
-        // PENDING id
-        id: "3f0cddbc",
+        id: "3f0cddbc-8693-4d5d-a7f0-50464c516ec2",
         label:
           "Did the recruitment process give you a good understanding of Kenafric's products and culture?",
         type: "text",
@@ -214,8 +216,7 @@ const SECTIONS: FormSection[] = [
         maxLength: TEXT_MAX,
       },
       {
-        // PENDING id
-        id: "650c074f",
+        id: "650c074f-e656-446b-a51a-7f1ff7177af7",
         label:
           "Were there any moments during the process that stood out as particularly positive or negative?",
         type: "text",

@@ -103,27 +103,24 @@ describe("FeedbackForm", () => {
     ).toBeInTheDocument();
   });
 
-  it("asks nothing whose answer it could not store", () => {
+  it("asks all twenty questions, each with somewhere to answer it", () => {
     renderForm();
 
-    /**
-     * The four abbreviated free-text ids. Asking and then dropping the answer
-     * is the V1 failure this phase exists to undo.
-     *
-     * Asserted on the CONTROL rather than the text, because the labels do
-     * appear in the development-only notice that lists what is withheld —
-     * `import.meta.env.DEV` is true under vitest. A question is "asked" when
-     * there is somewhere to answer it.
-     */
-    expect(screen.queryByLabelText(/impressed you the most/i)).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/What could we improve/i)).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/moments during the process/i)).not.toBeInTheDocument();
-
-    // The one free-text id that is complete is asked, and has a box
+    // The five free-text questions. Four of these were withheld until their
+    // ClickUp ids were completed — asking and then dropping the answer is the
+    // V1 failure this phase exists to undo.
+    expect(screen.getByLabelText(/impressed you the most/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/What could we improve/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/products and culture/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/moments during the process/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Any additional comments or suggestions/i)).toBeInTheDocument();
+    expect(screen.getAllByRole("textbox")).toHaveLength(5);
 
-    // 16 of the 20 questions are on screen: 13 ratings, 2 choices, 1 textarea
-    expect(screen.getAllByRole("textbox")).toHaveLength(1);
+    // 13 ratings × 5 stars, plus 4 + 2 choice options
+    expect(screen.getAllByRole("radio")).toHaveLength(13 * 5 + 6);
+
+    // Nothing is withheld, so the development notice is not on the page
+    expect(screen.queryByText(/withheld in this build/i)).not.toBeInTheDocument();
   });
 
   it("does not send an incomplete response, and says how much is left", async () => {
@@ -147,7 +144,7 @@ describe("FeedbackForm", () => {
     expect(screen.queryByText("Please answer this")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /send my feedback/i }));
-    // 16 questions on screen, 15 of them required
+    // 20 questions on screen, 15 of them required
     expect(await screen.findAllByText("Please answer this")).toHaveLength(15);
   });
 

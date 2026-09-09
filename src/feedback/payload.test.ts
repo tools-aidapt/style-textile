@@ -84,14 +84,21 @@ describe("cleanAnswers", () => {
     );
   });
 
-  it("refuses an answer to a question that is not on screen", () => {
-    // The four withheld free-text ids are abbreviated, so an answer keyed by
-    // one could never be stored. It must not reach the wire either.
+  it("refuses an answer keyed by an abbreviated id", () => {
+    // An id that is not a complete UUID withholds its own question, so an
+    // answer keyed by one could never be stored. It must not reach the wire.
     const clean = cleanAnswers(CANDIDATE_REVIEW, {
       ...completeAnswers(),
       "006db82e": "Everything about it.",
     });
     expect(clean).not.toHaveProperty("006db82e");
+    // …while the completed id for that same question does go through
+    expect(
+      cleanAnswers(CANDIDATE_REVIEW, {
+        ...completeAnswers(),
+        "006db82e-6dfe-4554-ab17-29d0fed62b9f": "Everything about it.",
+      })["006db82e-6dfe-4554-ab17-29d0fed62b9f"],
+    ).toBe("Everything about it.");
   });
 
   it("refuses an answer to a field the spec does not ask about at all", () => {

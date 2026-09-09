@@ -1,0 +1,18 @@
+{
+  "_comment": "The F2 twin of feedback-context.sample.json: the same endpoint answering for an INTERNAL applicant. Point VITE_FEEDBACK_CONTEXT_URL at /feedback-context-internal.sample.json to see the internal variant. Local and preview builds only. Everything here is invented: there is no employee called Brian Kiptoo and no such requisition.",
+  "ok": true,
+  "_formType": "ICRR is the only difference that matters. It shows the payroll number back to the applicant, and it is what WF-14 tags the response with — the Airtable internal form carried no tag at all, so every internal response ever submitted reports as nothing.",
+  "formType": "ICRR",
+  "alreadySubmitted": false,
+  "prefill": {
+    "fullName": "Brian Kiptoo",
+    "email": "brian.kiptoo.sample@example.com",
+    "payroll": "KIL-04182",
+    "positionTitle": "Sales Operations Coordinator",
+    "jobTitle": null,
+    "company": "Kenafric Manufacturing Limited",
+    "department": "Sales & Distribution",
+    "recruitmentType": "Internal Recruitment",
+    "reviewPoint": null
+  }
+}

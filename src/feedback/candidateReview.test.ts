@@ -104,9 +104,8 @@ describe("the candidate review spec", () => {
   });
 
   it("asks nothing it cannot store", () => {
-    // The whole point of `askableSections`. Four free-text ids arrived
-    // abbreviated; until they are completed those questions are withheld
-    // rather than asked and dropped.
+    // The standing guarantee, whatever the spec holds: anything on screen has
+    // somewhere to be written. `schema.test.ts` covers the withholding itself.
     askableSections(CANDIDATE_REVIEW).forEach((section) => {
       section.questions.forEach((question) => {
         expect(isFieldId(question.id), `${question.id} is on screen but not storable`).toBe(true);
@@ -114,24 +113,27 @@ describe("the candidate review spec", () => {
     });
   });
 
-  it("withholds exactly the four questions whose field ids are abbreviated", () => {
+  it("holds a complete UUID for every one of its questions", () => {
     /**
-     * This is a TODO with a test around it, and it fails the day somebody
-     * supplies the missing ids — which is the point. Completing an id here
-     * and deleting it from this list is the whole change.
+     * Four free-text ids first arrived abbreviated to eight characters and
+     * were withheld until they were completed on 2026-09-09. Nothing is
+     * withheld now, and this is what says so: a paste that drops half a UUID
+     * fails here rather than silently removing a question from the form.
      */
-    expect(withheldQuestions(CANDIDATE_REVIEW).map((q) => q.id)).toEqual([
-      "006db82e",
-      "f109d805",
-      "3f0cddbc",
-      "650c074f",
-    ]);
+    expect(withheldQuestions(CANDIDATE_REVIEW)).toEqual([]);
+    allQuestions(CANDIDATE_REVIEW).forEach((question) => {
+      expect(isFieldId(question.id), `${question.id} is not a complete field id`).toBe(true);
+    });
+  });
+
+  it("asks all twenty questions", () => {
+    const shown = askableSections(CANDIDATE_REVIEW).flatMap((s) => s.questions);
+    expect(shown).toHaveLength(20);
   });
 
   it("renumbers the sections that survive, so the reader counts 1, 2, 3", () => {
     const shown = askableSections(CANDIDATE_REVIEW);
     expect(shown.map((s) => s.ordinal)).toEqual(shown.map((_, index) => index + 1));
-    // No section is emptied by the withheld four, so all six still render
     expect(shown).toHaveLength(6);
   });
 });

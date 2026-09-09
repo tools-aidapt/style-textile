@@ -256,11 +256,12 @@ Worth knowing before changing it:
 - **An id is a complete UUID or the question is not asked.** A wrong id writes
   a real answer to the wrong field, and neither that nor a silent drop fails
   loudly. `isFieldId` is the only thing that decides, and `askableSections`
-  withholds anything that fails it. Four free-text ids reached us abbreviated
-  to eight characters and are held verbatim; those four questions do not
-  render, and a development-only notice on the form says which. Completing an
-  id is one edit and needs no other change. `candidateReview.test.ts` pins the
-  list, so it fails the day they arrive — which is the point.
+  withholds anything that fails it, dropping a section left with nothing to
+  ask and renumbering what survives. A development-only notice on the form
+  names whatever was withheld. All twenty candidate-review ids are complete,
+  so nothing is withheld today; `schema.test.ts` covers the mechanism on a
+  synthetic spec, because the next three instruments will each be built from
+  an audit and an audit is where an abbreviated id comes from.
 - **Option names, never option UUIDs.** WF-14 resolves a name against the live
   field schema. An option UUID changes if anyone rebuilds a field, and a public
   bundle has no business holding one.
@@ -292,10 +293,11 @@ Worth knowing before changing it:
 The wire contract is `docs/feedback-submission-1.0.schema.json`, asserted by
 `src/feedback/payload.test.ts` with Ajv against that file.
 
-For local work without n8n, point `VITE_FEEDBACK_CONTEXT_URL` at the
-checked-in `public/feedback-context.sample.json`. Any token-shaped `?t=` then
-opens the form, because a static file cannot verify a signature — so that
-value belongs on a local or preview build only.
+For local work without n8n, point `VITE_FEEDBACK_CONTEXT_URL` at
+`public/feedback-context.sample.json` for F1 or
+`public/feedback-context-internal.sample.json` for F2. Any token-shaped `?t=`
+then opens the form, because a static file cannot verify a signature — so
+either value belongs on a local or preview build only.
 
 ## Deploying
 

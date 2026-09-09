@@ -36,12 +36,6 @@ describe("validate", () => {
     expect(missing[0]).toBe(RATING_QUESTION_IDS[3]);
   });
 
-  it("does not require an answer to a withheld question", () => {
-    // Requiring an answer nobody can see is a form that will not submit and
-    // will not say why
-    expect(validate(CANDIDATE_REVIEW, complete()).missing).not.toContain("006db82e");
-  });
-
   it("accepts a blank optional text answer", () => {
     expect(validate(CANDIDATE_REVIEW, { ...complete(), [COMMENTS]: "   " }).errors).toEqual({});
   });
@@ -73,12 +67,12 @@ describe("validate", () => {
 });
 
 describe("the progress figures", () => {
-  it("counts only what is on screen", () => {
-    // 20 questions in the spec, four withheld
-    expect(askableCount(CANDIDATE_REVIEW)).toBe(16);
+  it("counts every question on screen", () => {
+    expect(askableCount(CANDIDATE_REVIEW)).toBe(20);
   });
 
   it("counts a blank text answer as unanswered", () => {
+    // `complete()` answers the 15 required questions and none of the 5 prose
     expect(answeredCount(CANDIDATE_REVIEW, { ...complete(), [COMMENTS]: "  " })).toBe(15);
     expect(answeredCount(CANDIDATE_REVIEW, { ...complete(), [COMMENTS]: "Thanks" })).toBe(16);
   });
