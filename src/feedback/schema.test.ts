@@ -129,9 +129,10 @@ describe("questionDomId", () => {
 
 describe("renderLabel", () => {
   it("substitutes the employing entity", () => {
-    expect(renderLabel("Would you recommend {{company}} to others?", "Kenafric Properties")).toBe(
-      "Would you recommend Kenafric Properties to others?",
-    );
+    // A real Company option from list 901220480198, not an invented entity
+    expect(
+      renderLabel("Would you recommend {{company}} to others?", "Kenafric Properties Limited"),
+    ).toBe("Would you recommend Kenafric Properties Limited to others?");
   });
 
   it("leaves a label with no placeholder alone", () => {

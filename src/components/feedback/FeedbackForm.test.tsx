@@ -32,7 +32,7 @@ const context = (
       email: "amina.otieno.sample@example.com",
       payroll: formType === "ICRR" ? "KIL-04182" : null,
       positionTitle: "Sales Operations Coordinator",
-      company: "Kenafric Bakery & Biscuits Limited",
+      company: "Kenafric Biscuits Limited",
       department: "Sales & Distribution",
       recruitmentType: "External Recruitment",
       ...overrides,
@@ -90,7 +90,7 @@ describe("FeedbackForm", () => {
     // G-9. The ClickUp field is named for Kenafric Industries Ltd
     renderForm();
     expect(
-      screen.getByText(/Would you recommend Kenafric Bakery & Biscuits Limited/),
+      screen.getByText(/Would you recommend Kenafric Biscuits Limited/),
     ).toBeInTheDocument();
     expect(screen.queryByText(/\{\{company\}\}/)).not.toBeInTheDocument();
   });
