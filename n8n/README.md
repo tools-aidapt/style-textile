@@ -14,6 +14,7 @@ serves the browser two endpoints, because everything a Vite build inlines under
 | `requisition-submit.workflow.json` | `POST /webhook/requisition-submit` | Creates a requisition from a submitted form |
 | `wf21-feedback-intake.md` | `POST /webhook/kenafric-wf21` | **Build plan** for the feedback layer. No JSON yet — see below |
 | `wf23-wf24-manager-feedback-sends.md` | — | **Build plan** for the two manager forms and the automations that send them |
+| `wf25-employee-check-in.md` | — | **Build plan** for F5: the nine ClickUp fields to create, and the cron that sends it |
 
 Two more endpoints the requisition form calls are **not** in this repo, because
 they already existed:
@@ -200,7 +201,7 @@ built, on one renderer:
 | F1 / F2 | Candidate recruitment review, external and internal | `/feedback/candidate-review` |
 | F3 | Manager recruitment review | `/feedback/manager-recruitment-review` |
 | F4 | New-hire readiness, Month 1 and Month 3 | `/feedback/new-hire-readiness` |
-| F5 | Employee check-in | blocked on its question texts (D-13) |
+| F5 | Employee check-in, Day 30 to Day 180 | `/feedback/employee-check-in` — route live, questions withheld until its nine ClickUp fields exist |
 
 No workflow JSON here yet. **`wf21-feedback-intake.md` is the build plan** for
 the shared intake, the token and the sequencing;
@@ -209,7 +210,8 @@ question maps, their send triggers and the test plan, and re-reads the ClickUp
 prerequisites against live state on 2026-09-10.
 
 The feedback workflows are **WF-21 intake · WF-22 candidate send · WF-23
-manager review send · WF-24 new-hire readiness send**, renumbered on
+manager review send · WF-24 new-hire readiness send · WF-25 employee
+check-in send**, renumbered on
 2026-09-10 because WF-14 and WF-15 already belonged to the onboarding phase
 described further down this file. Where those two numbers appear below, they
 are onboarding's and are not these.

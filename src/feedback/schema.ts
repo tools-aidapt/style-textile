@@ -305,6 +305,18 @@ export const askableSections = (spec: FeedbackFormSpec): FormSection[] =>
     .map((section, index) => ({ ...section, ordinal: index + 1 }));
 
 /**
+ * Can this instrument collect anything at all?
+ *
+ * False when every question is withheld, which is what a spec looks like
+ * before its ClickUp fields exist. The form must not open in that state: it
+ * would render a header, no questions, and a live Submit button whose empty
+ * `answers` object the wire schema refuses anyway (`minProperties: 1`). A
+ * page that cannot store an answer must say so rather than take one.
+ */
+export const canCollect = (spec: FeedbackFormSpec): boolean =>
+  askableSections(spec).length > 0;
+
+/**
  * The questions withheld because their field id is incomplete.
  *
  * Surfaced in development so the gap is visible to whoever is building, and

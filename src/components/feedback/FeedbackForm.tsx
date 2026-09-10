@@ -10,6 +10,7 @@ import { logFeedback } from "@/feedback/log";
 import { buildSubmission } from "@/feedback/payload";
 import {
   askableSections,
+  canCollect,
   questionDomId,
   visibleFacts,
   withheldQuestions,
@@ -25,7 +26,7 @@ import {
   type AnswerErrors,
 } from "@/feedback/validation";
 import { ChoiceField, LongTextField, PrefilledFact, ScaleField, StarField } from "./fields";
-import { FeedbackSubmitted } from "./FeedbackStates";
+import { FeedbackDeadEnd, FeedbackSubmitted } from "./FeedbackStates";
 
 /**
  * The generic feedback form.
@@ -135,6 +136,19 @@ export const FeedbackForm = ({
 
   if (state.status === "succeeded") {
     return <FeedbackSubmitted rating={rating} voice={voice} />;
+  }
+
+  /**
+   * A spec whose every question is withheld cannot open.
+   *
+   * That is what an instrument looks like before its ClickUp fields exist —
+   * F5 is in exactly this state. Rendering it would put a header and a live
+   * Submit button in front of somebody with nothing to answer, and the empty
+   * `answers` object would be refused by the wire schema after they pressed
+   * it. Better to say the form is not ready than to take an answer nowhere.
+   */
+  if (!canCollect(spec)) {
+    return <FeedbackDeadEnd fault="unconfigured" onRetry={() => undefined} />;
   }
 
   const busy = state.status === "submitting";

@@ -86,6 +86,7 @@ export const copy = {
     "Your answers are still on this page, but we cannot send them from here. Please reply to the email we sent you.",
   failedOffline: "You are offline. Your answers are still here — try again once you have a connection.",
   retry: "Try again",
+
 } as const;
 
 /**
@@ -141,5 +142,25 @@ export const voices = {
     successBody:
       "Your review has been sent to the Kenafric HR team and recorded against this employee's probation.",
     successRating: (rating: number) => `You rated their overall readiness ${rating} out of 5.`,
+  },
+  /**
+   * F5 — the new hire, on their own experience, monthly through probation.
+   *
+   * The only instrument whose reader is also its subject, and the only one
+   * that can promise something back: it asks what support they are missing,
+   * so the privacy line says who acts on the answer. It must not promise
+   * anonymity — the response is linked to their employee record, and
+   * implying otherwise would be a lie a payroll number makes obvious.
+   */
+  employeeCheckIn: {
+    eyebrow: "Kenafric Group · Onboarding",
+    detailsHeading: "Your details",
+    privacyNote:
+      "Your answers go to the Kenafric HR team, who use them to improve how we support new joiners. They are recorded against your employee record, so they are not anonymous — and anything you flag here as missing is something HR can act on.",
+    alreadyBody:
+      "We have your check-in for this month, and each link can only be used once. The next one will reach you at your next check-in.",
+    successBody:
+      "Your answers have been sent to the Kenafric HR team. A person reads them, and what you have asked for here is what HR follows up on.",
+    successRating: (rating: number) => `You rated your experience ${rating} out of 5.`,
   },
 } as const;

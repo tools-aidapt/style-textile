@@ -1,0 +1,20 @@
+{
+  "_comment": "A stand-in for the feedback context endpoint serving F5, for looking at Build D without n8n. Point VITE_FEEDBACK_CONTEXT_URL at /feedback-context-employee-check-in.sample.json and any token-shaped ?t= on /feedback/employee-check-in opens it. Everything here is invented: there is no employee called Grace Wanjiru. NOTE: until the nine ClickUp question fields exist, this route renders 'not finished being set up' rather than a form — that is the designed behaviour, see src/feedback/employeeCheckIn.ts.",
+  "ok": true,
+  "formType": "EEC",
+  "alreadySubmitted": false,
+  "_prefill": "fullName is the EMPLOYEE — on this form the reader is also the subject, so there is no subjectName. reviewPoint is 'Day 30' through 'Day 180'; the same nine questions arrive six times and it is the only thing that tells them apart.",
+  "prefill": {
+    "fullName": "Grace Wanjiru",
+    "email": "grace.wanjiru.sample@example.com",
+    "subjectName": null,
+    "payroll": "KML-04182",
+    "positionTitle": "Sales Operations Coordinator",
+    "hiresMade": null,
+    "jobTitle": "Sales Operations Coordinator",
+    "company": "Kenafric Manufacturing Limited",
+    "department": "Sales & Distribution",
+    "recruitmentType": null,
+    "reviewPoint": "Day 30"
+  }
+}

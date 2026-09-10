@@ -89,6 +89,19 @@ const router = createBrowserRouter([
     errorElement: <RouteError />,
   },
   {
+    /**
+     * F5 — the new hire's own check-in, six times through probation. Which
+     * one is the token's `rp` claim, not the address's.
+     *
+     * The route exists ahead of its ClickUp fields, so it currently renders
+     * "not finished being set up". A route that 404s and a route that says
+     * it is not ready are different messages, and the second is the true one.
+     */
+    path: "/feedback/employee-check-in",
+    lazy: async () => ({ Component: (await import("./pages/EmployeeCheckInPage")).default }),
+    errorElement: <RouteError />,
+  },
+  {
     path: "*",
     lazy: async () => ({ Component: (await import("./pages/NotFound")).default }),
     errorElement: <RouteError />,
