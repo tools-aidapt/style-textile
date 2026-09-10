@@ -12,6 +12,7 @@ serves the browser two endpoints, because everything a Vite build inlines under
 | `send-test-submission.mjs` | — | Posts a whole submission to the webhook, as the app does |
 | `requisition-schema.workflow.json` | `GET /webhook/requisition-schema` | The requisition form's option lists and member directory |
 | `requisition-submit.workflow.json` | `POST /webhook/requisition-submit` | Creates a requisition from a submitted form |
+| `wf14-feedback-intake.md` | `POST /webhook/FeedBack` | **Build plan** for the feedback layer. No JSON yet — see below |
 
 Two more endpoints the requisition form calls are **not** in this repo, because
 they already existed:
@@ -187,6 +188,39 @@ Three things it does not do yet, and should:
 Agency name and who-is-being-replaced have no ClickUp field of their own yet, so
 they are written into the task description where HR can still read them. Give
 them fields and they should move.
+
+## The feedback forms
+
+Five instruments feed the TA Metrics report; the candidate review (F1) and its
+internal twin (F2) are built and live at `/feedback/candidate-review`. No
+workflow JSON here yet — **`wf14-feedback-intake.md` is the build plan**, and it
+carries the live field register, the node chain, the token design and the
+sequencing.
+
+| Endpoint | Method | Purpose |
+| --- | --- | --- |
+| `GET /webhook/kenafric-feedback-context?t={token}` | GET | Verifies the token, returns THAT ONE person's prefill |
+| `POST /webhook/FeedBack` | POST, JSON | A completed response |
+
+Three things that are different from every other endpoint here, and worth
+knowing before you touch either:
+
+- **The link is signed, so it authenticates as well as identifies.** Unlike the
+  onboarding id — which is a name, and leans entirely on rate limiting — a
+  feedback link carries an HMAC over `LINK_SECRET`, the same secret WF-11d/11e
+  already use. A bad or expired one is refused outright.
+- **The app never decodes the token.** It could; the payload is only base64url.
+  That is exactly why it must not — `ft` decides which Form Type a response is
+  tagged with, so it comes back from the context endpoint instead. See
+  `src/feedback/session.ts`.
+- **`answers` is keyed by ClickUp custom field id**, so this workflow carries no
+  question-text mapping table. A reworded question never breaks it, and adding
+  the remaining three instruments needs no workflow change at all. The wire
+  contract is `docs/feedback-submission-1.0.schema.json`.
+
+Ten ClickUp fields have to exist before any of it runs — `Response Token` on
+`901220480198` and `Survey Sent On` on `901220480027` are the two hard
+blockers. §0 of the build plan lists them all.
 
 ## Employee onboarding
 
