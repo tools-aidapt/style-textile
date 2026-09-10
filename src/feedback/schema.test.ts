@@ -10,6 +10,7 @@ import {
   withheldQuestions,
   type FeedbackFormSpec,
 } from "./schema";
+import { voices } from "./locale";
 
 /**
  * The safety net, tested on a synthetic spec.
@@ -25,6 +26,9 @@ const spec = (): FeedbackFormSpec => ({
   formTypes: ["MRR"],
   title: "Test",
   intro: "",
+  // Neither is what this file is about; a spec cannot be built without them
+  voice: voices.managerRecruitment,
+  facts: [],
   ratingQuestions: [],
   sections: [
     {
@@ -151,7 +155,7 @@ describe("isFormType", () => {
   });
 
   it("maps each to the ClickUp Form Type option name", () => {
-    // Names, never option UUIDs — WF-14 resolves them against the live schema
+    // Names, never option UUIDs — WF-21 resolves them against the live schema
     expect(FORM_TYPE_LABEL.CRR).toBe("Candidate Recruitment Review Form");
     expect(FORM_TYPE_LABEL.ICRR).toBe("Internal Candidate Recruitment Review Form");
   });

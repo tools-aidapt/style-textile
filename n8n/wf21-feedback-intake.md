@@ -1,10 +1,16 @@
-# WF-14 · Feedback intake — build plan
+# WF-21 · Feedback intake — build plan
 
-`POST /webhook/FeedBack` → a task in **Feedback Responses** `901220480198`.
+`POST /webhook/kenafric-wf21` → a task in **Feedback Responses** `901220480198`.
 
 One workflow serves all five instruments. Build the branches for all five now
 even though only CRR and ICRR go live first: they are a switch in one Code
 node, and retrofitting is more work than including them.
+
+> **MRR and MNHR are no longer hypothetical.** Both web forms are built —
+> see `n8n/wf23-wf24-manager-feedback-sends.md` for their exact question
+> maps, their two send workflows and the test plan. That document also
+> re-reads §0 against live state on 2026-09-10 and completes the six field
+> ids this one carries abbreviated.
 
 Everything below is against the **live** lists, read on 2026-09-09:
 Feedback Responses `901220480198`, Candidates `901220480027`,
@@ -33,8 +39,8 @@ Nine items, all in the ClickUp UI, all confirmed missing on the live lists.
 
 | # | Item | Why it blocks |
 | --- | --- | --- |
-| 9 | New field **`Survey Sent On`** · date + time | **The hard blocker for WF-15.** It is the only idempotency guard on a daily cron. Without it the same candidate is surveyed every morning, for ever. |
-| 10 | New field **`Survey Response`** · relationship → Feedback Responses `901220480198` | WF-14 has nothing to link the response back to. |
+| 9 | New field **`Survey Sent On`** · date + time | **The hard blocker for WF-22.** It is the only idempotency guard on a daily cron. Without it the same candidate is surveyed every morning, for ever. |
+| 10 | New field **`Survey Response`** · relationship → Feedback Responses `901220480198` | WF-21 has nothing to link the response back to. |
 
 **Send the new field ids and the new Form Type option UUID before starting §3.**
 
@@ -48,9 +54,9 @@ Five phases. Each is testable on its own, and each one earns something.
 | --- | --- | --- |
 | **P0** | The ten ClickUp items above | you |
 | **P1** | `feedback-token.cjs` — mint and verify, one file | nothing |
-| **P2** | **WF-14** intake, `POST /webhook/FeedBack` | P0, P1 |
+| **P2** | **WF-21** intake, `POST /webhook/kenafric-wf21` | P0, P1 |
 | **P3** | **Context endpoint**, `GET /webhook/kenafric-feedback-context` | P1 |
-| **P4** | **WF-15** send, daily cron | P0, P1, P3 |
+| **P4** | **WF-22** send, daily cron | P0, P1, P3 |
 
 P1 comes before both endpoints deliberately: the minter and the verifier have
 to agree byte for byte, and the cheapest way to guarantee that is for them to
@@ -134,13 +140,13 @@ Two rules that are not negotiable:
   base64url. That is exactly why it must not. See `src/feedback/session.ts`.
 
 Build a `Mint Test Token` scratch workflow at the same time. You will need it
-for every test in P2, and WF-15 will need the minter anyway.
+for every test in P2, and WF-22 will need the minter anyway.
 
 ---
 
-## 3. P2 · WF-14 · Intake
+## 3. P2 · WF-21 · Intake
 
-Path **`FeedBack`** — capital B, and n8n paths are case-sensitive.
+Path **`kenafric-wf21`**. n8n paths are case-sensitive.
 
 ### 3.0 Webhook node settings
 
@@ -290,7 +296,7 @@ CRR   otherwise
 ```
 
 Use the Position's `Recruitment Type` as a **cross-check that logs a mismatch**,
-never as the decision. WF-15 mints `ft` on this rule; WF-14 only has to agree
+never as the decision. WF-22 mints `ft` on this rule; WF-21 only has to agree
 with the token.
 
 Getting it wrong is visible to the candidate: `ICRR` is what renders the
@@ -316,9 +322,9 @@ One line, one shape, no free text. What may be logged: form type, outcome,
 counts, the rating, a status, a short code.
 
 ```
-WF-14 FEEDBACK RECEIVED · Candidate Recruitment Review · 869evrmhx · 4.2/5
-WF-14 DUPLICATE IGNORED · CRR · token …a91f
-WF-14 REFUSED · bad-signature
+WF-21 FEEDBACK RECEIVED · Candidate Recruitment Review · 869evrmhx · 4.2/5
+WF-21 DUPLICATE IGNORED · CRR · token …a91f
+WF-21 REFUSED · bad-signature
 ```
 
 **Never log an answer.** This form carries a candidate saying their interviewer
@@ -366,7 +372,7 @@ Verify, load, and answer:
 
 ---
 
-## 5. P4 · WF-15 · Candidate survey send
+## 5. P4 · WF-22 · Candidate survey send
 
 Cron, daily 09:00 EAT.
 
@@ -436,13 +442,13 @@ stamp. Run it a second time and confirm nothing is sent.
 
 ## 7. Open decisions that change scope, not code
 
-Worth putting to Marline before P4, because each changes what WF-15 sends
+Worth putting to Marline before P4, because each changes what WF-22 sends
 rather than how it is built.
 
 | # | Question | Affects |
 | --- | --- | --- |
-| **D-17** | Candidates rejected at **screening** or at line-manager approval never interview, so they get **no form at all** — and they are by far the largest population, by an order of magnitude. A short 5-question version (JD clarity · ease of applying · communication · recommend Y/N · comments) sent with the regret would cost one extra route on the renderer already built and reuse five fields that already exist. **Recommend yes** — it is the only way to measure the top of the funnel. | WF-15 scope, one route |
-| **D-18** | Does an offer decline (`JOL Acceptance` = Declined) trigger a short "why did you decline?" survey? Their experience survey went out weeks earlier and asks nothing about the offer. The most expensive drop-off in the funnel, and it currently produces no data. | WF-15 scope |
-| D-3 | Survey after the **first attended interview only** (recommended, and what this plan builds), after every stage, or only the final stage? | WF-15 |
+| **D-17** | Candidates rejected at **screening** or at line-manager approval never interview, so they get **no form at all** — and they are by far the largest population, by an order of magnitude. A short 5-question version (JD clarity · ease of applying · communication · recommend Y/N · comments) sent with the regret would cost one extra route on the renderer already built and reuse five fields that already exist. **Recommend yes** — it is the only way to measure the top of the funnel. | WF-22 scope, one route |
+| **D-18** | Does an offer decline (`JOL Acceptance` = Declined) trigger a short "why did you decline?" survey? Their experience survey went out weeks earlier and asks nothing about the offer. The most expensive drop-off in the funnel, and it currently produces no data. | WF-22 scope |
+| D-3 | Survey after the **first attended interview only** (recommended, and what this plan builds), after every stage, or only the final stage? | WF-22 |
 | D-14 | Are the five free-text answers mandatory? Airtable made them so. **Recommend optional** — mandatory prose is the biggest driver of survey abandonment and the 13 ratings carry the report. Currently optional; it is one boolean in `candidateReview.ts`. | the form |
 | D-15 | Does F3 go only to the Requesting Manager, or also to the HR Responsible? | F3 |

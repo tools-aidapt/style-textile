@@ -17,7 +17,7 @@ const SUBMIT_TIMEOUT_MS = 30_000;
 export type FeedbackSubmitState =
   | { status: "idle" }
   | { status: "submitting" }
-  /** WF-14 rejected the content. Answers stay on screen, marked. */
+  /** WF-21 rejected the content. Answers stay on screen, marked. */
   | { status: "rejected"; issues: SubmissionIssue[] }
   | { status: "failed"; message: string; retryable: boolean }
   | { status: "succeeded"; receipt: FeedbackReceipt };
@@ -42,7 +42,7 @@ const issuesFrom = (body: unknown): SubmissionIssue[] => {
 /**
  * The submit.
  *
- * One JSON POST, and the token is the idempotency key: WF-14 refuses a
+ * One JSON POST, and the token is the idempotency key: WF-21 refuses a
  * `Response Token` already present on the list. That is what makes an n8n
  * retry harmless, and it is also why a **409 is a success** here — it means
  * this response is already filed, which is exactly what the person wanted.

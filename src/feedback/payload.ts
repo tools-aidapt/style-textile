@@ -6,7 +6,7 @@
  */
 
 import type { Answers, FeedbackSubmission } from "./contract";
-import { askableSections, type FeedbackFormSpec } from "./schema";
+import { askableSections, isFieldId, type FeedbackFormSpec, type Question } from "./schema";
 import type { FeedbackContext } from "./session";
 
 /**
@@ -42,7 +42,29 @@ export const localIsoTimestamp = (now: Date = new Date()): string => {
  *   "answered nothing" report differently.
  * - **Text is trimmed.** A textarea that holds one newline is not an answer.
  */
-export const cleanAnswers = (spec: FeedbackFormSpec, answers: Answers): Answers => {
+/**
+ * The ClickUp field id this answer is POSTED under.
+ *
+ * Normally the spec's own. A question marked `idFrom` takes it from the
+ * context endpoint instead, because that field has been rebuilt in ClickUp
+ * before and a rebuild changes the UUID — an answer posted to a retired id is
+ * dropped with no error anywhere.
+ *
+ * `session.ts` has already refused anything that is not a complete UUID, and
+ * this checks again rather than trusting that: the fallback is the spec id,
+ * which is at least an id somebody tested.
+ */
+export const postedFieldId = (question: Question, context: FeedbackContext): string => {
+  if (!question.idFrom) return question.id;
+  const override = context.fieldIds[question.idFrom];
+  return override && isFieldId(override) ? override : question.id;
+};
+
+export const cleanAnswers = (
+  spec: FeedbackFormSpec,
+  answers: Answers,
+  context: FeedbackContext,
+): Answers => {
   const clean: Answers = {};
 
   askableSections(spec).forEach((section) => {
@@ -50,13 +72,17 @@ export const cleanAnswers = (spec: FeedbackFormSpec, answers: Answers): Answers 
       const value = answers[question.id];
       if (value === undefined) return;
 
+      // The UI keys on the spec id throughout — DOM ids, error keys, local
+      // state. Only the wire key is substituted, and only here.
+      const key = postedFieldId(question, context);
+
       if (typeof value === "number") {
-        clean[question.id] = value;
+        clean[key] = value;
         return;
       }
 
       const text = String(value).trim();
-      if (text) clean[question.id] = text;
+      if (text) clean[key] = text;
     });
   });
 
@@ -77,9 +103,9 @@ export const buildSubmission = ({
   now?: Date;
 }): FeedbackSubmission => ({
   t: token,
-  // The server's word on which instrument this is, carried back so WF-14 can
+  // The server's word on which instrument this is, carried back so WF-21 can
   // branch without decoding its own token twice. Never a value the app chose.
   formType: context.formType,
   submittedAt: localIsoTimestamp(now),
-  answers: cleanAnswers(spec, answers),
+  answers: cleanAnswers(spec, answers, context),
 });

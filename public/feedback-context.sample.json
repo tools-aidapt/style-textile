@@ -9,8 +9,10 @@
   "prefill": {
     "fullName": "Amina Otieno",
     "email": "amina.otieno.sample@example.com",
+    "subjectName": null,
     "payroll": null,
     "positionTitle": "Sales Operations Coordinator",
+    "hiresMade": null,
     "jobTitle": null,
     "company": "Kenafric Manufacturing Limited",
     "department": "Sales & Distribution",

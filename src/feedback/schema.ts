@@ -9,7 +9,7 @@
  *
  * ---
  * **`answers` is keyed by ClickUp custom field id.** That is the single
- * decision the whole layer rests on: WF-14 carries no question-text mapping
+ * decision the whole layer rests on: WF-21 carries no question-text mapping
  * table, so rewording a question never breaks the workflow, and adding an
  * instrument later needs no workflow change at all. The question text and its
  * field id sit side by side here, in the app, and nowhere else.
@@ -28,11 +28,11 @@
  * so a log line, a token and a form spec all say the same word.
  *
  * `CRR` and `ICRR` are Build A and are live. The rest are declared now
- * because WF-14 branches on them from the start.
+ * because WF-21 branches on them from the start.
  */
 export type FormType = "CRR" | "ICRR" | "MRR" | "MNHR" | "EEC";
 
-/** The `Form Type` option name WF-14 writes, per form. Names, never UUIDs. */
+/** The `Form Type` option name WF-21 writes, per form. Names, never UUIDs. */
 export const FORM_TYPE_LABEL: Record<FormType, string> = {
   CRR: "Candidate Recruitment Review Form",
   ICRR: "Internal Candidate Recruitment Review Form",
@@ -60,7 +60,7 @@ export const isFieldId = (value: string): boolean => FIELD_ID.test(value);
  * `stars`  — ClickUp `emoji`, count 5. Posted as an **integer 1-5**.
  * `scale`  — ClickUp `drop_down` whose option names are the strings "1".."5".
  *            Posted as a string, because that is what the option is called.
- * `choice` — ClickUp `drop_down`. Posted as the option **name**; WF-14
+ * `choice` — ClickUp `drop_down`. Posted as the option **name**; WF-21
  *            resolves it against the live schema. Never an option UUID: those
  *            change if anyone rebuilds a field, and a public bundle has no
  *            business holding one.
@@ -71,16 +71,45 @@ export type QuestionType = "stars" | "scale" | "choice" | "text";
 export interface Question {
   /** The ClickUp custom field id. The key this answer is posted under. */
   id: string;
+  /**
+   * The short name of the thing being scored, above the question.
+   *
+   * Only the manager recruitment review needs one: its ClickUp fields are
+   * named `Clarity of Job Requirements` and the like, which is what HR reads
+   * on the report, while the question actually put to the manager is a
+   * sentence. Both are shown — the topic so a manager can scan seven of them,
+   * the sentence so they know what they are scoring.
+   */
+  topic?: string;
   /** Rendered verbatim. `{{company}}` is substituted from the prefill. */
   label: string;
   /** Sits below the control, so every control in a section starts level. */
   help?: string;
   type: QuestionType;
   required: boolean;
-  /** `choice` only. Option names, in the order ClickUp holds them. */
+  /** `choice` and `scale`. Option names, in the order ClickUp holds them. */
   options?: readonly string[];
+  /**
+   * `scale` only. What 1 and 5 mean on this particular question.
+   *
+   * A bare 1-5 row is not a scale, it is five numbers: `1 – Very inefficient`
+   * and `5 – Very efficient` are the difference between a considered answer
+   * and a guess. They sit at the ends of the row rather than in `help`,
+   * because an anchor away from the number it anchors is a legend to be
+   * cross-referenced.
+   */
+  anchors?: { low: string; high: string };
   /** `text` only. Refused above this, and counted down from 200 remaining. */
   maxLength?: number;
+  /**
+   * Take the ClickUp field id from the context endpoint instead of from `id`.
+   *
+   * The UI still keys on `id` — it is the DOM id, the error key and the answer
+   * key in local state — and only the POSTED key is substituted, in
+   * `payload.ts`. So a server that sends nothing, or something malformed,
+   * changes nothing on screen.
+   */
+  idFrom?: ContextFieldKey;
 }
 
 export interface FormSection {
@@ -93,19 +122,109 @@ export interface FormSection {
   questions: readonly Question[];
 }
 
+/**
+ * A value the context endpoint prefills. The keys of `FeedbackPrefill`.
+ *
+ * Stated as a union rather than `keyof FeedbackPrefill` to keep the model
+ * layer free of a `session.ts` import; `session.test.ts` pins the two lists
+ * together so they cannot drift.
+ */
+/**
+ * A field id the CONTEXT ENDPOINT supplies, overriding the one in the spec.
+ *
+ * One key so far. `d27d7a83` — the recommend question — has already been
+ * rebuilt once in ClickUp, and a rebuilt field gets a new UUID: the answer
+ * then posts to an id that no longer exists and is dropped without an error
+ * anywhere. So for that question the server names the field and the spec's
+ * own id is only a fallback.
+ *
+ * It is deliberately NOT how every id works. A spec whose ids all came from
+ * the wire could not be tested against ClickUp at all, and `isFieldId` would
+ * have nothing to check.
+ */
+export type ContextFieldKey = "recommendFieldId";
+
+export type PrefillKey =
+  | "fullName"
+  | "email"
+  | "subjectName"
+  | "payroll"
+  | "positionTitle"
+  | "hiresMade"
+  | "jobTitle"
+  | "company"
+  | "department"
+  | "recruitmentType"
+  | "reviewPoint";
+
+/**
+ * One line of the header: something Kenafric already holds, shown back.
+ *
+ * The header is per instrument because who is reading changes what the same
+ * value means — `fullName` is the candidate on Build A and the *manager* on
+ * Build B, and on Build C the manager's name and the new hire's name are two
+ * different lines. A header hardcoded in the renderer got Build A right and
+ * would have got both manager forms wrong.
+ */
+export interface PrefilledFactSpec {
+  label: string;
+  key: PrefillKey;
+  /**
+   * Shown only for these form types. Absent means always — subject to the
+   * value existing at all, which `PrefilledFact` decides.
+   */
+  onlyFor?: readonly FormType[];
+}
+
+/**
+ * The strings whose wording depends on who is reading.
+ *
+ * Everything shared — the star legend, the progress count, "go to the first
+ * one" — stays in `locale.ts` and is the same for everybody. These five are
+ * not: a candidate is told their feedback will not affect their application,
+ * which is meaningless to a line manager, and "you rated your overall
+ * experience" is wrong when what they rated was somebody else's first month.
+ *
+ * The strings themselves live in `locale.ts` with the rest, so translating
+ * the layer never means reading a spec or a component.
+ */
+export interface FeedbackVoice {
+  /** Above the h1. */
+  eyebrow: string;
+  /**
+   * Over the prefilled header.
+   *
+   * "Your details" on the candidate and manager-recruitment forms. Not on the
+   * new-hire readiness form, where half the block is somebody else's details.
+   */
+  detailsHeading: string;
+  /** Who reads the answers and what they are used for. */
+  privacyNote: string;
+  /** The already-answered screen. */
+  alreadyBody: string;
+  /** The thank-you screen. */
+  successBody: string;
+  /** The rating, said back. */
+  successRating: (rating: number) => string;
+}
+
 export interface FeedbackFormSpec {
   /** Which `formType` values this spec renders. Build A serves two. */
   formTypes: readonly FormType[];
   /** The h1. */
   title: string;
   intro: string;
+  /** How this instrument speaks to the person filling it in. */
+  voice: FeedbackVoice;
+  /** The header: what is shown back rather than asked for. */
+  facts: readonly PrefilledFactSpec[];
   sections: readonly FormSection[];
   /**
    * The questions that average into `Overall Rating`.
    *
    * Named explicitly rather than derived from `type === "stars"`, because a
    * categorical dropdown must never be averaged and a future form may score
-   * on a subset. WF-14 computes the figure it stores; this is only for what
+   * on a subset. WF-21 computes the figure it stores; this is only for what
    * the person is shown and for the log line.
    */
   ratingQuestions: readonly string[];
@@ -133,6 +252,36 @@ export const questionDomId = (fieldId: string): string => `q-${fieldId}`;
  */
 export const renderLabel = (label: string, company: string): string =>
   label.replace(/\{\{company\}\}/g, company);
+
+/**
+ * Does this spec render that instrument?
+ *
+ * Each form has its own route, and the route decides which spec is loaded
+ * while the CONTEXT ENDPOINT decides which instrument the token is for. When
+ * those two disagree — a candidate-review token opened at the new-hire
+ * readiness address — the page must refuse. Rendering anyway would put ten
+ * questions about somebody's probation in front of a candidate and file the
+ * answers under `CRR`.
+ *
+ * It is not a case that arises from a mistyped URL: a token that does not
+ * verify never gets this far. It arises from a bug in what WF-23 or WF-24
+ * put in the email, which is exactly the kind of thing that must fail
+ * visibly the first time rather than quietly produce mislabelled data.
+ */
+export const servesFormType = (spec: FeedbackFormSpec, formType: FormType): boolean =>
+  spec.formTypes.includes(formType);
+
+/**
+ * The header lines this instrument shows to this reader.
+ *
+ * Filtered by form type only. Whether a line has a value to show is
+ * `PrefilledFact`'s decision, so a null payroll number leaves no gap.
+ */
+export const visibleFacts = (
+  spec: FeedbackFormSpec,
+  formType: FormType,
+): PrefilledFactSpec[] =>
+  spec.facts.filter((fact) => !fact.onlyFor || fact.onlyFor.includes(formType));
 
 /** Every question in a spec, in reading order. */
 export const allQuestions = (spec: FeedbackFormSpec): Question[] =>

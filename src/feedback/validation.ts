@@ -33,6 +33,27 @@ const isBlank = (value: AnswerValue | undefined): boolean =>
 export const isStarValue = (value: AnswerValue | undefined): boolean =>
   typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= 5;
 
+/**
+ * An answer's numeric score, or `null` if it does not have one.
+ *
+ * The two rating controls store different things and both are correct. A
+ * five-star question is a ClickUp `emoji` field, which takes an integer. A
+ * 1-5 question is a `drop_down` whose options are genuinely *named* "1" to
+ * "5", so the answer is the string `"4"` — that is the option name WF-21
+ * resolves, and coercing it to a number on the wire would stop it resolving.
+ *
+ * So the coercion happens here, where a mean is being taken, and nowhere
+ * else. `Number("")` is 0 and `Number(" ")` is 0, so the string is matched
+ * against a digit rather than passed to `Number` and hoped for.
+ */
+export const scoreOf = (value: AnswerValue | undefined): number | null => {
+  if (isStarValue(value)) return value as number;
+  if (typeof value === "string" && /^[1-5]$/.test(value.trim())) {
+    return Number(value.trim());
+  }
+  return null;
+};
+
 const checkOne = (question: Question, value: AnswerValue | undefined): string | null => {
   if (isBlank(value)) return question.required ? REQUIRED : null;
 
@@ -96,7 +117,7 @@ export const answeredCount = (spec: FeedbackFormSpec, answers: Answers): number 
 /**
  * The mean of the rating questions, to one decimal place.
  *
- * **WF-14 computes the figure that gets stored.** This copy exists so the
+ * **WF-21 computes the figure that gets stored.** This copy exists so the
  * candidate can be shown what they said and so the log line carries it; two
  * sources of truth for one number is one too many, which is why it is not in
  * the payload.
@@ -104,10 +125,15 @@ export const answeredCount = (spec: FeedbackFormSpec, answers: Answers): number 
  * `null` until every rating question is answered — a mean of three answers
  * out of thirteen is not a rating of anything, and rounding it would put a
  * confident-looking number on a page.
+ *
+ * Which questions count is `spec.ratingQuestions`, never `type === "stars"`:
+ * Build A averages 13 five-star answers, Build B averages 7 dropdown scores
+ * and must exclude `Comparison with Previous Hiring Rounds`, which is
+ * categorical, and Build C averages 6.
  */
 export const overallRating = (spec: FeedbackFormSpec, answers: Answers): number | null => {
-  const scores = spec.ratingQuestions.map((id) => answers[id]);
-  if (!scores.every(isStarValue)) return null;
+  const scores = spec.ratingQuestions.map((id) => scoreOf(answers[id]));
+  if (!scores.length || scores.some((score) => score === null)) return null;
 
   const total = (scores as number[]).reduce((sum, score) => sum + score, 0);
   return Math.round((total / scores.length) * 10) / 10;

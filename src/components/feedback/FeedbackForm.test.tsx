@@ -17,7 +17,7 @@ import { FeedbackForm } from "./FeedbackForm";
  */
 
 const TOKEN = "eyJmdCI6IkNSUiIsImNpZCI6Ijg2OWV2cm1oeCJ9.dGVzdC1zaWduYXR1cmUtbm90LXJlYWw";
-const SUBMIT = "kenafric-wf14";
+const SUBMIT = "kenafric-wf21";
 
 const context = (
   formType: "CRR" | "ICRR" = "CRR",
@@ -162,7 +162,7 @@ describe("FeedbackForm", () => {
     expect(Object.keys(body).sort()).toEqual(["answers", "formType", "submittedAt", "t"]);
     expect(body.t).toBe(TOKEN);
     expect(body.answers[RATING_QUESTION_IDS[0]]).toBe(4);
-    // An option NAME, for WF-14 to resolve against the live schema
+    // An option NAME, for WF-21 to resolve against the live schema
     expect(body.answers["9a21e6ae-5493-47a9-9ab1-87d6002216eb"]).toBe("Easy and engaging");
     // The optional comment was left blank, so it is absent rather than ""
     expect(body.answers).not.toHaveProperty("f7994a03-2a34-4623-8fa6-065a3fddaf8c");
@@ -194,7 +194,7 @@ describe("FeedbackForm", () => {
 
   it("treats an idempotent replay as the success it is", async () => {
     const user = userEvent.setup();
-    // The token is single-use, so WF-14 answers 409 for a response already
+    // The token is single-use, so WF-21 answers 409 for a response already
     // filed. The candidate's answers are in ClickUp; showing them a failure
     // would have them email HR about a survey that went through.
     routeFetch([{ match: SUBMIT, status: 409, body: { ok: false } }]);

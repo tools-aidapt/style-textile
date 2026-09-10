@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { basicAuthFor, config } from "@/lib/config";
 import {
   parseContext,
+  refusalReason,
   type ContextFault,
   type FeedbackContext,
 } from "@/feedback/session";
@@ -68,9 +69,17 @@ export const useFeedbackContext = (token: string) => {
     return null;
   }, [token, query.isError, query.error, query.data, context]);
 
+  /**
+   * The endpoint's own words for a refusal it chose to explain, which the
+   * dead end prefers over the generic wording. Only ever present on a `200`
+   * carrying `ok: false`; an HTTP error status carries no body worth reading.
+   */
+  const reason = useMemo(() => refusalReason(query.data), [query.data]);
+
   return {
     context,
     fault,
+    reason,
     isLoading: !!token && !!config.feedbackContextUrl && query.isLoading,
     refetch: query.refetch,
   };

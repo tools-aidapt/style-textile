@@ -3,7 +3,7 @@
  *
  * **One spec, one route, two `formType` values.** The questions are
  * identical; the only differences are that an internal applicant's payroll
- * number is shown back to them in the header, and that WF-14 tags the
+ * number is shown back to them in the header, and that WF-21 tags the
  * response `Internal Candidate Recruitment Review Form` instead. In Airtable
  * these were two separate forms, they drifted, and the internal one shipped
  * with no `Form` tag at all — so every internal response ever submitted is
@@ -27,7 +27,8 @@
  * ---
  */
 
-import type { FeedbackFormSpec, FormSection } from "./schema";
+import { voices } from "./locale";
+import type { FeedbackFormSpec, FormSection, PrefilledFactSpec } from "./schema";
 
 /**
  * The eight Kenafric values, verbatim and in order.
@@ -44,7 +45,7 @@ export const KENAFRIC_VALUES =
 /**
  * The 13 five-star questions, in the order they are asked.
  *
- * This list is what averages into `Overall Rating`. WF-14 computes the figure
+ * This list is what averages into `Overall Rating`. WF-21 computes the figure
  * it stores; the app computes the same one only for what the candidate is
  * shown and for the log line.
  */
@@ -253,6 +254,12 @@ const SECTIONS: FormSection[] = [
          * "Kenafric" rather than naming the wrong company at somebody.
          */
         label: "Would you recommend {{company}} as an employer to others?",
+        /**
+         * This field has already been rebuilt once in ClickUp, and a rebuild
+         * means a new UUID. The context endpoint names it as
+         * `recommendFieldId`; the id above is the fallback if it does not.
+         */
+        idFrom: "recommendFieldId",
         type: "choice",
         required: true,
         options: ["Yes", "No"],
@@ -269,8 +276,27 @@ const SECTIONS: FormSection[] = [
   },
 ];
 
+/**
+ * The header. Every line is data Kenafric already holds.
+ *
+ * The Airtable form asked for the first three of these as questions, which is
+ * why it has 22 and this has 20. The payroll number is the internal
+ * applicant's only, and it is what makes an internal response countable at
+ * all — shown back to be confirmed by eye, never typed.
+ */
+const FACTS: PrefilledFactSpec[] = [
+  { label: "Name", key: "fullName" },
+  { label: "Email", key: "email" },
+  { label: "Payroll number", key: "payroll", onlyFor: ["ICRR"] },
+  { label: "Role you applied for", key: "positionTitle" },
+  { label: "Department", key: "department" },
+  { label: "Company", key: "company" },
+];
+
 export const CANDIDATE_REVIEW: FeedbackFormSpec = {
   formTypes: ["CRR", "ICRR"],
+  voice: voices.candidate,
+  facts: FACTS,
   title: "Your recruitment experience",
   intro:
     "You interviewed with us recently and we would like to know how it went. It takes about three minutes, it is read by our HR team, and it will not affect your application.",

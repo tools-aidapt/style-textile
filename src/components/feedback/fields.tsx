@@ -79,6 +79,15 @@ export const QuestionShell = ({
           </span>
         ) : null}
         <span className="measure">
+          {/* Inside the label, not above it: the topic is part of what this
+              question is called, and a screen reader that announced the group
+              without it would say "On a scale of 1 to 5, how clear were…"
+              seven times with nothing to tell them apart. */}
+          {question.topic ? (
+            <span className="block text-overline font-semibold uppercase text-steel-600">
+              {question.topic}
+            </span>
+          ) : null}
           {renderLabel(question.label, company)}
           {question.required ? (
             <span className="ml-1 text-ember-500" aria-hidden="true">
@@ -198,6 +207,119 @@ export const StarField = ({
           >
             {value ? copy.starValue(value) : copy.starLegend}
           </span>
+        </div>
+      </QuestionShell>
+    </fieldset>
+  );
+};
+
+/**
+ * A 1-5 score.
+ *
+ * The ClickUp field behind this is a `drop_down` whose five options are
+ * genuinely *named* "1" to "5", and V1 rendered it as a select — which is why
+ * the Airtable screenshots show seven identical empty dropdowns down one
+ * page. A select hides every option until it is opened, so a manager scoring
+ * seven of these has to open seven menus to see the same five numbers, and
+ * the anchors that say what 1 and 5 mean are nowhere near them.
+ *
+ * So: one row, five real radios, anchors under the ends. Same mechanics as
+ * `StarField` — visually hidden inputs inside labels, so arrow keys move
+ * between the values and the browser owns the roving tabindex — and the same
+ * reason for the number being written on the control rather than implied by
+ * position.
+ *
+ * The value posted is the STRING "4", not the number 4. That is the option's
+ * name, and the name is what WF-21 resolves against the live schema.
+ */
+export const ScaleField = ({
+  question,
+  company,
+  value,
+  ordinal,
+  onChange,
+  error,
+}: {
+  question: Question;
+  company: string;
+  value: string | undefined;
+  ordinal?: number;
+  onChange: (value: string) => void;
+  error?: string;
+}) => {
+  const id = questionDomId(question.id);
+  const options = question.options ?? [];
+  const anchors = question.anchors;
+
+  return (
+    <fieldset
+      id={`${id}-field`}
+      className="scroll-mt-28"
+      aria-labelledby={`${id}-label`}
+      aria-invalid={error ? true : undefined}
+      aria-describedby={describedBy(question.id, !!question.help, !!error)}
+    >
+      <QuestionShell question={question} company={company} error={error} ordinal={ordinal}>
+        <div className={cn("max-w-xs", error && "border-l-2 border-l-ember-300 pl-3")}>
+          <div className="flex gap-1.5">
+            {options.map((option, index) => {
+              const checked = value === option;
+              /**
+               * The ends carry their meaning into the accessible name. A
+               * screen reader user hearing "1, 2, 3, 4, 5" has been told
+               * nothing; the anchors are printed under the row for everybody
+               * else and would otherwise reach them as loose text after the
+               * group.
+               */
+              const anchor =
+                anchors && index === 0
+                  ? anchors.low
+                  : anchors && index === options.length - 1
+                    ? anchors.high
+                    : null;
+
+              return (
+                <label
+                  key={option}
+                  className={cn(
+                    "press tap-44 flex h-11 flex-1 cursor-pointer items-center justify-center rounded-md border bg-white",
+                    "font-mono text-body-sm tabular-nums transition-colors duration-fast",
+                    "focus-within:ring-[3px] focus-within:ring-teal-200",
+                    checked
+                      ? "border-teal-400 bg-teal-400 font-semibold text-ink-900"
+                      : "border-mist-200 text-steel-700 hover:border-mist-300",
+                  )}
+                >
+                  <input
+                    type="radio"
+                    className="sr-only"
+                    name={id}
+                    value={option}
+                    checked={checked}
+                    onChange={() => onChange(option)}
+                    aria-label={
+                      anchor
+                        ? `${copy.scaleValue(Number(option))} — ${anchor}`
+                        : copy.scaleValue(Number(option))
+                    }
+                  />
+                  <span aria-hidden="true">{option}</span>
+                </label>
+              );
+            })}
+          </div>
+
+          {anchors ? (
+            <div
+              className="mt-1.5 flex justify-between gap-4 text-caption text-steel-600"
+              // Already in each end option's accessible name; read out here
+              // as well it is the same sentence twice
+              aria-hidden="true"
+            >
+              <span>{anchors.low}</span>
+              <span className="text-right">{anchors.high}</span>
+            </div>
+          ) : null}
         </div>
       </QuestionShell>
     </fieldset>

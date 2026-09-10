@@ -51,7 +51,7 @@ describe("validate", () => {
   });
 
   it("refuses a choice that is not one of the options", () => {
-    // ClickUp would reject the option name, and WF-14 resolves names against
+    // ClickUp would reject the option name, and WF-21 resolves names against
     // the live schema — so this has to fail here, not there
     const { errors } = validate(CANDIDATE_REVIEW, { ...complete(), [RECOMMEND]: "Maybe" });
     expect(errors[RECOMMEND]).toBeTruthy();

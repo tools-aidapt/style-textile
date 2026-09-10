@@ -45,7 +45,7 @@ export default defineConfig(({ mode }) => ({
       VITE_ONBOARDING_SESSION_URL: "https://webhook.test/kenafric/onboarding-session",
       VITE_ONBOARDING_SUBMIT_URL: "https://webhook.test/kenafric/onboarding-submit",
       VITE_FEEDBACK_CONTEXT_URL: "https://webhook.test/kenafric-feedback-context",
-      VITE_FEEDBACK_SUBMIT_URL: "https://webhook.test/kenafric-wf14",
+      VITE_FEEDBACK_SUBMIT_URL: "https://webhook.test/kenafric-wf21",
     },
     globals: true,
     css: false,

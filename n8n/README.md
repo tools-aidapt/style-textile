@@ -12,7 +12,8 @@ serves the browser two endpoints, because everything a Vite build inlines under
 | `send-test-submission.mjs` | — | Posts a whole submission to the webhook, as the app does |
 | `requisition-schema.workflow.json` | `GET /webhook/requisition-schema` | The requisition form's option lists and member directory |
 | `requisition-submit.workflow.json` | `POST /webhook/requisition-submit` | Creates a requisition from a submitted form |
-| `wf14-feedback-intake.md` | `POST /webhook/FeedBack` | **Build plan** for the feedback layer. No JSON yet — see below |
+| `wf21-feedback-intake.md` | `POST /webhook/kenafric-wf21` | **Build plan** for the feedback layer. No JSON yet — see below |
+| `wf23-wf24-manager-feedback-sends.md` | — | **Build plan** for the two manager forms and the automations that send them |
 
 Two more endpoints the requisition form calls are **not** in this repo, because
 they already existed:
@@ -191,16 +192,32 @@ them fields and they should move.
 
 ## The feedback forms
 
-Five instruments feed the TA Metrics report; the candidate review (F1) and its
-internal twin (F2) are built and live at `/feedback/candidate-review`. No
-workflow JSON here yet — **`wf14-feedback-intake.md` is the build plan**, and it
-carries the live field register, the node chain, the token design and the
-sequencing.
+Five instruments feed the TA Metrics report. Three of the four web forms are
+built, on one renderer:
+
+| | Instrument | Route |
+| --- | --- | --- |
+| F1 / F2 | Candidate recruitment review, external and internal | `/feedback/candidate-review` |
+| F3 | Manager recruitment review | `/feedback/manager-recruitment-review` |
+| F4 | New-hire readiness, Month 1 and Month 3 | `/feedback/new-hire-readiness` |
+| F5 | Employee check-in | blocked on its question texts (D-13) |
+
+No workflow JSON here yet. **`wf21-feedback-intake.md` is the build plan** for
+the shared intake, the token and the sequencing;
+**`wf23-wf24-manager-feedback-sends.md`** carries the two manager forms'
+question maps, their send triggers and the test plan, and re-reads the ClickUp
+prerequisites against live state on 2026-09-10.
+
+The feedback workflows are **WF-21 intake · WF-22 candidate send · WF-23
+manager review send · WF-24 new-hire readiness send**, renumbered on
+2026-09-10 because WF-14 and WF-15 already belonged to the onboarding phase
+described further down this file. Where those two numbers appear below, they
+are onboarding's and are not these.
 
 | Endpoint | Method | Purpose |
 | --- | --- | --- |
 | `GET /webhook/kenafric-feedback-context?t={token}` | GET | Verifies the token, returns THAT ONE person's prefill |
-| `POST /webhook/FeedBack` | POST, JSON | A completed response |
+| `POST /webhook/kenafric-wf21` | POST, JSON | A completed response |
 
 Three things that are different from every other endpoint here, and worth
 knowing before you touch either:
@@ -218,9 +235,13 @@ knowing before you touch either:
   the remaining three instruments needs no workflow change at all. The wire
   contract is `docs/feedback-submission-1.0.schema.json`.
 
-Ten ClickUp fields have to exist before any of it runs — `Response Token` on
-`901220480198` and `Survey Sent On` on `901220480027` are the two hard
-blockers. §0 of the build plan lists them all.
+Ten ClickUp fields have to exist before any of it runs, and **none of them did
+as of 2026-09-10.** `Response Token` on `901220480198` is the hard blocker for
+every instrument; `Survey Sent On` on `901220480027` for F1/F2; `Employee` and
+`Review Point` on `901220480198` for F4, which without both has no idempotency
+guard at all; and `Manager Review Sent On` on `901220480011` for F3, which
+without it emails a closed position's manager every morning. §0 of the intake
+plan and §1.3 of the manager-sends plan list them.
 
 ## Employee onboarding
 

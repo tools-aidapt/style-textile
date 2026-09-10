@@ -64,6 +64,31 @@ const router = createBrowserRouter([
     errorElement: <RouteError />,
   },
   {
+    /**
+     * F3 — the manager recruitment review, once per position on the day it
+     * closes as filled.
+     *
+     * A separate route from the candidate review rather than one address
+     * switching on the token, because these are different instruments with
+     * different question sets: a wrong `formType` on a shared route would
+     * render the wrong form rather than refuse.
+     */
+    path: "/feedback/manager-recruitment-review",
+    lazy: async () => ({
+      Component: (await import("./pages/ManagerRecruitmentReviewPage")).default,
+    }),
+    errorElement: <RouteError />,
+  },
+  {
+    /**
+     * F4 — the line manager's review of a new hire, at Month 1 and Month 3.
+     * Which of the two is the token's business, not the address's.
+     */
+    path: "/feedback/new-hire-readiness",
+    lazy: async () => ({ Component: (await import("./pages/NewHireReadinessPage")).default }),
+    errorElement: <RouteError />,
+  },
+  {
     path: "*",
     lazy: async () => ({ Component: (await import("./pages/NotFound")).default }),
     errorElement: <RouteError />,

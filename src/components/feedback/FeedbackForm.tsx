@@ -11,11 +11,12 @@ import { buildSubmission } from "@/feedback/payload";
 import {
   askableSections,
   questionDomId,
+  visibleFacts,
   withheldQuestions,
   type FeedbackFormSpec,
   type Question,
 } from "@/feedback/schema";
-import { companyName, isInternal, type FeedbackContext } from "@/feedback/session";
+import { companyName, type FeedbackContext } from "@/feedback/session";
 import {
   answeredCount,
   askableCount,
@@ -23,7 +24,7 @@ import {
   validate,
   type AnswerErrors,
 } from "@/feedback/validation";
-import { ChoiceField, LongTextField, PrefilledFact, StarField } from "./fields";
+import { ChoiceField, LongTextField, PrefilledFact, ScaleField, StarField } from "./fields";
 import { FeedbackSubmitted } from "./FeedbackStates";
 
 /**
@@ -78,14 +79,19 @@ export const FeedbackForm = ({
 
   const sections = React.useMemo(() => askableSections(spec), [spec]);
   const withheld = React.useMemo(() => withheldQuestions(spec), [spec]);
+  const facts = React.useMemo(
+    () => visibleFacts(spec, context.formType),
+    [spec, context.formType],
+  );
   const company = companyName(context);
+  const voice = spec.voice;
 
   const { errors, missing } = React.useMemo(() => validate(spec, answers), [spec, answers]);
   const rating = React.useMemo(() => overallRating(spec, answers), [spec, answers]);
   const asked = React.useMemo(() => askableCount(spec), [spec]);
   const answered = React.useMemo(() => answeredCount(spec, answers), [spec, answers]);
 
-  /** What WF-14 said was wrong, keyed the same way the local errors are. */
+  /** What WF-21 said was wrong, keyed the same way the local errors are. */
   const serverErrors: AnswerErrors = React.useMemo(() => {
     if (state.status !== "rejected") return {};
     return state.issues.reduce<AnswerErrors>((all, issue) => {
@@ -128,7 +134,7 @@ export const FeedbackForm = ({
   };
 
   if (state.status === "succeeded") {
-    return <FeedbackSubmitted rating={rating} />;
+    return <FeedbackSubmitted rating={rating} voice={voice} />;
   }
 
   const busy = state.status === "submitting";
@@ -149,26 +155,52 @@ export const FeedbackForm = ({
        * the V1 problem in React.
        */}
       <Panel>
-        <Eyebrow>Your details</Eyebrow>
+        <Eyebrow>{voice.detailsHeading}</Eyebrow>
+        {/*
+         * Which lines these are is the spec's decision, not the renderer's.
+         * `fullName` is the candidate on Build A and the manager on Build B,
+         * and on Build C the manager and the new hire are two separate lines
+         * — a header hardcoded here got Build A right and both manager forms
+         * wrong. A fact with no value renders nothing, so a null payroll
+         * number leaves no gap.
+         */}
         <dl className="mt-4 grid gap-4 sm:grid-cols-2">
-          <PrefilledFact label="Name" value={context.prefill.fullName} />
-          <PrefilledFact label="Email" value={context.prefill.email} />
-          {/* Internal applicants only. The payroll number is what makes an
-              internal response countable, and it is confirmed rather than
-              typed — see F2. */}
-          {isInternal(context) ? (
-            <PrefilledFact label="Payroll number" value={context.prefill.payroll} />
-          ) : null}
-          <PrefilledFact label="Role you applied for" value={context.prefill.positionTitle} />
-          <PrefilledFact label="Department" value={context.prefill.department} />
-          <PrefilledFact label="Company" value={context.prefill.company} />
+          {facts.map((fact) => (
+            <PrefilledFact
+              key={`${fact.key}-${fact.label}`}
+              label={fact.label}
+              value={context.prefill[fact.key]}
+            />
+          ))}
         </dl>
 
         <p className="measure mt-5 flex gap-2.5 text-[0.8125rem] leading-5 text-steel-600">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-teal-400" aria-hidden="true" />
-          <span>{copy.privacyNote}</span>
+          <span>{voice.privacyNote}</span>
         </p>
       </Panel>
+
+      {/*
+       * An operational warning from the endpoint.
+       *
+       * Shown to everybody, not just in development, and deliberately so:
+       * the only one that exists means n8n is in TEST_MODE and is not
+       * enforcing token signatures, so a hand-made link opens any
+       * candidate's or employee's form. A banner is how that gets noticed
+       * and switched off before a real link is sent. It says what the server
+       * said — this app does not invent the wording.
+       */}
+      {context.warning ? (
+        <Panel className="border-ember-200 bg-ember-50/40">
+          <p className="measure flex gap-2.5 text-body-sm text-ink-900">
+            <AlertTriangle
+              className="mt-0.5 h-4 w-4 shrink-0 text-ember-500"
+              aria-hidden="true"
+            />
+            <span>{context.warning}</span>
+          </p>
+        </Panel>
+      ) : null}
 
       {/* Dev only. A gap the person filling this in cannot act on, and a
           survey that apologises for itself gets abandoned. */}
@@ -224,7 +256,25 @@ export const FeedbackForm = ({
                 );
               }
 
-              if (question.type === "choice" || question.type === "scale") {
+              if (question.type === "scale") {
+                return (
+                  <ScaleField
+                    key={question.id}
+                    question={question}
+                    company={company}
+                    ordinal={ordinal}
+                    value={
+                      answers[question.id] === undefined
+                        ? undefined
+                        : String(answers[question.id])
+                    }
+                    onChange={(value) => setAnswer(question, value)}
+                    error={error}
+                  />
+                );
+              }
+
+              if (question.type === "choice") {
                 return (
                   <ChoiceField
                     key={question.id}
@@ -321,7 +371,7 @@ export const FeedbackForm = ({
           </p>
           {/*
            * Disabled while in flight, and it stays disabled: the token is
-           * single-use, and a second POST would be refused by WF-14's dedupe
+           * single-use, and a second POST would be refused by WF-21's dedupe
            * guard rather than land twice. The guard is the insurance, not the
            * design.
            */}

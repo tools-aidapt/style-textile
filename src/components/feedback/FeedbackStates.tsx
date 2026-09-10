@@ -1,7 +1,15 @@
 import { AlertTriangle, Check, Clock, LinkIcon, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { copy } from "@/feedback/locale";
+import { copy, voices } from "@/feedback/locale";
+import type { FeedbackVoice } from "@/feedback/schema";
 import type { ContextFault } from "@/feedback/session";
+
+/**
+ * The dead end is reached before the spec is — a token that does not verify
+ * says nothing about which instrument it was for — so these screens default
+ * to the candidate voice and take another only when the page knows one.
+ */
+const DEFAULT_VOICE: FeedbackVoice = voices.candidate;
 
 /** What the page can be instead of, before, and after the form. */
 
@@ -60,9 +68,20 @@ export const FeedbackLoading = () => (
  */
 export const FeedbackDeadEnd = ({
   fault,
+  reason,
   onRetry,
 }: {
   fault: ContextFault;
+  /**
+   * The endpoint's own explanation, from an `ok: false` body.
+   *
+   * Preferred over the generic wording when present, because it is written
+   * server-side where the secret is and can say something true that this app
+   * cannot know. It is shown verbatim, so the endpoint owns the rule that it
+   * must never name a person or a position — whoever holds the link reads it,
+   * and that is not necessarily who it was sent to.
+   */
+  reason?: string | null;
   onRetry: () => void;
 }) => {
   const content: Record<
@@ -98,6 +117,7 @@ export const FeedbackDeadEnd = ({
 
   const shown = content[fault];
   const Icon = shown.icon;
+  const body = reason?.trim() || shown.body;
 
   return (
     <Shell>
@@ -105,7 +125,7 @@ export const FeedbackDeadEnd = ({
         <Icon className="h-6 w-6 text-steel-600" aria-hidden="true" />
       </div>
       <h1 className="mt-6 text-h4 font-bold tracking-snug text-ink-900">{shown.heading}</h1>
-      <p className="measure mt-3 text-body text-steel-600">{shown.body}</p>
+      <p className="measure mt-3 text-body text-steel-600">{body}</p>
       {shown.retry ? (
         <div className="mt-8">
           <Button type="button" variant="secondary" onClick={onRetry}>
@@ -126,13 +146,17 @@ export const FeedbackDeadEnd = ({
  * the link twice or kept the email. Telling them the link is dead would read
  * as their feedback having been lost.
  */
-export const FeedbackAlreadySubmitted = () => (
+export const FeedbackAlreadySubmitted = ({
+  voice = DEFAULT_VOICE,
+}: {
+  voice?: FeedbackVoice;
+}) => (
   <Shell tone="sweep">
     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-50">
       <Check className="h-6 w-6 text-teal-400" aria-hidden="true" />
     </div>
     <h1 className="mt-6 text-h4 font-bold tracking-snug text-ink-900">{copy.alreadyHeading}</h1>
-    <p className="measure mt-3 text-body text-steel-700">{copy.alreadyBody}</p>
+    <p className="measure mt-3 text-body text-steel-700">{voice.alreadyBody}</p>
   </Shell>
 );
 
@@ -144,7 +168,13 @@ export const FeedbackAlreadySubmitted = () => (
  * because it is the one thing they might want to check they got right, and
  * because it is theirs.
  */
-export const FeedbackSubmitted = ({ rating }: { rating: number | null }) => (
+export const FeedbackSubmitted = ({
+  rating,
+  voice = DEFAULT_VOICE,
+}: {
+  rating: number | null;
+  voice?: FeedbackVoice;
+}) => (
   <Shell tone="sweep">
     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-50">
       <Check className="h-6 w-6 text-teal-400" aria-hidden="true" />
@@ -152,9 +182,9 @@ export const FeedbackSubmitted = ({ rating }: { rating: number | null }) => (
     <h1 className="mt-6 text-h3 font-bold tracking-snug text-ink-900" role="status">
       {copy.successHeading}
     </h1>
-    <p className="measure mt-3 text-body text-steel-700">{copy.successBody}</p>
+    <p className="measure mt-3 text-body text-steel-700">{voice.successBody}</p>
     {rating !== null ? (
-      <p className="measure mt-2 text-body text-steel-700">{copy.successRating(rating)}</p>
+      <p className="measure mt-2 text-body text-steel-700">{voice.successRating(rating)}</p>
     ) : null}
   </Shell>
 );

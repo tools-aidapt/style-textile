@@ -1,0 +1,20 @@
+{
+  "_comment": "A stand-in for the feedback context endpoint serving F4, for looking at Build C without n8n. Point VITE_FEEDBACK_CONTEXT_URL at /feedback-context-new-hire-readiness.sample.json and any token-shaped ?t= on /feedback/new-hire-readiness opens it. Everything here is invented: there is no manager called Peter Njoroge and no employee called Grace Wanjiru.",
+  "ok": true,
+  "formType": "MNHR",
+  "alreadySubmitted": false,
+  "_prefill": "TWO names, and the distinction matters: fullName is the line manager filling this in, subjectName is the new hire being reviewed. reviewPoint is 'Month 1' or 'Month 3' — the same manager gets this form twice about the same person, and it is the only thing that keeps the two responses apart.",
+  "prefill": {
+    "fullName": "Peter Njoroge",
+    "email": "peter.njoroge.sample@example.com",
+    "subjectName": "Grace Wanjiru",
+    "payroll": null,
+    "positionTitle": "Sales Operations Coordinator",
+    "hiresMade": null,
+    "jobTitle": "Sales Operations Coordinator",
+    "company": "Kenafric Manufacturing Limited",
+    "department": "Sales & Distribution",
+    "recruitmentType": null,
+    "reviewPoint": "Month 1"
+  }
+}

@@ -10,6 +10,13 @@
  * congratulate them, must not imply the survey affects anything, and must not
  * ask them to be brief — it should read as somebody who wants to know how it
  * went, which is the only honest reason to send it.
+ *
+ * A manager is a different reader on both counts. They are a colleague, not
+ * somebody who has just been refused; and what they write about a named new
+ * hire has consequences for that person, so the privacy line has to say who
+ * reads it rather than reassure them that nobody does. `voices` below holds
+ * the handful of strings that turn on that difference; everything outside it
+ * is shared, and is shared because it reads the same to everybody.
  */
 
 export const copy = {
@@ -21,6 +28,10 @@ export const copy = {
     "Your answers go to the Kenafric HR team. They are used to improve how we recruit, and they do not affect any application you have with us.",
 
   requiredNote: "Questions marked * need an answer. The rest are up to you.",
+
+  /** The 1-5 dropdown questions on the manager forms. */
+  scaleLegend: "1 is lowest, 5 is highest",
+  scaleValue: (value: number) => `${value} out of 5`,
 
   starLegend: "1 is poor, 5 is excellent",
   starValue: (value: number) => `${value} out of 5`,
@@ -75,4 +86,60 @@ export const copy = {
     "Your answers are still on this page, but we cannot send them from here. Please reply to the email we sent you.",
   failedOffline: "You are offline. Your answers are still here — try again once you have a connection.",
   retry: "Try again",
+} as const;
+
+/**
+ * What changes with the reader. Everything above stays the same for everyone.
+ *
+ * One entry per instrument rather than per form type: `CRR` and `ICRR` are
+ * one voice because they are one form, which is the whole point of Build A.
+ */
+export const voices = {
+  /** F1 / F2 — the external candidate and the internal applicant. */
+  candidate: {
+    eyebrow: copy.pageEyebrow,
+    detailsHeading: "Your details",
+    privacyNote: copy.privacyNote,
+    alreadyBody: copy.alreadyBody,
+    successBody: copy.successBody,
+    successRating: copy.successRating,
+  },
+
+  /**
+   * F3 — the requesting manager, on the recruitment they have just been
+   * through. Nobody is being appraised here except HR, so it can be direct
+   * about that: it is the recruitment process being marked, not the hire.
+   */
+  managerRecruitment: {
+    eyebrow: "Kenafric Group · Recruitment",
+    detailsHeading: "Your details",
+    privacyNote:
+      "Your answers go to the Kenafric HR team and are used to improve how we recruit. This reviews the recruitment process for this role — not the person who was hired.",
+    alreadyBody:
+      "We have your review of the recruitment for this role, and each link can only be used once. Thank you for taking the time.",
+    successBody:
+      "Your review has been sent to the Kenafric HR team. It is read by a person, and it is how we find out what to change in the next hiring round.",
+    successRating: (rating: number) => `You rated this recruitment round ${rating} out of 5.`,
+  },
+
+  /**
+   * F4 — the line manager, on a named new hire at Month 1 and Month 3.
+   *
+   * The one form in the layer where the subject is a person who is not
+   * reading it, so the privacy line says plainly where it goes. Understating
+   * that would be a manager writing something frank about a colleague on the
+   * assumption it stops with them.
+   */
+  newHireReadiness: {
+    eyebrow: "Kenafric Group · Onboarding",
+    // Not "your details": half of this block is the new hire's
+    detailsHeading: "This review",
+    privacyNote:
+      "Your answers go to the Kenafric HR team and form part of this employee's probation record. They are not shown to the employee by this form.",
+    alreadyBody:
+      "We have your review for this check-in point, and each link can only be used once. The next one will reach you at the next review point.",
+    successBody:
+      "Your review has been sent to the Kenafric HR team and recorded against this employee's probation.",
+    successRating: (rating: number) => `You rated their overall readiness ${rating} out of 5.`,
+  },
 } as const;

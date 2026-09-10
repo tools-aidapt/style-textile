@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { companyName, isInternal, parseContext, readToken } from "./session";
+import {
+  companyName,
+  isInternal,
+  parseContext,
+  refusalReason,
+  readToken,
+} from "./session";
 
 /**
  * The token and the context response.
@@ -115,6 +121,66 @@ describe("parseContext", () => {
     const context = parseContext({ ok: true, formType: "CRR" });
     expect(context?.prefill.fullName).toBe("");
     expect(context?.prefill.company).toBeNull();
+  });
+});
+
+describe("the extra keys the endpoint may send", () => {
+  const body = (overrides: Record<string, unknown> = {}) => ({
+    ok: true,
+    formType: "CRR",
+    alreadySubmitted: false,
+    prefill: { fullName: "Amina Otieno", email: "amina.otieno.sample@example.com" },
+    ...overrides,
+  });
+
+  it("keeps a warning so the page can show it", () => {
+    /**
+     * The only warning that exists means n8n is not enforcing token
+     * signatures, so a hand-made link opens anybody's form. It is shown as a
+     * banner rather than logged, because it has to be noticed and switched
+     * off before a real link is sent.
+     */
+    const context = parseContext(body({ warn: "TEST_MODE is on: signatures are not checked." }));
+    expect(context?.warning).toBe("TEST_MODE is on: signatures are not checked.");
+    expect(parseContext(body())?.warning).toBeNull();
+  });
+
+  it("takes a complete field id the server names", () => {
+    const id = "aaaaaaaa-1111-2222-3333-444444444444";
+    expect(parseContext(body({ recommendFieldId: id }))?.fieldIds).toEqual({
+      recommendFieldId: id,
+    });
+  });
+
+  it("discards a field id that is not a complete UUID", () => {
+    // Better the spec's own tested id than an answer posted at nothing
+    expect(parseContext(body({ recommendFieldId: "d27d7a83" }))?.fieldIds).toEqual({});
+    expect(parseContext(body({ recommendFieldId: 42 }))?.fieldIds).toEqual({});
+  });
+
+  it("ignores formTypeLabel, because formType already decided", () => {
+    // Two sources of truth for the form's identity could disagree, and the
+    // label is the one nothing downstream depends on
+    const context = parseContext(body({ formTypeLabel: "Manager Recruitment Review Form" }));
+    expect(context?.formType).toBe("CRR");
+    expect(JSON.stringify(context)).not.toContain("Manager Recruitment Review Form");
+  });
+});
+
+describe("refusalReason", () => {
+  it("reads the endpoint's own wording off an ok:false body", () => {
+    expect(refusalReason({ ok: false, reason: "This review has been cancelled." })).toBe(
+      "This review has been cancelled.",
+    );
+  });
+
+  it("offers nothing when the body is a success, or says nothing", () => {
+    // A successful body's contents are not an explanation of a failure
+    expect(refusalReason({ ok: true, formType: "CRR" })).toBeNull();
+    expect(refusalReason({ ok: false })).toBeNull();
+    expect(refusalReason({ ok: false, reason: "   " })).toBeNull();
+    expect(refusalReason(null)).toBeNull();
+    expect(refusalReason("nope")).toBeNull();
   });
 });
 

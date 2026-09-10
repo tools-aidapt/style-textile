@@ -9,6 +9,17 @@
 
 const read = (value: string | undefined): string => (value ?? "").trim();
 
+/**
+ * The n8n instance every workflow in this system is served from.
+ *
+ * Here once so a renumbered workflow is one edit. The feedback workflows were
+ * renumbered to WF-21..24 on 2026-09-10 because WF-14 and WF-15 already
+ * belonged to the onboarding phase. The old submit path must not survive
+ * anywhere in the repo — that is an acceptance criterion, so it is not
+ * written out here either.
+ */
+export const N8N_BASE = "https://aidapt.app.n8n.cloud/webhook";
+
 export const config = {
   jobsWebhookUrl: read(import.meta.env.VITE_JOBS_WEBHOOK_URL),
   jobsWebhookUser: read(import.meta.env.VITE_JOBS_WEBHOOK_USER),
@@ -74,8 +85,10 @@ export const config = {
    * here — it arrives in the URL WF-15 emailed. See `feedback/session.ts` for
    * why the app refuses to decode it.
    */
-  feedbackContextUrl: read(import.meta.env.VITE_FEEDBACK_CONTEXT_URL),
-  feedbackSubmitUrl: read(import.meta.env.VITE_FEEDBACK_SUBMIT_URL),
+  feedbackContextUrl:
+    read(import.meta.env.VITE_FEEDBACK_CONTEXT_URL) || `${N8N_BASE}/kenafric-feedback-context`,
+  /** WF-21, renumbered on 2026-09-10. */
+  feedbackSubmitUrl: read(import.meta.env.VITE_FEEDBACK_SUBMIT_URL) || `${N8N_BASE}/kenafric-wf21`,
   feedbackWebhookUser: read(import.meta.env.VITE_FEEDBACK_WEBHOOK_USER),
   feedbackWebhookPassword: read(import.meta.env.VITE_FEEDBACK_WEBHOOK_PASSWORD),
 

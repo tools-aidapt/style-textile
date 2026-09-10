@@ -1,7 +1,7 @@
 /**
  * Who is filling this in, and whether they still may.
  *
- * The link WF-15 emails a candidate carries a signed token:
+ * The link WF-22 emails a candidate carries a signed token:
  * `/feedback/candidate-review?t=<token>`. The app reads it out of the URL,
  * sends it to the context endpoint, and renders whatever comes back.
  *
@@ -25,7 +25,7 @@
  * there is no shape in it for anybody else's anything.
  */
 
-import { isFormType, type FormType } from "./schema";
+import { isFieldId, isFormType, type ContextFieldKey, type FormType } from "./schema";
 
 /**
  * What the context endpoint says, filtered to what the app renders.
@@ -37,11 +37,31 @@ import { isFormType, type FormType } from "./schema";
  * unmatchable to a candidate record for ever.
  */
 export interface FeedbackPrefill {
+  /**
+   * The person filling the form in — the candidate on F1/F2, the manager on
+   * F3/F4. One rule across every instrument, so a header line never means
+   * two different people depending on the route.
+   */
   fullName: string;
   email: string;
+  /**
+   * The person being reviewed, when that is somebody else. F4 only: a line
+   * manager with four reports must not have to guess which new hire this
+   * form is about, and an answer filed against the wrong person is worse
+   * than no answer.
+   */
+  subjectName: string | null;
   /** Internal applicants only. Shown back to them, never asked for. */
   payroll: string | null;
   positionTitle: string | null;
+  /**
+   * How many people were hired against this requisition. F3 only.
+   *
+   * The context that makes "quality of candidate pool" answerable: one hire
+   * out of forty applicants is a different round from three out of five. A
+   * string because it is shown, never counted with.
+   */
+  hiresMade: string | null;
   /** For the manager and new-hire forms. Unused by Build A. */
   jobTitle: string | null;
   /** The employing entity. Substituted into the recommend question (G-9). */
@@ -58,6 +78,24 @@ export interface FeedbackContext {
   /** Already answered. Renders the thank-you, not the form. */
   alreadySubmitted: boolean;
   prefill: FeedbackPrefill;
+  /**
+   * ClickUp field ids the server names, overriding the spec's own.
+   *
+   * Only ever applied to the POSTED key, and only for a question that asked
+   * for it with `idFrom`. A value that is not a complete UUID is discarded
+   * here rather than posted — a malformed override must not turn into an
+   * answer filed against nothing.
+   */
+  fieldIds: Partial<Record<ContextFieldKey, string>>;
+  /**
+   * An operational warning from the endpoint, shown as a banner.
+   *
+   * The only one so far means n8n is in `TEST_MODE`: token signatures are not
+   * being enforced, so a hand-made link opens any candidate's or employee's
+   * form. That is not something to log quietly — whoever is testing needs to
+   * see it on the page, and it must be gone before a real link is sent.
+   */
+  warning: string | null;
 }
 
 /** Why the form will not open. Each renders a different dead end. */
@@ -77,7 +115,7 @@ const str = (value: unknown): string => (typeof value === "string" ? value.trim(
 const nullable = (value: unknown): string | null => str(value) || null;
 
 /**
- * `base64url.base64url` — a payload and its HMAC, as WF-15 mints it.
+ * `base64url.base64url` — a payload and its HMAC, as WF-22 mints it.
  *
  * Checked before the token is sent, for the same reason a ClickUp id is:
  * it saves the endpoint a verification, and it keeps a URL nobody typed on
@@ -104,6 +142,24 @@ export const readToken = (): string => {
   return TOKEN.test(raw) ? raw : "";
 };
 
+/**
+ * Why the endpoint refused, in its own words, when it says so.
+ *
+ * A `200` carrying `ok: false` is a refusal the server chose to explain, and
+ * the explanation is written server-side where the secret is — so it is shown
+ * verbatim rather than collapsed into the generic dead end.
+ *
+ * **The wording is the endpoint's responsibility.** Whoever holds the link
+ * reads it, and that is not necessarily the person it was sent to, so a
+ * `reason` must never name a candidate, an employee, a manager or a position,
+ * and must not say which part of a bad token was wrong.
+ */
+export const refusalReason = (raw: unknown): string | null => {
+  const body = raw as Record<string, unknown> | null;
+  if (!body || typeof body !== "object" || body.ok !== false) return null;
+  return str(body.reason) || null;
+};
+
 export const parseContext = (raw: unknown): FeedbackContext | null => {
   const body = raw as Record<string, unknown> | null;
   if (!body || typeof body !== "object") return null;
@@ -119,14 +175,26 @@ export const parseContext = (raw: unknown): FeedbackContext | null => {
 
   const prefill = (body.prefill ?? {}) as Record<string, unknown>;
 
+  /**
+   * `formTypeLabel` is deliberately ignored. `formType` already decides which
+   * instrument this is and WF-21 writes the `Form Type` option itself; a
+   * label rendered from the wire would be a second source of truth for the
+   * form's identity, and the two could disagree.
+   */
+  const recommend = str(body.recommendFieldId);
+
   return {
     formType,
     alreadySubmitted: body.alreadySubmitted === true,
+    fieldIds: isFieldId(recommend) ? { recommendFieldId: recommend } : {},
+    warning: str(body.warn) || null,
     prefill: {
       fullName: str(prefill.fullName),
       email: str(prefill.email),
+      subjectName: nullable(prefill.subjectName),
       payroll: nullable(prefill.payroll),
       positionTitle: nullable(prefill.positionTitle),
+      hiresMade: nullable(prefill.hiresMade),
       jobTitle: nullable(prefill.jobTitle),
       company: nullable(prefill.company),
       department: nullable(prefill.department),

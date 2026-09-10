@@ -8,41 +8,38 @@ import {
 } from "@/components/feedback/FeedbackStates";
 import { useFeedbackContext } from "@/hooks/useFeedbackContext";
 import { useDocumentMeta } from "@/lib/seo";
-import { CANDIDATE_REVIEW } from "@/feedback/candidateReview";
-import { copy } from "@/feedback/locale";
 import { logFeedback } from "@/feedback/log";
+import { MANAGER_RECRUITMENT_REVIEW } from "@/feedback/managerRecruitmentReview";
 import { servesFormType } from "@/feedback/schema";
 import { readToken } from "@/feedback/session";
 
 /**
- * F1 / F2 — the candidate recruitment review.
+ * F3 — the manager recruitment review. Build B.
  *
- * Reached only from the link WF-22 emails a candidate the day after their
- * first attended interview. The `?t=` on that link is a signed token; the
- * candidate has no ClickUp account and never will, so there is no login in
- * front of this.
+ * Reached only from the link WF-23 emails the requesting manager on the day
+ * their position closes as filled. Once per position, ever.
  *
- * `noindex` is not decoration, and neither is the `referrer: no-referrer` in
- * `index.html`. The URL carries a credential that identifies a person, so it
- * must not be crawled and it must not travel to another host in a `Referer`
- * header.
+ * The manager does have a ClickUp account, unlike a candidate — and this is
+ * still a signed public link rather than anything behind a login. Two
+ * reasons: it is opened from an email on a phone, where a ClickUp form is a
+ * login wall; and the token is what carries *which position* is being
+ * reviewed, so a manager who raised three requisitions this quarter answers
+ * about the right one without choosing from a list.
  *
- * The same route serves the internal variant. `formType` comes back from the
- * context endpoint as `CRR` or `ICRR`, and that is the only difference on
- * screen — the payroll number an internal applicant is shown. Splitting them
- * into two pages is how Airtable ended up with an internal form that carries
- * no form tag and reports as nothing.
+ * `noindex`, and `referrer: no-referrer` in `index.html`: the URL carries a
+ * credential, so it must not be crawled and must not travel in a `Referer`.
  */
-const CandidateReviewPage = () => {
+const ManagerRecruitmentReviewPage = () => {
   // Read once, on mount. Re-reading on every render would make the form's
   // identity depend on a history entry a link preview could change.
   const token = React.useMemo(() => readToken(), []);
   const { context, fault, reason, isLoading, refetch } = useFeedbackContext(token);
+  const spec = MANAGER_RECRUITMENT_REVIEW;
 
   useDocumentMeta({
-    title: "Your recruitment experience — Kenafric",
-    description: "Tell the Kenafric HR team how your recruitment experience went.",
-    path: "/feedback/candidate-review",
+    title: "Recruitment review — Kenafric",
+    description: "Tell the Kenafric HR team how the recruitment for this role went.",
+    path: "/feedback/manager-recruitment-review",
     noindex: true,
   });
 
@@ -58,23 +55,18 @@ const CandidateReviewPage = () => {
       mainClassName="pb-20"
     >
       <div className="mx-auto w-full max-w-form">
-        {/* The one landmark gradient: cropped, Water-led, grain-welded and
-            deliberately shallow — every row it takes is a row of the form
-            pushed below the fold on a 360px screen. */}
         <section className="surface-flow-light has-grain mt-5 overflow-hidden rounded-lg border border-frost-200 [--grain-strength:0.5]">
           <div className="relative z-raised px-5 py-4 sm:px-6 sm:py-5">
             <p className="text-overline font-semibold uppercase text-steel-600">
-              {copy.pageEyebrow}
+              {spec.voice.eyebrow}
             </p>
             <h1 className="mt-1 max-w-measure text-h5 font-extrabold tracking-tight text-ink-900">
-              {CANDIDATE_REVIEW.title}
+              {spec.title}
             </h1>
-            {/* The intro is only true once we know the form will open. On a
-                dead end it would promise three minutes and then refuse. */}
+            {/* Only true once we know the form will open. On a dead end it
+                would promise three minutes and then refuse. */}
             {context && !context.alreadySubmitted ? (
-              <p className="measure mt-1.5 text-caption text-steel-700">
-                {CANDIDATE_REVIEW.intro}
-              </p>
+              <p className="measure mt-1.5 text-caption text-steel-700">{spec.intro}</p>
             ) : null}
           </div>
         </section>
@@ -82,16 +74,16 @@ const CandidateReviewPage = () => {
         <div className="mt-5">
           {isLoading ? (
             <FeedbackLoading />
-          ) : fault || !context || !servesFormType(CANDIDATE_REVIEW, context.formType) ? (
+          ) : fault || !context || !servesFormType(spec, context.formType) ? (
             <FeedbackDeadEnd
               fault={fault ?? "unreachable"}
               reason={reason}
               onRetry={() => void refetch()}
             />
           ) : context.alreadySubmitted ? (
-            <FeedbackAlreadySubmitted />
+            <FeedbackAlreadySubmitted voice={spec.voice} />
           ) : (
-            <FeedbackForm token={token} context={context} spec={CANDIDATE_REVIEW} />
+            <FeedbackForm token={token} context={context} spec={spec} />
           )}
         </div>
       </div>
@@ -99,4 +91,4 @@ const CandidateReviewPage = () => {
   );
 };
 
-export default CandidateReviewPage;
+export default ManagerRecruitmentReviewPage;
