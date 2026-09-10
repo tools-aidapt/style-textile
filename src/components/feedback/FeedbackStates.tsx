@@ -106,6 +106,13 @@ export const FeedbackDeadEnd = ({
       retry: true,
       icon: AlertTriangle,
     },
+    "wrong-form": {
+      heading: copy.wrongFormHeading,
+      body: copy.wrongFormBody,
+      // Retrying cannot fix a link built for another instrument
+      retry: false,
+      icon: LinkIcon,
+    },
     unconfigured: {
       heading: copy.unreachableHeading,
       // A deployment fault of ours, said plainly rather than blamed on them

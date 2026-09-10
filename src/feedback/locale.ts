@@ -65,6 +65,10 @@ export const copy = {
     "Something on our side did not respond. Nothing you have typed has been lost — try again in a moment.",
   unreachableRetry: "Try again",
 
+  wrongFormHeading: "This link opens a different form",
+  wrongFormBody:
+    "The link you followed belongs to another Kenafric feedback form, so we have not shown it. Open the link from the original email, or reply to it and we will send you a new one.",
+
   unconfiguredBody:
     "This form is not finished being set up. Nothing you do here will help — please reply to the email we sent you.",
 

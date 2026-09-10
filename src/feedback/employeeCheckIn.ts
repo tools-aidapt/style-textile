@@ -14,22 +14,17 @@
  * payroll number cannot pretend otherwise.
  *
  * ---
- * **NOT YET LIVE. Every field id below is a placeholder.**
+ * FIELD IDS and OPTION NAMES are complete, read live from `Feedback
+ * Responses` (901220480198) on 2026-09-10 — the nine fields were created
+ * that day. Every option list below is verbatim from ClickUp, in ClickUp's
+ * own order, because the NAME is what WF-21 resolves against the live
+ * schema: a paraphrase resolves to nothing and the answer is dropped with no
+ * error anywhere.
  *
- * The nine question fields do not exist on `Feedback Responses`
- * (901220480198) — verified live on 2026-09-10. The `Candidate Experience
- * Survey` Form Type option has never had a single question field behind it.
- *
- * So every `id` here is a `TBC-` string, which fails `isFieldId`, so
- * `askableSections` withholds every question, so `canCollect` is false and
- * the route renders "not finished being set up" instead of a form. That is
- * the designed behaviour, not a bug: asking somebody nine questions and
- * dropping every answer is the V1 failure this whole phase exists to undo.
- *
- * To finish this build: create the nine fields (see
- * `n8n/wf25-employee-check-in.md` §1), paste the real UUIDs over the `TBC-`
- * ids, and fill in the four option lists marked `options: []`. Nothing else
- * changes — no renderer change, no workflow change.
+ * Note the four option lists are four different shapes — `Very Good / Good /
+ * Fair / Poor`, `Yes / Partially / No`, `Yes / Sometimes / No` and `Yes / No`.
+ * Q7 says `Partially` where Q9 says `Sometimes`; they are not interchangeable
+ * and not one of them was guessable from the question text.
  * ---
  *
  * QUESTION TEXT is verbatim from the live Google Form, which has fourteen
@@ -83,31 +78,29 @@ const SECTIONS: FormSection[] = [
     questions: [
       {
         // Google Form Q5
-        id: "TBC-experience-so-far",
+        id: "f8846fd7-f9aa-4323-b203-ce05651c7e9c",
         label: "How has your experience been so far since joining the company?",
         type: "choice",
         required: true,
-        // TODO(kenafric): the live option list. Expand this dropdown in the
-        // Google Form and copy the choices verbatim — WF-21 resolves the
-        // NAME against the ClickUp schema, so a paraphrase resolves to
-        // nothing and the answer is dropped in silence.
-        options: [],
+        options: ["Very Good", "Good", "Fair", "Poor"],
       },
       {
         // Q7
-        id: "TBC-understand-role",
+        id: "9a1a419e-688b-498c-b19e-3c33d4dad339",
         label: "Do you clearly understand your role and responsibilities?",
         type: "choice",
         required: true,
-        // TODO(kenafric): the live option list. Q8 names 'Partially' and
-        // 'No', so those two are certainly among them — which is not the
-        // same as knowing the list, and it is not worth guessing the rest.
-        options: [],
+        options: ["Yes", "Partially", "No"],
       },
       {
-        // Q8 — conditional in intent, unconditional in fact
-        id: "TBC-explain-role-gap",
-        label: "If 'Partially' or 'No', please briefly explain why?",
+        /**
+         * Q8. Conditional in the Google Form, unconditional here — see D-21.
+         * The ClickUp field is named with the form's own curly quotes and a
+         * stray double space; the label renders cleanly because the label is
+         * display text and the FIELD ID is what the answer is posted under.
+         */
+        id: "bfccbfbb-fd9c-4dd2-b38f-a3e672e56846",
+        label: "If ‘Partially’ or ‘No,’ please briefly explain why?",
         type: "text",
         required: false,
         maxLength: TEXT_MAX,
@@ -120,24 +113,24 @@ const SECTIONS: FormSection[] = [
     title: "Support and tools",
     questions: [
       {
-        // Q9
-        id: "TBC-supported-by-team",
+        // Q9. `Sometimes`, not `Partially` — a different list from Q7's
+        id: "a4419c28-bc18-4f19-85b5-72fceedd787c",
         label: "Do you feel supported by your supervisor and team?",
         type: "choice",
         required: true,
-        options: [],
+        options: ["Yes", "Sometimes", "No"],
       },
       {
-        // Q10
-        id: "TBC-tools-and-resources",
+        // Q10. Yes/No only, which is why Q11 says "explain if No"
+        id: "39bbd4ec-28fe-4658-8d1a-3c509392a077",
         label: "Do you have the tools and resources you need to do your job effectively?",
         type: "choice",
         required: true,
-        options: [],
+        options: ["Yes", "No"],
       },
       {
         // Q11
-        id: "TBC-explain-tools-gap",
+        id: "6a8b786e-4f17-4fd1-b2cd-138bdcc1df76",
         label: "Briefly explain if No",
         type: "text",
         required: false,
@@ -152,7 +145,7 @@ const SECTIONS: FormSection[] = [
     questions: [
       {
         // Q12
-        id: "TBC-challenges",
+        id: "d424b0aa-e127-404d-a701-04374e6202cc",
         label: "What challenges have you faced in your role, if any?",
         type: "text",
         required: false,
@@ -160,7 +153,7 @@ const SECTIONS: FormSection[] = [
       },
       {
         // Q13 — the question this instrument exists for
-        id: "TBC-support-or-training",
+        id: "919ae0af-321e-403f-a85c-c7b828a2f181",
         label: "What additional support or training would help you perform better?",
         type: "text",
         required: false,
@@ -168,7 +161,7 @@ const SECTIONS: FormSection[] = [
       },
       {
         // Q14
-        id: "TBC-anything-for-hr",
+        id: "85c082fd-86c8-47f8-8196-4d1122e3bfa5",
         label: "Is there anything you would like to share with HR or management?",
         type: "text",
         required: false,

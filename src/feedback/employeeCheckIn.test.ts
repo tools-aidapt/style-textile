@@ -3,61 +3,76 @@ import { EMPLOYEE_CHECK_IN as EEC } from "./employeeCheckIn";
 import { allQuestions, askableSections, canCollect, isFieldId, withheldQuestions } from "./schema";
 
 /**
- * Build D, before its ClickUp fields exist.
+ * The spec is the contract with ClickUp, so it is pinned here.
  *
- * These tests pin the *unfinished* state on purpose. The nine question
- * fields are not on list 901220480198 — verified live on 2026-09-10 — so
- * every id here is a `TBC-` placeholder and every question is withheld.
- *
- * Two things have to be true while that is the case: the form must refuse to
- * open, and nobody must be able to make it open by accident. The moment the
- * real UUIDs are pasted in, the first four tests here fail loudly and tell
- * whoever did it what else to finish — which is the point.
+ * The nine fields were created on 2026-09-10 and the ids and option lists
+ * below were read live the same day. This build's specific hazard is the
+ * option NAMES: WF-21 resolves them against the live schema, so a paraphrase
+ * resolves to nothing and the answer is dropped with no error anywhere — and
+ * the four lists are four different shapes, one of which says `Sometimes`
+ * where another says `Partially`.
  */
 
-describe("the employee check-in spec, while it is unfinished", () => {
-  it("cannot collect anything, so the form does not open", () => {
-    /**
-     * The guard that matters. Without it the route would render a header, no
-     * questions and a live Submit button, and the empty `answers` object
-     * would be refused by the wire schema after somebody pressed it.
-     */
-    expect(canCollect(EEC)).toBe(false);
-    expect(askableSections(EEC)).toEqual([]);
+describe("the employee check-in spec is finished and storable", () => {
+  it("can collect, so the form actually opens", () => {
+    // `canCollect` is what kept this route shut while the fields did not
+    // exist. It has to be true now, or the form silently stays closed.
+    expect(canCollect(EEC)).toBe(true);
+    expect(askableSections(EEC)).toHaveLength(3);
+    expect(askableSections(EEC).flatMap((s) => s.questions)).toHaveLength(9);
   });
 
-  it("withholds every question, because not one has a real field id", () => {
-    expect(withheldQuestions(EEC)).toHaveLength(9);
-    allQuestions(EEC).forEach((question) => {
-      expect(isFieldId(question.id), `${question.id} should still be a placeholder`).toBe(false);
-      expect(question.id.startsWith("TBC-"), question.id).toBe(true);
+  it("gives every question a unique, complete field id", () => {
+    const ids = allQuestions(EEC).map((q) => q.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    ids.forEach((id) => {
+      expect(isFieldId(id), `${id} is not a complete field id`).toBe(true);
     });
+    expect(withheldQuestions(EEC)).toEqual([]);
   });
 
-  it("has no choice question that could render without its options", () => {
+  it("carries each dropdown's live option names, verbatim and in order", () => {
     /**
-     * The four dropdowns' option lists are not known — the Google Form
-     * screenshot shows them collapsed. An option NAME is what WF-21 resolves
-     * against the live ClickUp schema, so a guessed one resolves to nothing
-     * and the answer is dropped in silence.
-     *
-     * They are empty and the questions are withheld, so nothing renders. If
-     * somebody pastes the ids in without the options, this is what tells
-     * them: an askable choice with no options is a question that cannot be
-     * answered.
+     * Four questions, four different lists. Q7 offers `Partially` and Q9
+     * offers `Sometimes`; swapping them posts a name ClickUp cannot resolve.
+     * None of these was guessable from the question text, which is why the
+     * build waited for them.
      */
-    askableSections(EEC).forEach((section) => {
-      section.questions.forEach((question) => {
-        if (question.type === "choice") {
-          expect(question.options?.length, question.label).toBeGreaterThan(1);
-        }
-      });
+    const optionsOf = (id: string) => allQuestions(EEC).find((q) => q.id === id)?.options;
+
+    expect(optionsOf("f8846fd7-f9aa-4323-b203-ce05651c7e9c")).toEqual([
+      "Very Good",
+      "Good",
+      "Fair",
+      "Poor",
+    ]);
+    expect(optionsOf("9a1a419e-688b-498c-b19e-3c33d4dad339")).toEqual([
+      "Yes",
+      "Partially",
+      "No",
+    ]);
+    expect(optionsOf("a4419c28-bc18-4f19-85b5-72fceedd787c")).toEqual([
+      "Yes",
+      "Sometimes",
+      "No",
+    ]);
+    expect(optionsOf("39bbd4ec-28fe-4658-8d1a-3c509392a077")).toEqual(["Yes", "No"]);
+  });
+
+  it("leaves no choice question unanswerable", () => {
+    allQuestions(EEC).forEach((question) => {
+      if (question.type === "choice") {
+        expect(question.options?.length, question.label).toBeGreaterThan(1);
+      } else {
+        expect(question.options, question.label).toBeUndefined();
+      }
     });
   });
 
   it("averages nothing, because nothing on this form is a score", () => {
     // Four categorical choices. A mean of "Partially" is a number that looks
-    // like a rating and measures nothing.
+    // like a rating and measures nothing, and a zero written into Overall
+    // Rating would drag every average on the report.
     expect(EEC.ratingQuestions).toEqual([]);
     expect(allQuestions(EEC).some((q) => q.type === "scale" || q.type === "stars")).toBe(false);
   });
@@ -81,6 +96,12 @@ describe("the employee check-in spec, as an instrument", () => {
     expect(EEC.sections).toHaveLength(3);
 
     const asked = allQuestions(EEC).map((q) => q.label.toLowerCase());
+    /**
+     * The JD field WAS created in ClickUp on 2026-09-10
+     * (`0562bc83-…`, Yes/No), but the question stays dropped: JD signing went
+     * out of scope on 2026-08-25 and a field existing is not a decision to
+     * reverse that. Adding it back is one entry in `SECTIONS`.
+     */
     expect(asked.some((label) => label.includes("job description"))).toBe(false);
     expect(asked.some((label) => label.includes("payroll"))).toBe(false);
     expect(asked.some((label) => label.includes("employee name"))).toBe(false);

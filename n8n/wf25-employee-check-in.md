@@ -5,11 +5,13 @@
 D-13 is answered: the fourteen question texts arrived. This document is what turns them into
 a working instrument.
 
-**Nothing is built yet on the ClickUp side.** Verified live on 2026-09-10: the nine question
-fields do not exist, and the `Candidate Experience Survey` Form Type option has never had a
-single question field behind it. The React form, route, fixture and tests are built and
-sitting behind the withholding guard — the route renders "not finished being set up" until
-the ids land, which takes one paste.
+**The nine fields were created on 2026-09-10 and the form is built against them.** Ids and
+option lists were read live the same day and are in `src/feedback/employeeCheckIn.ts`. The
+route renders nine questions in three sections.
+
+**Two hard blockers remain, and both are on ClickUp, not in the app** — see §1.2. Until
+`Review Point` and `Employee` exist, an EEC response cannot say which of the six check-ins it
+is or whose it is, and WF-25 has no guard.
 
 ---
 
@@ -36,43 +38,34 @@ Five of the fourteen go, and four of those five were the join key. That is the r
 
 ---
 
-## 1. The nine fields to create on `Feedback Responses` `901220480198`
+## 1. The nine fields on `Feedback Responses` `901220480198`
 
-Field **names must be the question text verbatim**, the way every other question field on
-this list already is. The name is what makes a ClickUp view readable, and it is what the next
-audit reads.
+Created 2026-09-10, each named the question text verbatim — the way every other question
+field on this list is, because the name is what a ClickUp view shows and what the next audit
+reads.
 
-| # | Field name | Type |
-| --- | --- | --- |
-| 1 | `How has your experience been so far since joining the company?` | **Dropdown** |
-| 2 | `Do you clearly understand your role and responsibilities?` | **Dropdown** |
-| 3 | `If 'Partially' or 'No', please briefly explain why?` | Text (long) |
-| 4 | `Do you feel supported by your supervisor and team?` | **Dropdown** |
-| 5 | `Do you have the tools and resources you need to do your job effectively?` | **Dropdown** |
-| 6 | `Briefly explain if No` | Text (long) |
-| 7 | `What challenges have you faced in your role, if any?` | Text (long) |
-| 8 | `What additional support or training would help you perform better?` | Text (long) |
-| 9 | `Is there anything you would like to share with HR or management?` | Text (long) |
+### 1.1 The live ids and option lists
 
-### 1.1 The four dropdowns — I need their option lists
+| Q | Field id | Type | Options, verbatim and in ClickUp's order |
+| --- | --- | --- | --- |
+| Q5 | `f8846fd7-f9aa-4323-b203-ce05651c7e9c` | drop_down | **Very Good · Good · Fair · Poor** |
+| Q7 | `9a1a419e-688b-498c-b19e-3c33d4dad339` | drop_down | **Yes · Partially · No** |
+| Q8 | `bfccbfbb-fd9c-4dd2-b38f-a3e672e56846` | text | — |
+| Q9 | `a4419c28-bc18-4f19-85b5-72fceedd787c` | drop_down | **Yes · Sometimes · No** |
+| Q10 | `39bbd4ec-28fe-4658-8d1a-3c509392a077` | drop_down | **Yes · No** |
+| Q11 | `6a8b786e-4f17-4fd1-b2cd-138bdcc1df76` | text | — |
+| Q12 | `d424b0aa-e127-404d-a701-04374e6202cc` | text | — |
+| Q13 | `919ae0af-321e-403f-a85c-c7b828a2f181` | text | — |
+| Q14 | `85c082fd-86c8-47f8-8196-4d1122e3bfa5` | text | — |
 
-**This is the one thing I cannot get from the screenshot.** All four dropdowns are collapsed
-in it, showing only "Choose".
+**Four questions, four different shapes, and none of them guessable.** Q7 says `Partially`
+where Q9 says `Sometimes`; they are not interchangeable, and posting one where the other
+belongs is a name WF-21 cannot resolve. `employeeCheckIn.test.ts` pins all four lists.
 
-The option **names** are what the form posts and what WF-21 resolves against the live ClickUp
-schema. A paraphrase resolves to nothing and the answer is **dropped with no error anywhere**
-— the exact failure class this phase exists to remove. So they are not being guessed.
-
-Open each dropdown in the Google Form and send the choices verbatim, in order:
-
-- Q5 `How has your experience been so far since joining the company?` → ?
-- Q7 `Do you clearly understand your role and responsibilities?` → ? *(Q8 names 'Partially'
-  and 'No', so both are certainly in the list — which is not the same as knowing the list)*
-- Q9 `Do you feel supported by your supervisor and team?` → ?
-- Q10 `Do you have the tools and resources you need to do your job effectively?` → ?
-  *(Q11 says "explain if No", so 'No' is in this one)*
-
-Create each ClickUp dropdown with **exactly those names, in that order**.
+**Also created but deliberately not asked:** `Have you signed your Job Description (JD)?`
+`0562bc83-bb0e-4c2d-bb5c-63de22d6ba30`, drop_down Yes/No. That is Google Form Q6, and JD
+signing went out of scope on 2026-08-25. A field existing is not a decision to reverse that
+— **confirm with HR before adding it back.** If it comes back it is one entry in `SECTIONS`.
 
 ### 1.2 Still missing, and F5 makes two of them unavoidable
 
@@ -85,17 +78,15 @@ Create each ClickUp dropdown with **exactly those names, in that order**.
 
 ---
 
-## 2. Finishing the React build — one paste
+## 2. The React build — done
 
-Once the fields exist, in `src/feedback/employeeCheckIn.ts`:
+`src/feedback/employeeCheckIn.ts` carries the nine ids and the four option lists.
+`/feedback/employee-check-in` renders nine questions in three sections. No renderer change
+and no workflow change were needed — WF-21 carries no question-text mapping table, which is
+the whole reason `answers` is keyed by field id.
 
-1. Replace each `TBC-…` id with the real UUID.
-2. Fill the four `options: []` arrays with the live option names, in ClickUp's order.
-
-Nothing else changes. No renderer change, no route change, **no workflow change** — WF-21
-carries no question-text mapping table, which is the whole reason `answers` is keyed by field
-id. `npm test` then tells you if you missed something: the tests currently assert the
-unfinished state and will fail loudly the moment ids appear without options.
+Still to decide before it goes to a real employee: **D-21** (should Q8 and Q11 appear only
+when the answer above them warrants it?) and **D-22** (who acts on a Q13 answer?).
 
 ---
 
@@ -161,22 +152,29 @@ drag every average on the TA Metrics report.
 
 ## 4. Test plan
 
-### 4.1 Now, before any field exists
-
-The route is live and honest about being unfinished:
+### 4.1 By eye, with no n8n
 
 ```
 VITE_FEEDBACK_CONTEXT_URL=/feedback-context-employee-check-in.sample.json
 ```
 
-Open `/feedback/employee-check-in?t=<any token-shaped string>` and confirm it renders **"This
-form is not finished being set up"** and no questions. That is `canCollect` refusing to open a
-form that cannot store an answer. Nine tests in `employeeCheckIn.test.ts` pin this state.
+**Define it once.** A duplicate `VITE_FEEDBACK_CONTEXT_URL` later in `.env` silently wins,
+which is what made this route render a dead end on 2026-09-10 while pointing at the F4
+fixture. Restart the dev server after any change — Vite inlines these at build time.
 
-### 4.2 After the fields exist
+Then open `/feedback/employee-check-in?t=<any token-shaped string>` and check:
 
-- Every `TBC-` gone, every dropdown's options filled → the form renders nine questions in
-  three sections, and `npm test` passes with the unfinished-state assertions updated.
+- [ ] Nine questions, three sections. Four choice groups: 4 + 3 + 3 + 2 = 12 options total.
+- [ ] `Sometimes` appears under "supported by your supervisor", `Partially` under
+      "understand your role". Swapped is the defect this build waited to avoid.
+- [ ] The header shows name, payroll number, department, company and **Check-in: Day 30**.
+      No control anywhere near any of them.
+- [ ] Submit with nothing answered → four errors, not nine. Only the choices are required.
+- [ ] Change `formType` in the fixture to `MNHR` → **"This link opens a different form"**,
+      with no retry button.
+
+### 4.2 Against n8n
+
 - Submit once against `kenafric-wf21` with a hand-minted `EEC` token. Confirm: task named
   `EEC · Day 30 · …`, `Form Type` = `Employee Experience & Engagement Check-In`,
   `Review Point` = `Day 30`, `Employee` linked, **`Overall Rating` empty**, and all four

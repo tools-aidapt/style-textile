@@ -108,6 +108,17 @@ export type ContextFault =
    */
   | "link-dead"
   | "unreachable"
+  /**
+   * The token verified, but it is for a different instrument than this route
+   * renders — a `CRR` link opened at the new-hire readiness address.
+   *
+   * Its own fault rather than folded into `unreachable`, because the two need
+   * opposite things from the reader: `unreachable` means try again in a
+   * moment, and this one will never work no matter how many times it is
+   * retried. It is also a fault of ours, not theirs — it means a send
+   * workflow built the wrong link.
+   */
+  | "wrong-form"
   /** Deployed without its endpoints. A fault of ours, said as one. */
   | "unconfigured";
 

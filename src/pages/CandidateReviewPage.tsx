@@ -84,7 +84,13 @@ const CandidateReviewPage = () => {
             <FeedbackLoading />
           ) : fault || !context || !servesFormType(CANDIDATE_REVIEW, context.formType) ? (
             <FeedbackDeadEnd
-              fault={fault ?? "unreachable"}
+              /*
+               * A verified token for another instrument is its own dead end.
+               * Folding it into `unreachable` told the reader to try again,
+               * which can never work, and hid the real fault — a send
+               * workflow that built the wrong link.
+               */
+              fault={fault ?? (context ? "wrong-form" : "unreachable")}
               reason={reason}
               onRetry={() => void refetch()}
             />
