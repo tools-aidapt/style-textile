@@ -12,21 +12,12 @@ import type { FeedbackContext } from "./session";
 /**
  * ISO 8601 with the local offset.
  *
- * `toISOString()` would send Z, and every one of these is submitted in
- * Nairobi — a 09:00 EAT response filed as 06:00 UTC reads as a candidate
- * answering before the email went out.
+ * Moved to `lib/isoTimestamp.ts` when the KPI forms needed the same stamp;
+ * re-exported here so this module stays the one place a feedback submission
+ * is assembled from, and so nothing that already imported it has to move.
  */
-export const localIsoTimestamp = (now: Date = new Date()): string => {
-  const pad = (value: number) => String(Math.floor(Math.abs(value))).padStart(2, "0");
-  const offset = -now.getTimezoneOffset();
-  const sign = offset >= 0 ? "+" : "-";
-
-  return (
-    `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}` +
-    `T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}` +
-    `${sign}${pad(offset / 60)}:${pad(offset % 60)}`
-  );
-};
+export { localIsoTimestamp } from "@/lib/isoTimestamp";
+import { localIsoTimestamp } from "@/lib/isoTimestamp";
 
 /**
  * The answers, cleaned for the wire.

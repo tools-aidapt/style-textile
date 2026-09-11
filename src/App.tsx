@@ -102,6 +102,36 @@ const router = createBrowserRouter([
     errorElement: <RouteError />,
   },
   {
+    /**
+     * Build E — the probation KPI definition form, one per employee per
+     * review cycle.
+     *
+     * `?t=` rather than a path segment, like the feedback routes and for the
+     * same reason: the token is long, and what the form does is decided by
+     * what the context endpoint says the token is for, not by the address.
+     */
+    path: "/kpi/define",
+    lazy: async () => ({ Component: (await import("./pages/KpiDefinePage")).default }),
+    errorElement: <RouteError />,
+  },
+  {
+    /**
+     * Build F — the KPI review, mid-probation and final.
+     *
+     * One route for both modes, because they are one instrument: the mid
+     * review is the final review with the scoring block hidden. Which mode
+     * it is belongs to the token, not to the address — a manager who could
+     * switch modes in the URL could score somebody three months early.
+     *
+     * Separate from `/kpi/define` for the opposite reason: those two really
+     * are different instruments, and a shared route switching on the token
+     * would render the wrong form rather than refuse.
+     */
+    path: "/kpi/review",
+    lazy: async () => ({ Component: (await import("./pages/KpiReviewPage")).default }),
+    errorElement: <RouteError />,
+  },
+  {
     path: "*",
     lazy: async () => ({ Component: (await import("./pages/NotFound")).default }),
     errorElement: <RouteError />,

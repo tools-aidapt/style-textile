@@ -92,6 +92,30 @@ export const config = {
   feedbackWebhookUser: read(import.meta.env.VITE_FEEDBACK_WEBHOOK_USER),
   feedbackWebhookPassword: read(import.meta.env.VITE_FEEDBACK_WEBHOOK_PASSWORD),
 
+  /**
+   * The KPI forms' three endpoints.
+   *
+   * One context endpoint serves both forms — it verifies the token, reads
+   * the employee and, for a review, the agreed KPI set — and each form
+   * posts to its own workflow: WF-18b takes a new KPI set, WF-26b takes a
+   * mid or final review. Two submit URLs rather than one branching workflow,
+   * because they write to different lists and fail for different reasons.
+   *
+   * No ClickUp field id, option UUID or list id is configured here or
+   * carried in the payloads; see `kpi/contract.ts`. The token is never
+   * configured either — it arrives in the URL WF-18a or WF-26a emailed.
+   */
+  kpiContextUrl:
+    read(import.meta.env.VITE_KPI_CONTEXT_URL) || `${N8N_BASE}/kenafric-kpi-context`,
+  /** WF-18b — a new KPI set. */
+  kpiDefineSubmitUrl:
+    read(import.meta.env.VITE_KPI_DEFINE_SUBMIT_URL) || `${N8N_BASE}/kenafric-wf18b`,
+  /** WF-26b — a mid or final review. */
+  kpiReviewSubmitUrl:
+    read(import.meta.env.VITE_KPI_REVIEW_SUBMIT_URL) || `${N8N_BASE}/kenafric-wf26b`,
+  kpiWebhookUser: read(import.meta.env.VITE_KPI_WEBHOOK_USER),
+  kpiWebhookPassword: read(import.meta.env.VITE_KPI_WEBHOOK_PASSWORD),
+
   /** Absolute origin used to build canonical URLs and JobPosting structured data. */
   siteUrl: read(import.meta.env.VITE_SITE_URL) || "https://aidapt.co",
 

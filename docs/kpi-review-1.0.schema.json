@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aidapt.co/schemas/kenafric/kpi-review-1.0.json",
+  "title": "Kenafric KPI review submission (v1.0)",
+  "description": "The body of a POST to WF-26b (kenafric-wf26b): a mid-probation or final review of one employee against their agreed KPI set. One instrument, two modes — the mid review is the final review with the scoring block hidden — and `mode` is echoed back from what the context endpoint said, never chosen by the browser. Carries NO scores: Score, Weighted Score, Weighted KPI Score and Final Individual Score are all WF-26b's, and Weighted Score is a ClickUp formula that recomputes itself. Validated against real payloads by src/kpi/payload.test.ts with Ajv.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["t", "formType", "mode", "submittedAt", "kpis"],
+  "properties": {
+    "t": {
+      "description": "The signed token from the link, passed through verbatim. n8n verifies it against LINK_SECRET. It is also what makes a retry harmless: WF-26b appends KMID or KFIN to Automation Markers and refuses a review whose marker is already there.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{16,1024}\\.[A-Za-z0-9_-]{16,512}$"
+    },
+    "formType": { "const": "KPIR" },
+    "mode": {
+      "description": "Which review this is, echoed back from the context endpoint so WF-26b branches without decoding its own token twice. 'mid' writes Progress and appends to Mid-Review Notes; 'final' writes Actual, Final Rating and Score, the talent block and both sign-off dates.",
+      "type": "string",
+      "enum": ["mid", "final"]
+    },
+    "submittedAt": {
+      "description": "ISO 8601 with the local UTC offset, never Z. On a final review this timestamp, with the signed token, IS the sign-off — it is written to Employee Sign-off Date and Manager Sign-off Date in place of the KIL sheet's wet-signature boxes (K-4).",
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}[+-]\\d{2}:\\d{2}$"
+    },
+    "kpis": {
+      "description": "One entry per LIVE KPI in the agreed set. A voided KPI is not sent at all — it drops out of the numerator and the denominator both. WF-26b refuses a final review that is missing any live KPI: a partial final review produces a wrong weighted score, and a wrong score is worse than none.",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["taskId"],
+        "properties": {
+          "taskId": {
+            "description": "The KPI's ClickUp task id, from the context endpoint. The only ClickUp identifier that crosses the wire, and it has to: matching answers back by KPI name would break the first time a statement was edited.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "progress": {
+            "description": "Mid only. The ClickUp Progress option NAME, never its UUID.",
+            "type": "string",
+            "enum": ["On Track", "At Risk", "Off Track"]
+          },
+          "midReviewNotes": {
+            "description": "Mid only, and absent when nothing was written. Required by the form at At Risk and Off Track. WF-26b APPENDS it under a dated heading rather than overwriting — the mid note and the final note are both evidence — so an empty string here would append a dated heading with nothing under it.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "actual": {
+            "description": "Final, quantitative rows only. What was actually achieved, in the KPI's own unit. WF-26b scores it as min(actual / targetFigure, CAP); K-3 decides the cap, and the app caps at 100% for probation.",
+            "type": "number"
+          },
+          "rating": {
+            "description": "Final only, and captured for EVERY KPI regardless of measurement type — it is what WF-19 gates on and what HR reads. 1 Did not meet, 2 Partially met, 3 Met, 4 Exceeded, 5 Significantly exceeded. A qualitative KPI is scored from it: rating / 5.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "comment": {
+            "description": "Final only, and absent when nothing was written. Required by the form at a rating of 2 or below: a 1 or a 2 is part of what a probation decision rests on, and an unexplained one cannot be put to the employee.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        }
+      }
+    },
+    "talent": {
+      "description": "The KIL sheet's talent block, rows 20-42. Final reviews only. Absent on a mid review.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capacityBuilding", "careerAspirations", "managerComments"],
+      "properties": {
+        "capacityBuilding": {
+          "description": "Up to three areas for training, coaching or mentoring. Blank lines are dropped, so an empty array means nothing was written rather than three empty strings. WF-26b joins them with newlines for the ClickUp text field.",
+          "type": "array",
+          "maxItems": 3,
+          "items": { "type": "string", "minLength": 1, "maxLength": 500 }
+        },
+        "careerAspirations": {
+          "description": "Up to two positions the employee is aiming for in the next 1 to 2 years.",
+          "type": "array",
+          "maxItems": 2,
+          "items": { "type": "string", "minLength": 1, "maxLength": 500 }
+        },
+        "employeeComments": {
+          "description": "The employee's own words, as given in the review conversation. Absent when nothing was written.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "managerComments": {
+          "description": "Required. This is the paragraph the confirmation conversation is held against.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "panelAdjustment": {
+          "description": "Signed, HR only, and absent unless the token says HR and a figure was actually typed. A zero adjustment and no adjustment are the same outcome, but only one of them is a decision somebody made. Added to the weighted score to give Final Individual Score.",
+          "type": "number"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "description": "A mid review carries progress on every KPI, and no scoring of any kind: a mid review that asks for a score is a final review held early, and managers then anchor the real one to it.",
+      "if": { "properties": { "mode": { "const": "mid" } } },
+      "then": {
+        "properties": {
+          "talent": false,
+          "kpis": {
+            "items": {
+              "required": ["progress"],
+              "properties": { "actual": false, "rating": false, "comment": false }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "A final review carries a rating on every KPI and the talent block.",
+      "if": { "properties": { "mode": { "const": "final" } } },
+      "then": {
+        "required": ["talent"],
+        "properties": {
+          "kpis": {
+            "items": {
+              "required": ["rating"],
+              "properties": { "progress": false, "midReviewNotes": false }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
