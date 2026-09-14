@@ -18,7 +18,22 @@ const read = (value: string | undefined): string => (value ?? "").trim();
  * anywhere in the repo — that is an acceptance criterion, so it is not
  * written out here either.
  */
-export const N8N_BASE = "https://aidapt.app.n8n.cloud/webhook";
+export const N8N_HOST =
+  read(import.meta.env.VITE_N8N_BASE_URL) || "https://aidapt.app.n8n.cloud";
+
+export const N8N_BASE = `${N8N_HOST}/webhook`;
+
+/**
+ * Join a host and a path without doubling or dropping the slash between them.
+ *
+ * `https://host/` + `/webhook/x` is `//webhook/x`, which n8n answers with a
+ * 404 that says the webhook is not registered — indistinguishable, from the
+ * outside, from a workflow nobody activated. A trailing slash in a dashboard
+ * environment variable is the most likely way anyone ever produces that, so
+ * it is handled here rather than trusted not to happen.
+ */
+export const joinUrl = (host: string, path: string): string =>
+  `${host.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
 
 export const config = {
   jobsWebhookUrl: read(import.meta.env.VITE_JOBS_WEBHOOK_URL),
@@ -103,16 +118,30 @@ export const config = {
    *
    * No ClickUp field id, option UUID or list id is configured here or
    * carried in the payloads; see `kpi/contract.ts`. The token is never
-   * configured either — it arrives in the URL WF-18a or WF-26a emailed.
+   * configured either — it arrives in the URL WF-18a or WF-26a emailed,
+   * and `LINK_SECRET` is not here and must never be: the app carries `?t=`
+   * through and neither mints nor verifies it.
+   *
+   * Host and path are separate variables so that pointing the whole layer at
+   * a staging n8n is one change rather than three, and so a renamed webhook
+   * does not require redeploying with a different hostname. Each falls back
+   * to the live value, so a preview build with nothing configured still
+   * works rather than posting to `undefined`.
    */
-  kpiContextUrl:
-    read(import.meta.env.VITE_KPI_CONTEXT_URL) || `${N8N_BASE}/kenafric-kpi-context`,
+  kpiContextUrl: joinUrl(
+    N8N_HOST,
+    read(import.meta.env.VITE_KPI_CONTEXT_PATH) || "/webhook/kenafric-kpi-context",
+  ),
   /** WF-18b — a new KPI set. */
-  kpiDefineSubmitUrl:
-    read(import.meta.env.VITE_KPI_DEFINE_SUBMIT_URL) || `${N8N_BASE}/kenafric-wf18b`,
+  kpiDefineSubmitUrl: joinUrl(
+    N8N_HOST,
+    read(import.meta.env.VITE_KPI_DEFINE_PATH) || "/webhook/kenafric-wf18b",
+  ),
   /** WF-26b — a mid or final review. */
-  kpiReviewSubmitUrl:
-    read(import.meta.env.VITE_KPI_REVIEW_SUBMIT_URL) || `${N8N_BASE}/kenafric-wf26b`,
+  kpiReviewSubmitUrl: joinUrl(
+    N8N_HOST,
+    read(import.meta.env.VITE_KPI_REVIEW_PATH) || "/webhook/kenafric-wf26b",
+  ),
   kpiWebhookUser: read(import.meta.env.VITE_KPI_WEBHOOK_USER),
   kpiWebhookPassword: read(import.meta.env.VITE_KPI_WEBHOOK_PASSWORD),
 

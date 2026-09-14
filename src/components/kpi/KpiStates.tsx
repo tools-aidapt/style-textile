@@ -5,6 +5,14 @@ import type { KpiFault } from "@/kpi/session";
 
 /** What a KPI page can be instead of, before, and after the form. */
 
+/**
+ * Centred, unlike the feedback layer's equivalent.
+ *
+ * These screens are the whole page — there is no form under them to align a
+ * left edge with, and the text is two short lines. Centred also keeps the
+ * mark, the heading and the body on one axis at 360px, where a left-aligned
+ * 48px disc above a wrapped sentence reads as a layout that lost something.
+ */
 const Shell = ({
   tone = "plain",
   children,
@@ -19,7 +27,7 @@ const Shell = ({
         : "overflow-hidden rounded-lg border border-mist-200 bg-white shadow-sm"
     }
   >
-    <div className="relative z-raised p-6 sm:p-8">{children}</div>
+    <div className="relative z-raised px-5 py-10 text-center sm:p-12">{children}</div>
   </div>
 );
 
@@ -121,11 +129,11 @@ export const KpiDeadEnd = ({
 
   return (
     <Shell>
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-mist-50">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-mist-50">
         <Icon className="h-6 w-6 text-steel-600" aria-hidden="true" />
       </div>
       <h1 className="mt-6 text-h4 font-bold tracking-snug text-ink-900">{shown.heading}</h1>
-      <p className="measure mt-3 text-body text-steel-600">{body}</p>
+      <p className="measure mx-auto mt-3 text-body text-steel-600">{body}</p>
       {shown.retry ? (
         <div className="mt-8">
           <Button type="button" variant="secondary" onClick={onRetry}>
@@ -148,11 +156,11 @@ export const KpiDeadEnd = ({
  */
 export const KpiAlreadySubmitted = ({ body }: { body: string }) => (
   <Shell tone="sweep">
-    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-50">
+    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-teal-50">
       <Check className="h-6 w-6 text-teal-400" aria-hidden="true" />
     </div>
     <h1 className="mt-6 text-h4 font-bold tracking-snug text-ink-900">{copy.alreadyHeading}</h1>
-    <p className="measure mt-3 text-body text-steel-700">{body}</p>
+    <p className="measure mx-auto mt-3 text-body text-steel-700">{body}</p>
   </Shell>
 );
 
@@ -175,15 +183,15 @@ export const KpiSubmitted = ({
   detail?: string | null;
 }) => (
   <Shell tone="sweep">
-    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-50">
+    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-teal-50">
       <Check className="h-6 w-6 text-teal-400" aria-hidden="true" />
     </div>
     <h1 className="mt-6 text-h3 font-bold tracking-snug text-ink-900" role="status">
       {heading}
     </h1>
-    <p className="measure mt-3 text-body text-steel-700">{body}</p>
+    <p className="measure mx-auto mt-3 text-body text-steel-700">{body}</p>
     {detail ? (
-      <p className="measure mt-2 font-mono text-body-sm tabular-nums text-steel-700">{detail}</p>
+      <p className="measure mx-auto mt-2 font-mono text-body-sm tabular-nums text-steel-700">{detail}</p>
     ) : null}
   </Shell>
 );

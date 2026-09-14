@@ -299,6 +299,85 @@ For local work without n8n, point `VITE_FEEDBACK_CONTEXT_URL` at
 then opens the form, because a static file cannot verify a signature — so
 either value belongs on a local or preview build only.
 
+## The probation KPI forms
+
+Two routes, both opened from a link n8n emails a line manager, both carrying a
+signed token as `?t=`:
+
+| Route | Build | What it is |
+|---|---|---|
+| `/kpi/define` | E | The manager agrees 3–5 KPIs; weights must total 100 |
+| `/kpi/review` | F | Mid-probation and final review. One route, two modes |
+
+**Which form, which mode, and whether the panel adjustment appears are all the
+context endpoint's word — never the token's as this app reads it, and never the
+URL's.** The app never decodes the token and holds no `LINK_SECRET`: it carries
+`?t=` from the address bar to the POST body and nothing else. n8n verifies the
+signature server-side, where the secret is. A manager who could edit
+`mode=mid` to `mode=final` in the address bar could score somebody three months
+early, which is why the mode is not in the address bar.
+
+### Configuration
+
+Host and path are separate variables, so pointing the whole layer at a staging
+n8n is one change rather than three. Each falls back to the live value, so a
+preview build with nothing set still works instead of posting to `undefined`.
+
+| Variable | Production | Local | What it is |
+|---|---|---|---|
+| `VITE_N8N_BASE_URL` | `https://aidapt.app.n8n.cloud` | same | The n8n host. No trailing slash needed — one is stripped |
+| `VITE_KPI_CONTEXT_PATH` | `/webhook/kenafric-kpi-context` | same | Serves **both** forms: verifies the token, returns the employee and, for a review, the agreed KPI set |
+| `VITE_KPI_DEFINE_PATH` | `/webhook/kenafric-wf18b` | same | WF-18b — takes a new KPI set |
+| `VITE_KPI_REVIEW_PATH` | `/webhook/kenafric-wf26b` | same | WF-26b — takes a mid or final review |
+| `VITE_KPI_WEBHOOK_USER` / `_PASSWORD` | unset | unset | Optional basic auth. Public in the bundle, so it deters casual traffic only |
+
+> **`/webhook/…` is the production path. `/webhook-test/…` is not.** n8n serves
+> a test URL for each workflow, but only while somebody has the editor open
+> with *Listen for test event* pressed, and only for a single request. Use one
+> by hand when stepping through a workflow; never commit one and never set one
+> on a deployment — it works for whoever is listening and 404s for everybody
+> else.
+
+### How the app treats each answer
+
+| From n8n | The app does |
+|---|---|
+| `200` | Accepted. The thank-you screen |
+| `409` | **Also success.** It means the set or review is already filed, which is what the manager wanted. The token is the idempotency key, and this is what makes an n8n retry harmless |
+| `422` / `400` | Reads `issues: [{ field?, message }]`. On the review form `field` addresses a row — `<taskId>.rating`, `.actual`, `.comment`, `.progress`, `.notes`, or `talent.managerComments`. On the define form issues arrive with **no** `field`, because row ids are client-side only and never cross the wire, so they render as a list above Submit |
+| `401` `403` `404` `410`, or any `ok:false` | One dead end. The endpoint's `reason` is rendered verbatim and nothing else — no form, no employee name, no retry |
+| Anything else, or a network failure | A retryable error. Submit re-enables; the answers stay on screen |
+
+A `reason` is written server-side and shown as-is, so the endpoint owns the
+rule that it must never name the employee or say which part of a bad token was
+wrong. Whoever holds the link reads it, and that is not necessarily the person
+it was sent to.
+
+Three things the forms deliberately do not do: no `localStorage` for answers
+(the token is single-use, and a restored draft would outlive it), no retry on a
+409 or a 422, and nothing about the token in a log line. `src/kpi/log.ts` lists
+what may and may not be logged.
+
+### Looking at either form without n8n
+
+`?mock=` on either route serves a checked-in sample context, in development or
+on a build with `VITE_ALLOW_PREFILL=true`:
+
+```
+/kpi/define?mock=1          /kpi/review?mock=mid        /kpi/review?mock=final
+/kpi/define?mock=submitted  /kpi/review?mock=final-hr   /kpi/review?mock=final-void
+```
+
+`src/kpi/mock.ts` has the rest, including the dead ends. **Nothing submitted
+from a mocked page leaves the browser** — a POST of invented content to WF-18b
+would create real ClickUp tasks against a real employee record.
+
+The wire contracts are `docs/kpi-definition-1.0.schema.json` and
+`docs/kpi-review-1.0.schema.json`, asserted by `src/kpi/payload.test.ts` with
+Ajv against those files. The review payload carries **no scores**: n8n computes
+`Score`, `Weighted KPI Score` and `Final Individual Score`, and `Weighted Score`
+is a ClickUp formula that recomputes itself.
+
 ## Deploying
 
 Build with `npm run build` and serve `dist/` as a static site with an SPA
