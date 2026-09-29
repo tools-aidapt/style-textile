@@ -49,7 +49,7 @@ export const PageShell = ({
   const container = width === "wide" ? "max-w-container-wide" : "max-w-container";
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="flex min-h-screen flex-col bg-white">
       {/* Every view is a long scroll with a landmark header. Without this a
           keyboard user tabs the whole nav before reaching the content, and on
           a role page that is the difference between reading the role and
@@ -122,12 +122,12 @@ export const PageShell = ({
         </div>
       </header>
 
-      <main id="main" className={cn("mx-auto px-6 lg:px-8", container, mainClassName)}>
+      <main id="main" className={cn("mx-auto w-full flex-1 px-6 lg:px-8", container, mainClassName)}>
         {children}
       </main>
 
-      <footer className="mx-auto flex justify-center px-6 pb-8 pt-12 lg:px-8">
-        <img src={reinventedByAidapt} alt="Reinvented by Aidapt" className="h-10 w-auto" />
+      <footer className="mt-auto flex justify-center px-6 pb-2 pt-6">
+        <img src={reinventedByAidapt} alt="Reinvented by Aidapt" className="h-9 w-auto" />
       </footer>
     </div>
   );
