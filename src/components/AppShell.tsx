@@ -2,7 +2,9 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Wordmark } from "@/components/careers/primitives";
+import kenafricLogo from "@/assets/brand/kenafric-logo.png";
+import kenafricMark from "@/assets/brand/kenafric-mark.png";
+import reinventedByAidapt from "@/assets/brand/reinvented-by-aidapt.png";
 
 /**
  * The page chrome, in one place.
@@ -70,10 +72,13 @@ export const PageShell = ({
             <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-2 sm:gap-3">
               <Link
                 to="/"
-                aria-label="Aidapt — all open roles"
+                aria-label="Kenafric — all open roles"
                 className="press shrink-0 rounded-sm"
               >
-                <Wordmark className="h-7" />
+                {/* The full logo carries its own padding, so it is sized up to
+                    read at the same weight as the mark on a phone. */}
+                <img src={kenafricMark} alt="" className="h-8 w-auto sm:hidden" />
+                <img src={kenafricLogo} alt="Kenafric" className="hidden h-11 w-auto sm:block" />
               </Link>
 
               {crumbs.map((crumb, index) => (
@@ -120,6 +125,10 @@ export const PageShell = ({
       <main id="main" className={cn("mx-auto px-6 lg:px-8", container, mainClassName)}>
         {children}
       </main>
+
+      <footer className="mx-auto flex justify-center px-6 pb-8 pt-12 lg:px-8">
+        <img src={reinventedByAidapt} alt="Reinvented by Aidapt" className="h-10 w-auto" />
+      </footer>
     </div>
   );
 };
