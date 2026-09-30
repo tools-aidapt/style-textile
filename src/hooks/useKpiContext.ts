@@ -31,13 +31,11 @@ import { ApiError, useApi } from "./useApi";
 /**
  * Whether `?mock=` is honoured at all.
  *
- * Development always, and a preview deployment that sets
- * `VITE_ALLOW_PREFILL=true` — the same switch the requisition form's sample
- * content uses, for the same reason. On the deployment HR uses it is off,
- * and `?mock=` is ignored entirely: sample content is invented, and a KPI
+ * Development only — the same switch the requisition form's sample content
+ * uses, for the same reason. In a production build `?mock=` is ignored entirely: sample content is invented, and a KPI
  * set raised from it would arrive in ClickUp looking like a real one.
  */
-export const mockAllowed = (): boolean => import.meta.env.DEV || config.allowPrefill;
+export const mockAllowed = (): boolean => config.allowPrefill;
 
 /** `?mock=<variant>`, when the build allows one. */
 export const readMockVariant = (): string => {

@@ -360,8 +360,8 @@ what may and may not be logged.
 
 ### Looking at either form without n8n
 
-`?mock=` on either route serves a checked-in sample context, in development or
-on a build with `VITE_ALLOW_PREFILL=true`:
+`?mock=` on either route serves a checked-in sample context, in development only (a
+production build ignores it):
 
 ```
 /kpi/define?mock=1          /kpi/review?mock=mid        /kpi/review?mock=final

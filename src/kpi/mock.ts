@@ -22,8 +22,7 @@
  * ---
  *
  * Reached with `?mock=<variant>` on either route, and only where the build
- * allows it — development, or a preview deployment with
- * `VITE_ALLOW_PREFILL=true`. See `useKpiContext`.
+ * allows it — development only. See `useKpiContext`.
  */
 
 const EMPLOYEE = {

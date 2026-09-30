@@ -1,16 +1,34 @@
 /// <reference types="vitest" />
-import { defineConfig } from "vite";
+import fs from "fs";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
+/**
+ * The `public/*.sample.json` files are for local work without n8n. Vite copies
+ * all of `public/` into the build, which would publish invented people at a
+ * guessable URL on the live site, so they are removed from the output.
+ */
+const stripSampleData = (): Plugin => ({
+  name: "strip-sample-data",
+  apply: "build",
+  closeBundle() {
+    const out = path.resolve(__dirname, "dist");
+    if (!fs.existsSync(out)) return;
+    for (const file of fs.readdirSync(out)) {
+      if (/\.sample\.json$/i.test(file)) fs.rmSync(path.join(out, file));
+    }
+  },
+});
+
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
   },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [react(), mode === "development" && componentTagger(), stripSampleData()].filter(Boolean),
   build: {
     rollupOptions: {
       output: {

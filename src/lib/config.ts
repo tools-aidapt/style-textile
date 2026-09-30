@@ -10,6 +10,16 @@
 const read = (value: string | undefined): string => (value ?? "").trim();
 
 /**
+ * An endpoint that points at a checked-in `*.sample.json` is a development aid
+ * and nothing else: a static file cannot verify a token, so every link would
+ * open the same invented person. Outside development it is treated as unset,
+ * so the form refuses to open (or falls back to the live endpoint) rather than
+ * showing dummy data to a real respondent.
+ */
+const liveOnly = (url: string): string =>
+  !import.meta.env.DEV && /\.sample\.json(\?|$)/i.test(url) ? "" : url;
+
+/**
  * The n8n instance every workflow in this system is served from.
  *
  * Here once so a renumbered workflow is one edit. The feedback workflows were
@@ -72,7 +82,7 @@ export const config = {
    * Neither carries a ClickUp field id. The employee's id is not configured
    * here either; it arrives in the URL WF-15 emailed to the new hire.
    */
-  onboardingSessionUrl: read(import.meta.env.VITE_ONBOARDING_SESSION_URL),
+  onboardingSessionUrl: liveOnly(read(import.meta.env.VITE_ONBOARDING_SESSION_URL)),
   onboardingSubmitUrl: read(import.meta.env.VITE_ONBOARDING_SUBMIT_URL),
   onboardingWebhookUser: read(import.meta.env.VITE_ONBOARDING_WEBHOOK_USER),
   onboardingWebhookPassword: read(import.meta.env.VITE_ONBOARDING_WEBHOOK_PASSWORD),
@@ -101,7 +111,7 @@ export const config = {
    * why the app refuses to decode it.
    */
   feedbackContextUrl:
-    read(import.meta.env.VITE_FEEDBACK_CONTEXT_URL) || `${N8N_BASE}/kenafric-feedback-context`,
+    liveOnly(read(import.meta.env.VITE_FEEDBACK_CONTEXT_URL)) || `${N8N_BASE}/kenafric-feedback-context`,
   /** WF-21, renumbered on 2026-09-10. */
   feedbackSubmitUrl: read(import.meta.env.VITE_FEEDBACK_SUBMIT_URL) || `${N8N_BASE}/kenafric-wf21`,
   feedbackWebhookUser: read(import.meta.env.VITE_FEEDBACK_WEBHOOK_USER),
@@ -149,14 +159,15 @@ export const config = {
   siteUrl: read(import.meta.env.VITE_SITE_URL) || "https://aidapt.co",
 
   /**
-   * Allows the requisition form to be filled with sample content in one click.
+   * Whether sample content may appear: the requisition form's "Fill with sample
+   * content" button and the KPI forms' `?mock=`.
    *
-   * Off unless explicitly set, and always on in development. It must stay off
-   * on the deployment HR uses: sample content is invented, and a requisition
-   * raised from it would reach ClickUp looking like a real one. See
+   * Development only. There is deliberately no environment variable that turns
+   * it on in a production build: sample content is invented, and a requisition
+   * or review raised from it would reach ClickUp looking like a real one. See
    * requisition/sample.ts.
    */
-  allowPrefill: read(import.meta.env.VITE_ALLOW_PREFILL) === "true",
+  allowPrefill: import.meta.env.DEV,
 } as const;
 
 /** Basic auth is only worth sending when a username was actually configured. */

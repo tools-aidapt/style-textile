@@ -36,7 +36,7 @@ import { optionsFor, type RequisitionSchema } from "./schema";
  * real requisition.
  */
 export const isPrefillEnabled = (): boolean =>
-  import.meta.env.DEV || config.allowPrefill;
+  config.allowPrefill;
 
 /**
  * The first option whose label matches one of `preferred`, else the first
