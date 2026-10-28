@@ -35,6 +35,7 @@ const complete = (overrides: Partial<RequisitionValues> = {}): RequisitionValues
   potentialCareerPath: "p".repeat(300),
   positionRequirements: ["Laptop/Computer/Connectivity"],
   assessmentStagesRequired: ["Telephone", "Stage 1"],
+  applicationDeadline: "2099-12-31",
   ...overrides,
 });
 

@@ -78,6 +78,8 @@ export interface RequisitionValues {
   // F · Hiring process
   assessmentStagesRequired: string[];
   interviewPanel: number[];
+  /** YYYY-MM-DD, the last day applications are accepted. */
+  applicationDeadline: string;
 }
 
 export type FieldKey = keyof RequisitionValues;
@@ -300,7 +302,22 @@ export const FIELDS: FieldSpec[] = [
     section: "hiringProcess",
     required: false,
   },
+  {
+    key: "applicationDeadline",
+    ref: "F3",
+    label: "Application deadline",
+    help: "The last day applications are accepted. The role closes to new applicants after this day",
+    section: "hiringProcess",
+    required: true,
+  },
 ];
+
+/** Today as YYYY-MM-DD in the browser's own timezone — the deadline's floor. */
+export const todayIso = (): string => {
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+};
 
 export const fieldSpec = (key: FieldKey): FieldSpec =>
   FIELDS.find((field) => field.key === key) as FieldSpec;
@@ -347,6 +364,7 @@ export const emptyValues = (): RequisitionValues => ({
   positionRequirements: [],
   assessmentStagesRequired: [],
   interviewPanel: [],
+  applicationDeadline: "",
 });
 
 /** Conditional rule 2 — an agency has to be named once one is involved. */

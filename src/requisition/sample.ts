@@ -176,5 +176,7 @@ export const sampleValues = ({
     // ---- F · Hiring process -------------------------------------------
     assessmentStagesRequired: multi("assessmentStagesRequired", 2),
     interviewPanel: panel,
+    // Four weeks out, so the sample never trips the not-in-the-past rule
+    applicationDeadline: new Date(Date.now() + 28 * 86_400_000).toISOString().slice(0, 10),
   };
 };

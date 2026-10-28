@@ -60,6 +60,7 @@ const values = (overrides: Partial<RequisitionValues> = {}): RequisitionValues =
   positionRequirements: ["Laptop/Computer/Connectivity", "Pick-up"],
   assessmentStagesRequired: ["Telephone"],
   interviewPanel: [1002],
+  applicationDeadline: "2099-12-31",
   ...overrides,
 });
 

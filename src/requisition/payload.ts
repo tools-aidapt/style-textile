@@ -164,6 +164,7 @@ export const buildPayload = ({
     hiringProcess: {
       assessmentStagesRequired: values.assessmentStagesRequired,
       interviewPanel: panel,
+      applicationDeadline: orNull(values.applicationDeadline),
     },
     advisoriesAcknowledged,
   };
@@ -200,6 +201,7 @@ export const FIELD_BY_PATH: Record<string, keyof RequisitionValues> = {
   "provisioning.positionRequirements": "positionRequirements",
   "hiringProcess.assessmentStagesRequired": "assessmentStagesRequired",
   "hiringProcess.interviewPanel": "interviewPanel",
+  "hiringProcess.applicationDeadline": "applicationDeadline",
 };
 
 /** `position.recruitmentType[1]` and `position.recruitmentType` are the same field. */

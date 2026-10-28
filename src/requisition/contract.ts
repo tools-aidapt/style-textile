@@ -31,6 +31,10 @@
  *   and the four business-case fields) drop their 4000-character ceiling and
  *   gain a 300-character floor instead — see `LIMITS.longText`.
  *
+ * Later in 1.2, `hiringProcess.applicationDeadline` (YYYY-MM-DD) was added. The
+ * form requires it; n8n accepts its absence so a tab opened before it shipped
+ * still submits, and writes it to ClickUp's Application Deadline date field.
+ *
  * TODO(kenafric): n8n's JSON Schema validation node must accept 1.2 — both
  * changes above — before this ships, or every affected submission is a 422.
  * Confirm with whoever owns the contract.
@@ -127,7 +131,12 @@ export interface RequisitionSubmission {
     potentialCareerPath: string;
   };
   provisioning: { positionRequirements: string[] };
-  hiringProcess: { assessmentStagesRequired: string[]; interviewPanel: UserRef[] };
+  hiringProcess: {
+    assessmentStagesRequired: string[];
+    interviewPanel: UserRef[];
+    /** YYYY-MM-DD. Added later in 1.2; n8n treats it as optional for older tabs. */
+    applicationDeadline: string | null;
+  };
   advisoriesAcknowledged: string[];
 }
 

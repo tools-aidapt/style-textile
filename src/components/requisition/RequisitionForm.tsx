@@ -16,7 +16,7 @@ import {
   type RequisitionValues,
   type SectionId,
 } from "@/requisition/form";
-import { NOT_APPLICABLE } from "@/requisition/form";
+import { NOT_APPLICABLE, todayIso } from "@/requisition/form";
 import { optionsFor, type RequisitionSchema, type SchemaOption } from "@/requisition/schema";
 import { advise, unacknowledged, validate } from "@/requisition/validation";
 import { fieldForPath } from "@/requisition/payload";
@@ -880,6 +880,15 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
                     error={visible.interviewPanel}
                   />
                 </div>
+                <TextField
+                  fieldKey="applicationDeadline"
+                  type="date"
+                  min={todayIso()}
+                  value={values.applicationDeadline}
+                  onChange={(v) => set("applicationDeadline", v)}
+                  onBlur={() => blur("applicationDeadline")}
+                  error={visible.applicationDeadline}
+                />
               </Row>
             </Card>
           ) : null}

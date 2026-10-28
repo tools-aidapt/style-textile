@@ -120,6 +120,8 @@ export const TextField = ({
   placeholder,
   className,
   inputMode,
+  type,
+  min,
 }: {
   fieldKey: FieldKey;
   value: string;
@@ -129,12 +131,17 @@ export const TextField = ({
   placeholder?: string;
   className?: string;
   inputMode?: React.ComponentProps<"input">["inputMode"];
+  /** "date" gives the browser's own picker, which submits YYYY-MM-DD. */
+  type?: "text" | "date";
+  min?: string;
 }) => {
   const spec = fieldSpec(fieldKey);
   return (
     <FieldShell fieldKey={fieldKey} error={error} className={className}>
       <Input
         id={fieldId(fieldKey)}
+        type={type}
+        min={min}
         value={value}
         placeholder={placeholder}
         inputMode={inputMode}

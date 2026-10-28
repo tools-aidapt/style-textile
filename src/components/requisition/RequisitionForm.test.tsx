@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import { testEmployeesPayload, testSchema, testUsersPayload } from "@/test/requisitionSchema";
@@ -98,6 +98,10 @@ const fillEverything = async (user: User, overrides: { costCentre?: string } = {
 
   // F · Hiring process
   await user.click(screen.getByRole("checkbox", { name: /Telephone/i }));
+  // A date input takes its value whole; typing into one is not how it is used
+  fireEvent.change(screen.getByLabelText(/Application deadline/i), {
+    target: { value: "2099-12-31" },
+  });
   await goNext(user);
 
   // Lands on Review
