@@ -1,11 +1,6 @@
 import type { RequisitionSchema } from "@/requisition/schema";
 import { REQUIRED_FIELD_KEYS } from "@/requisition/schema";
-import {
-  parseEmployees,
-  parsePeople,
-  type DirectoryPerson,
-  type EmployeeRecord,
-} from "@/requisition/directory";
+import { parsePeople, type DirectoryPerson } from "@/requisition/directory";
 
 /**
  * A complete served schema, for tests. Kept small deliberately — the option
@@ -117,6 +112,3 @@ export const testUsersPayload = () => ({
 });
 
 export const testPeople = (): DirectoryPerson[] => parsePeople(testUsersPayload());
-
-export const testEmployeeRecords = (): EmployeeRecord[] =>
-  parseEmployees(testEmployeesPayload());

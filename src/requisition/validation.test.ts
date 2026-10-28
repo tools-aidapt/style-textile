@@ -20,19 +20,19 @@ const complete = (overrides: Partial<RequisitionValues> = {}): RequisitionValues
   recruitmentType: ["External Recruitment"],
   requestingManager: 1001,
   reportingTo: "Regional Sales Manager",
-  jobOverview: "x".repeat(200),
+  jobOverview: "x".repeat(300),
   keyResponsibilitiesRows: [
     { id: "a", responsibility: "Manage the ledger", outcome: "Zero variance at month end" },
     { id: "b", responsibility: "Lead dispatch", outcome: "Same-day dispatch on 95% of orders" },
     { id: "c", responsibility: "Run stock counts", outcome: "Weekly count signed off" },
   ],
   qualifications: ["Degree in supply chain"],
-  experience: "Five years in depot operations",
+  experience: "e".repeat(300),
   skills: ["Stock reconciliation", "SAP"],
-  previousFailuresSuccesses: "The last holder left after six months",
-  competitiveAdvantage: "Ownership of a whole region",
-  sixMonthsObjectives: "y".repeat(250),
-  potentialCareerPath: "Regional manager",
+  previousFailuresSuccesses: "f".repeat(300),
+  competitiveAdvantage: "c".repeat(300),
+  sixMonthsObjectives: "y".repeat(300),
+  potentialCareerPath: "p".repeat(300),
   positionRequirements: ["Laptop/Computer/Connectivity"],
   assessmentStagesRequired: ["Telephone", "Stage 1"],
   ...overrides,
@@ -135,23 +135,32 @@ describe("blocking rules", () => {
     expect(validate(complete(), schema, people).errors.agencyName).toBeUndefined();
   });
 
-  it("B-10 · requires who is being replaced only on a replacement", () => {
-    const replacement = complete({ newOrReplacement: "Replacement" });
-    expect(validate(replacement, schema, people).errors.replacingEmployee).toBe(
-      "Select who is being replaced.",
-    );
-    expect(validate(complete(), schema, people).errors.replacingEmployee).toBeUndefined();
-  });
-
-  it("holds every field to the length the wire schema enforces", () => {
+  it("holds optional free text to the length the wire schema enforces", () => {
     // Checked here so a manager is told before a submit, not after a 422
-    expect(
-      validate(complete({ jobOverview: "o".repeat(4001) }), schema, people).errors.jobOverview,
-    ).toMatch(/4000/);
     expect(
       validate(complete({ othersReportingIndirectly: "o".repeat(2001) }), schema, people).errors
         .othersReportingIndirectly,
     ).toMatch(/2000/);
+  });
+
+  it("holds the six essay answers to a 300-character floor and no ceiling", () => {
+    const essayKeys = [
+      "jobOverview",
+      "experience",
+      "previousFailuresSuccesses",
+      "competitiveAdvantage",
+      "sixMonthsObjectives",
+      "potentialCareerPath",
+    ] as const;
+
+    essayKeys.forEach((key) => {
+      expect(validate(complete({ [key]: "o".repeat(299) }), schema, people).errors[key]).toMatch(
+        /at least 300/,
+      );
+      expect(validate(complete({ [key]: "o".repeat(300) }), schema, people).errors[key]).toBeUndefined();
+      // No upper bound: a very long essay answer is never rejected for length
+      expect(validate(complete({ [key]: "o".repeat(20000) }), schema, people).errors[key]).toBeUndefined();
+    });
   });
 
   it("holds reports-to between 2 and 120 characters", () => {
@@ -197,14 +206,6 @@ describe("advisory rules", () => {
     const ids = advise(complete({ costCentre: "ICT" })).map((a) => a.id);
     expect(ids).toContain("A-1");
     expect(advise(complete()).map((a) => a.id)).not.toContain("A-1");
-  });
-
-  it("A-2 · notices a thin job overview", () => {
-    expect(advise(complete({ jobOverview: "Runs the depot." })).map((a) => a.id)).toContain("A-2");
-  });
-
-  it("A-3 · notices thin six-month objectives", () => {
-    expect(advise(complete({ sixMonthsObjectives: "Do well." })).map((a) => a.id)).toContain("A-3");
   });
 
   it("A-5 · is informational and needs no acknowledgement", () => {

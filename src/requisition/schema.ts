@@ -58,8 +58,8 @@ export interface RequisitionSchema {
  * responsibilities silently vanish is worse than not submitting at all.
  *
  * `jobTitle` is deliberately absent — it becomes the ClickUp task name, not a
- * custom field. So are `agencyName` and `replacingEmployee`, which travel in
- * the payload for HR and have no field of their own.
+ * custom field. So is `agencyName`, which travels in the payload for HR and
+ * has no field of its own.
  */
 export const REQUIRED_FIELD_KEYS = [
   // A · Position identity
@@ -149,9 +149,8 @@ export const isKnownOption = (schema: RequisitionSchema, key: string, value: str
   !value || optionLabels(schema, key).includes(value);
 
 /**
- * Job grade is free text until the client supplies a grade structure, and
- * "who is being replaced" is free text until the employee register is exposed.
- * Both become a select the moment the served schema carries options — a config
+ * Job grade is free text until the client supplies a grade structure. It
+ * becomes a select the moment the served schema carries options — a config
  * change in n8n, not a rewrite here.
  */
 export const rendersAsSelect = (schema: RequisitionSchema, key: string): boolean =>

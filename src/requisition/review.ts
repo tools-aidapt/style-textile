@@ -11,12 +11,7 @@ import {
   type FieldKey,
   type RequisitionValues,
 } from "./form";
-import {
-  employeeByTaskId,
-  personById,
-  type DirectoryPerson,
-  type EmployeeRecord,
-} from "./directory";
+import { personById, type DirectoryPerson } from "./directory";
 
 /** One readable string per field, whatever the control underneath was. */
 export const describeValue = (
@@ -25,7 +20,6 @@ export const describeValue = (
   people: {
     employees: DirectoryPerson[];
     users: DirectoryPerson[];
-    employeeRecords: EmployeeRecord[];
   },
 ): string => {
   if (key === "keyResponsibilitiesRows") {
@@ -33,11 +27,6 @@ export const describeValue = (
     return rows.length === 0
       ? ""
       : rows.map((row, i) => `${i + 1}. ${row.responsibility} → ${row.outcome}`).join("\n");
-  }
-
-  // The form stores the record's task id; the reader wants the person
-  if (key === "replacingEmployee") {
-    return employeeByTaskId(people.employeeRecords, values.replacingEmployee)?.name ?? "";
   }
 
   if (key === "requestingManager") {

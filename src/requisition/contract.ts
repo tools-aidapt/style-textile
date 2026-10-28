@@ -21,11 +21,21 @@
  * still written — always as `null` — so nothing downstream has to cope with an
  * absent property.
  *
- * TODO(kenafric): v1.0 made `jobGrade` a required non-null string, so n8n must
- * accept 1.1 before this ships or every submission is a 422. Confirm with
- * whoever owns the contract.
+ * v1.2 does two more things:
+ * - `replacingEmployee` is now always `null`. The form no longer asks who is
+ *   being replaced, so the key stays (still written, for the same reason as
+ *   `jobGrade` above) but the old rule requiring an object when
+ *   `newOrReplacement` is "Replacement" has to be dropped server-side, or a
+ *   replacement requisition 422s on a field nothing can ever answer again.
+ * - The six long-form essay answers (`jobOverview`, the C4 experience half,
+ *   and the four business-case fields) drop their 4000-character ceiling and
+ *   gain a 300-character floor instead — see `LIMITS.longText`.
+ *
+ * TODO(kenafric): n8n's JSON Schema validation node must accept 1.2 — both
+ * changes above — before this ships, or every affected submission is a 422.
+ * Confirm with whoever owns the contract.
  */
-export const SCHEMA_VERSION = "1.1" as const;
+export const SCHEMA_VERSION = "1.2" as const;
 
 export const CLIENT_APP = "kenafric-requisition-web" as const;
 
@@ -45,7 +55,8 @@ export const LIMITS = {
   agencyName: { max: 120 },
   reportingTo: { min: 2, max: 120 },
   othersReportingIndirectly: { max: 2000 },
-  longText: { max: 4000 },
+  /** The six essay answers: a floor, deliberately no ceiling — see v1.2 above. */
+  longText: { min: 300 },
   responsibilityCell: { max: 300 },
   rows: { min: 3, max: 12 },
   totalSubPositions: { min: 1, max: 10 },
@@ -61,9 +72,9 @@ export interface UserRef {
 }
 
 /**
- * A replacement is a link to an employee record. There is no shape in v1.0 for
- * a name typed by hand — see `replacementOf` in payload.ts for what the app
- * does while the register is still unexposed.
+ * A replacement is a link to an employee record. The form no longer has a
+ * control for it — `position.replacingEmployee` is always `null` since v1.2 —
+ * but the shape stays on the wire in case a future version reintroduces it.
  */
 export interface EmployeeRef {
   clickupTaskId: string;

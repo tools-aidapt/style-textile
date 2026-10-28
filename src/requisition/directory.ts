@@ -29,22 +29,6 @@ export interface DirectoryPerson {
   jobTitle: string | null;
 }
 
-/**
- * An employee, addressed by the task id of their record in the employee list.
- * That is what "who is being replaced" needs: the wire contract wants a link to
- * a record, not a typed name.
- */
-export interface EmployeeRecord {
-  clickupTaskId: string;
-  name: string;
-  email: string | null;
-  avatarUrl: string | null;
-  initials: string | null;
-  jobTitle: string | null;
-  /** The legal entity that employs them, where the register says. */
-  company: string | null;
-}
-
 type Row = Record<string, unknown>;
 
 const str = (value: unknown): string | null => {
@@ -79,7 +63,6 @@ const AVATAR_KEYS = [
 ];
 const TITLE_KEYS = ["designation", "jobTitle", "job_title", "title", "position"];
 const INITIALS_KEYS = ["avatar_initials", "avatarInitials", "initials"];
-const TASK_KEYS = ["task_id", "taskId", "clickupTaskId", "clickup_task_id"];
 
 /** Some payloads nest the person under `user`, the way ClickUp's own do. */
 const flatten = (row: Row): Row => {
@@ -121,32 +104,6 @@ const toPerson = (raw: unknown): DirectoryPerson | null => {
 const absoluteAvatar = (value: string | null): string | null =>
   value && /^https?:\/\//i.test(value) ? value : null;
 
-/**
- * The employee register, addressed by task id rather than user id — an
- * employee record exists whether or not the person has a ClickUp seat.
- *
- * ClickUp's `avatar_color` is deliberately ignored: the palette it draws from
- * carries purples and reds that are off-brand, so initials keep the Water wash.
- */
-const toEmployee = (raw: unknown): EmployeeRecord | null => {
-  if (!raw || typeof raw !== "object") return null;
-  const row = flatten(raw as Row);
-
-  const clickupTaskId = pick(row, TASK_KEYS);
-  const name = pick(row, NAME_KEYS) ?? firstLast(row) ?? pick(row, EMAIL_KEYS);
-  if (!clickupTaskId || !name) return null;
-
-  return {
-    clickupTaskId,
-    name,
-    email: pick(row, EMAIL_KEYS),
-    avatarUrl: absoluteAvatar(pick(row, AVATAR_KEYS)),
-    initials: pick(row, INITIALS_KEYS),
-    jobTitle: pick(row, TITLE_KEYS),
-    company: pick(row, ["company", "legalEntity", "legal_entity"]),
-  };
-};
-
 const ENVELOPES = ["data", "users", "employees", "members", "people", "items", "results"];
 
 /** Accepts a bare array or any of the usual single-key envelopes around one. */
@@ -171,32 +128,6 @@ export const parsePeople = (response: unknown): DirectoryPerson[] => {
   return people
     .filter((person) => !seen.has(person.clickupUserId) && seen.add(person.clickupUserId))
     .sort((a, b) => a.name.localeCompare(b.name));
-};
-
-export const parseEmployees = (response: unknown): EmployeeRecord[] => {
-  const records = unwrap(response)
-    .map(toEmployee)
-    .filter((record): record is EmployeeRecord => record !== null);
-
-  const seen = new Set<string>();
-  return records
-    .filter((record) => !seen.has(record.clickupTaskId) && seen.add(record.clickupTaskId))
-    .sort((a, b) => a.name.localeCompare(b.name));
-};
-
-export const employeeByTaskId = (
-  records: EmployeeRecord[],
-  taskId: string,
-): EmployeeRecord | undefined =>
-  taskId ? records.find((record) => record.clickupTaskId === taskId) : undefined;
-
-/** Name, email, band and employing entity, all searched together. */
-export const matchesEmployee = (record: EmployeeRecord, query: string): boolean => {
-  const q = query.trim().toLowerCase();
-  if (!q) return true;
-  return `${record.name} ${record.email ?? ""} ${record.jobTitle ?? ""} ${record.company ?? ""}`
-    .toLowerCase()
-    .includes(q);
 };
 
 /** Initials, for when there is no avatar or the image fails to load. */

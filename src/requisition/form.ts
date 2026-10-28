@@ -58,7 +58,6 @@ export interface RequisitionValues {
   totalSubPositions: string;
   recruitmentType: string[];
   agencyName: string;
-  replacingEmployee: string;
   // B · Reporting lines
   requestingManager: number | null;
   reportingTo: string;
@@ -161,15 +160,6 @@ export const FIELDS: FieldSpec[] = [
     required: true,
     conditional: true,
   },
-  {
-    key: "replacingEmployee",
-    ref: "A10a",
-    label: "Who is being replaced",
-    section: "identity",
-    required: true,
-    conditional: true,
-  },
-
   // ---- B · Reporting lines ---------------------------------------------
   {
     key: "requestingManager",
@@ -342,7 +332,6 @@ export const emptyValues = (): RequisitionValues => ({
   totalSubPositions: "1",
   recruitmentType: [],
   agencyName: "",
-  replacingEmployee: "",
   requestingManager: null,
   reportingTo: "",
   othersReportingIndirectly: "",
@@ -364,17 +353,12 @@ export const emptyValues = (): RequisitionValues => ({
 export const needsAgencyName = (values: RequisitionValues): boolean =>
   values.recruitmentType.includes("Recruitment Agency");
 
-/** Conditional rule 3 — a replacement has someone it replaces. */
-export const needsReplacingEmployee = (values: RequisitionValues): boolean =>
-  values.newOrReplacement === "Replacement";
-
 /** Conditional rule 1 — several openings on one requisition. */
 export const coversSeveralOpenings = (values: RequisitionValues): boolean =>
   Number(values.totalSubPositions) > 1;
 
 export const isFieldActive = (key: FieldKey, values: RequisitionValues): boolean => {
   if (key === "agencyName") return needsAgencyName(values);
-  if (key === "replacingEmployee") return needsReplacingEmployee(values);
   return true;
 };
 

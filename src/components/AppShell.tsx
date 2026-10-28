@@ -38,15 +38,16 @@ export const PageShell = ({
   children,
   mainClassName,
 }: {
-  /** The requisition form earns the wider container; everything else is 1200. */
-  width?: "default" | "wide";
+  /** The requisition form earns the full width; everything else is 1200. */
+  width?: "default" | "wide" | "full";
   crumbs?: Crumb[];
   /** Right-hand slot: the section label, or an action. */
   trail?: React.ReactNode;
   children: React.ReactNode;
   mainClassName?: string;
 }) => {
-  const container = width === "wide" ? "max-w-container-wide" : "max-w-container";
+  const container =
+    width === "full" ? "" : width === "wide" ? "max-w-container-wide" : "max-w-container";
 
   return (
     <div className="flex min-h-screen flex-col bg-white">

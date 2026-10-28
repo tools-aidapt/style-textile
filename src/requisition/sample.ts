@@ -44,9 +44,8 @@ export const isPrefillEnabled = (): boolean =>
  *
  * Preferences are not cosmetic. "Permanent" avoids advisory A-5, which fires
  * for a fixed-term or intern position; anything but "Recruitment Agency"
- * avoids the conditional agency-name field; "New" avoids having to name the
- * employee being replaced. A prefill that trips a blocking rule is not much
- * use for looking at a filled form.
+ * avoids the conditional agency-name field. A prefill that trips a blocking
+ * rule is not much use for looking at a filled form.
  */
 const pick = (
   schema: RequisitionSchema,
@@ -115,10 +114,9 @@ export const sampleValues = ({
     newOrReplacement: pick(schema, "newOrReplacement", ["New"], ["Replacement"]),
     totalSubPositions: "2",
     recruitmentType: multi("recruitmentType", 1, ["Recruitment Agency"]),
-    // Both conditionals stay empty: the answers above are the ones that do
-    // not ask for them
+    // The conditional stays empty: the answer above is the one that does
+    // not ask for it
     agencyName: "",
-    replacingEmployee: "",
 
     // ---- B · Reporting lines ------------------------------------------
     requestingManager: manager?.clickupUserId ?? null,
@@ -155,7 +153,7 @@ export const sampleValues = ({
       "Internal auditor training is welcome but not expected",
     ],
     experience:
-      "Four years in a food or beverage manufacturing quality function, at least one of them holding release authority for finished product.",
+      "Four years in a food or beverage manufacturing quality function, at least one of them holding release authority for finished product. Comfortable reading a specification against a batch record and making the call to hold a line, rather than only flagging it upward and waiting for someone else to decide.",
     skills: [
       "Laboratory testing methods for food and beverage products",
       "HACCP plans, product specifications and audit documentation",
@@ -167,10 +165,10 @@ export const sampleValues = ({
     previousFailuresSuccesses:
       "This is sample content. The officers who lasted in this role were comfortable holding a batch when production wanted it released. The two who did not last were technically sound but deferred to the shift manager every time there was a deadline. The failure mode is not analytical skill, it is willingness to be unpopular on the day.",
     competitiveAdvantage:
-      "This is sample content. You hold genuine release authority rather than recommending it to someone else, across a site making several product categories, with a laboratory that is properly equipped. Quality officers here move into quality management or product development.",
+      "This is sample content. You hold genuine release authority rather than recommending it to someone else, across a site making several product categories, with a laboratory that is properly equipped. Quality officers here move into quality management or product development, and the site invests in HACCP and FSSC training rather than treating it as a box to tick once a year.",
     sixMonthsObjectives: SIX_MONTH_OBJECTIVES,
     potentialCareerPath:
-      "This is sample content. The route from here is Senior Quality Officer, then Quality Assurance Manager for a site, then Group Quality and Compliance.",
+      "This is sample content. The route from here is Senior Quality Officer, then Quality Assurance Manager for a site, then Group Quality and Compliance. Each step carries wider release authority and a bigger laboratory team, and the group has moved people through all three in under five years where the fundamentals were solid from day one.",
 
     // ---- E · Provisioning ---------------------------------------------
     positionRequirements: multi("positionRequirements", 3),

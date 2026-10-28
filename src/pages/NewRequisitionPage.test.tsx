@@ -51,14 +51,17 @@ describe("NewRequisitionPage", () => {
     // names on screen before anyone asks for them is what buried section B
     expect(screen.queryByRole("option", { name: /Asha Wanjiru/i })).not.toBeInTheDocument();
 
-    // Opening one proves the directory arrived and reached the picker — it
-    // came from the served payload, not from the component
+    // The company list loaded too, from the served schema rather than a directory
+    expect(screen.getByRole("combobox", { name: /Company/i })).toBeInTheDocument();
+
+    // Reporting lines is its own step now; jump to it from the rail
     const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /^Reporting lines\b/i }));
+
+    // Opening the picker proves the directory arrived and reached it — it
+    // came from the served payload, not from the component
     await user.click(screen.getByRole("combobox", { name: /Requesting manager/i }));
     expect(await screen.findByRole("option", { name: /Asha Wanjiru/i })).toBeInTheDocument();
-
-    // As did the company list
-    expect(screen.getByRole("combobox", { name: /Company/i })).toBeInTheDocument();
   });
 
   it("refuses to open, and names the fields, when the workspace is short one", async () => {

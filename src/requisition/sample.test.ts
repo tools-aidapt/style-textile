@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { parseEmployees, parsePeople } from "./directory";
+import { parsePeople } from "./directory";
 import { testEmployeesPayload, testSchema, testUsersPayload } from "@/test/requisitionSchema";
 import { parseSchemaResponse, type RequisitionSchema } from "./schema";
 import { advise, unacknowledged, validate } from "./validation";
@@ -16,12 +16,7 @@ import { sampleValues } from "./sample";
  * that against the rules is exactly the thing that rots.
  */
 
-/**
- * The register serves both shapes: `people` hold a ClickUp seat and can be the
- * requesting manager, `records` are the linkable employee rows.
- */
 const employeePeople = parsePeople(testEmployeesPayload());
-const employeeRecords = parseEmployees(testEmployeesPayload());
 const users = parsePeople(testUsersPayload());
 
 const build = (schema: RequisitionSchema) =>
@@ -59,7 +54,6 @@ describe("sampleValues", () => {
       values,
       employees: employeePeople,
       users,
-      employeeRecords,
       submissionId: "00000000-0000-4000-8000-000000000000",
       submittedAt: "2026-08-28T00:00:00.000Z",
       advisoriesAcknowledged: [],

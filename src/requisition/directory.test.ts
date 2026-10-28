@@ -1,13 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import {
-  employeeByTaskId,
-  initialsOf,
-  matchesEmployee,
-  matchesPerson,
-  parseEmployees,
-  parsePeople,
-} from "./directory";
+import { initialsOf, matchesPerson, parsePeople } from "./directory";
 
 const live = (name: string) =>
   JSON.parse(readFileSync(`src/test/fixtures/${name}.live.json`, "utf8"));
@@ -44,31 +37,10 @@ describe("the live response shapes", () => {
     expect(people.filter((p) => p.avatarUrl)).toHaveLength(72);
   });
 
-  it("reads the employee register a second way, by task id", () => {
-    const records = parseEmployees(live("employees"));
-
-    expect(records).toHaveLength(31);
-    expect(records.every((r) => r.clickupTaskId.length <= 20)).toBe(true);
-    expect(records.every((r) => r.company)).toBe(true);
-    // Every employee is also a workspace user, which is what lets one endpoint
-    // serve both the manager picker and the replacement picker
-    const users = parsePeople(live("users")).map((p) => p.clickupUserId);
-    const employees = parsePeople(live("employees")).map((p) => p.clickupUserId);
-    expect(employees.every((id) => users.includes(id))).toBe(true);
-  });
-
-  it("finds a record by task id", () => {
-    const records = parseEmployees(live("employees"));
-    const first = records[0];
-    expect(employeeByTaskId(records, first.clickupTaskId)).toBe(first);
-    expect(employeeByTaskId(records, "nope")).toBeUndefined();
-    expect(employeeByTaskId(records, "")).toBeUndefined();
-  });
-
   it("prefers ClickUp's own initials over ones it works out", () => {
-    const [record] = parseEmployees(live("employees"));
-    expect(record.initials).toBeTruthy();
-    expect(initialsOf(record)).toBe(record.initials);
+    const [person] = parsePeople(live("employees"));
+    expect(person.initials).toBeTruthy();
+    expect(initialsOf(person)).toBe(person.initials);
   });
 });
 
@@ -193,21 +165,6 @@ describe("people helpers", () => {
     expect(initialsOf({ name: "Mary Jane Watson Parker" })).toBe("MJ");
     // The endpoint's own initials win where it supplies them
     expect(initialsOf({ name: "Akhil Shah", initials: "A" })).toBe("A");
-  });
-
-  it("searches an employee by band and employing entity too", () => {
-    const [record] = parseEmployees([
-      {
-        task_id: "869e00000",
-        name: "Asha Wanjiru",
-        email: "asha@kenafric.test",
-        designation: "Line Manager",
-        company: "Kenafric Biscuits Limited",
-      },
-    ]);
-    expect(matchesEmployee(record, "line manager")).toBe(true);
-    expect(matchesEmployee(record, "biscuits")).toBe(true);
-    expect(matchesEmployee(record, "properties")).toBe(false);
   });
 
   it("searches name, email and job title together", () => {

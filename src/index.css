@@ -329,4 +329,54 @@
       transparent
     );
   }
+
+  /* ---- Scrollbar ---------------------------------------------
+     A light Water-led gradient rather than the flat grey platform
+     default — frost into teal, the system's own cool ramp, never
+     run to full saturation so it stays a quiet track rather than a
+     third accent colour on the page. Applied page-wide; any inner
+     scrolling surface (the people pickers' option lists, the
+     mobile step sheet) inherits it for free. */
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--frost-300) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-image: linear-gradient(
+      180deg,
+      var(--frost-200),
+      var(--teal-300)
+    );
+    border-radius: var(--radius-pill);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-image: linear-gradient(
+      180deg,
+      var(--frost-300),
+      var(--teal-400)
+    );
+  }
+
+  @media (prefers-contrast: more) {
+    ::-webkit-scrollbar-thumb {
+      background-image: none;
+      background-color: var(--steel-600);
+    }
+    html {
+      scrollbar-color: var(--steel-600) transparent;
+    }
+  }
 }

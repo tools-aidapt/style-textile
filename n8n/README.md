@@ -143,15 +143,22 @@ a schema the app can render:
 
 ### requisition-submit
 
-The body is a v1.0 submission — `docs/requisition-submission-1.0.schema.json`.
-**Validate against it in a JSON Schema node before the Code node**, and return
-the §8 `422` shape on failure: `{ ok: false, error, issues: [{ path, code,
-message }] }`, where `path` is dot-notation matching the payload. The app maps
-each issue straight to its field and shows the message verbatim, so those
-messages are written for the manager to read.
+The body is a submission against whichever contract version it names in
+`schemaVersion` — currently 1.2, `docs/requisition-submission-1.2.schema.json`.
+1.0 and 1.1 are still accepted, for a tab left open across a deploy. **Validate
+against the schema the body's own `schemaVersion` names, in a JSON Schema node
+before the Code node**, and return the §8 `422` shape on failure: `{ ok: false,
+error, issues: [{ path, code, message }] }`, where `path` is dot-notation
+matching the payload. The app maps each issue straight to its field and shows
+the message verbatim, so those messages are written for the manager to read.
+
+1.2 dropped the 4000-character ceiling on the six essay answers (`jobOverview`,
+the C4 experience half, and the four business-case fields) in favour of a
+300-character floor, and `position.replacingEmployee` is now always `null` —
+the form no longer asks who is being replaced.
 
 The Code node refuses any `schemaVersion` it does not know rather than
-mis-mapping a future version into the v1.0 branch, and re-derives
+mis-mapping a future version into an older branch, and re-derives
 `keyResponsibilitiesMarkdown` from the rows to compare: a mismatch means the
 app's serialiser and the JD renderer's parser have drifted.
 

@@ -52,7 +52,7 @@ src/
   pages/          One file per route
   components/
     careers/      The board, a role, the application form
-    requisition/  The new-requisition form: fields, repeater, rail, JD preview
+    requisition/  The new-requisition form: fields, repeater, step rail, review
     onboarding/   The new-hire form: document tiles, photo, progress rail
     feedback/     The feedback forms: the generic renderer, fields, states
     ui/           Vendored shadcn/ui — not written here, not modified here
@@ -96,6 +96,11 @@ job description verbatim, which is the whole reason this is an app rather than a
 ClickUp form view — a form view has no numeric ranges, no cross-field checks, no
 repeating rows, no live preview and no draft saving.
 
+It is a step at a time — one JD section per step, a rail (a bar on a phone) that
+jumps straight to any of them, and a Review step at the end that reads the whole
+requisition back, with an edit link on every line, before the one submit on the
+page.
+
 What is deliberately **not** in it: salary, benefits, leave days, HR Responsible,
 the approvers, the advert, and the approval flow. Those are HR's. Putting any of
 them in a manager-facing form is a data-exposure problem, not a feature.
@@ -106,26 +111,29 @@ Worth knowing before changing it:
   from the live workspace, so a list cannot drift out of sync with ClickUp. For
   local work without n8n, point `VITE_REQUISITION_SCHEMA_URL` at the checked-in
   `public/requisition-schema.sample.json`.
-- **The wire contract is v1.1**, published as
-  `docs/requisition-submission-1.1.schema.json` and mirrored in
+- **The wire contract is v1.2**, published as
+  `docs/requisition-submission-1.2.schema.json` and mirrored in
   `src/requisition/contract.ts`. It is `additionalProperties: false` throughout,
   so a stray key is rejected rather than ignored. `payload.test.ts` validates
   real payloads against that file with Ajv — not against its own opinion of it.
-  1.1 loosens `section`, `jobGrade` and `jobCodeNo` to nullable because the form
-  stopped asking for them: HR assigns the grade and the code. The keys are still
-  written, always as `null`, so nothing downstream meets an absent property.
+  1.1 loosened `section`, `jobGrade` and `jobCodeNo` to nullable because the form
+  stopped asking for them: HR assigns the grade and the code. 1.2 does two more
+  things: `position.replacingEmployee` is always `null` now — the form no longer
+  asks who is being replaced — and the six essay answers (`jobOverview`, the C4
+  experience half, and the four business-case fields) drop their 4000-character
+  ceiling for a 300-character floor instead (`LIMITS.longText` in contract.ts).
+  Every one of these keys is still written, so nothing downstream meets an
+  absent property — see the TODO in contract.ts for what n8n still has to accept
+  before this ships.
 - **People come from two directory endpoints, not from the form schema.** The
-  requesting manager and the replacement are picked from the employee register
-  (31 people, with avatars and a `designation` band); "reports to" and the
-  interview panel are picked from the user list (93 people). The two disagree on
-  spelling — `clickup_user_id` as a string against `id` as a number, `name`
-  against `username` — so `src/requisition/directory.ts` normalises both.
+  requesting manager is picked from the employee register (31 people, with
+  avatars and a `designation` band); "reports to" and the interview panel are
+  picked from the user list (93 people). The two disagree on spelling —
+  `clickup_user_id` as a string against `id` as a number, `name` against
+  `username` — so `src/requisition/directory.ts` normalises both.
   `src/test/fixtures/*.live.json` are anonymised copies of the real responses,
   kept for their shape: a change at either endpoint breaks a test rather than a
   picker.
-- **A replacement links to an employee record**, by the task id the register
-  supplies, because that is what the wire contract wants. It is a lookup, not a
-  name match.
 - **The app submits labels, not option UUIDs**, and n8n resolves them. That is
   what keeps ClickUp ids out of a public bundle.
 - **Validation has two tiers.** Blocking rules stop a submit; advisory ones warn

@@ -10,18 +10,12 @@ import {
   APP_VERSION,
   CLIENT_APP,
   SCHEMA_VERSION,
-  type EmployeeRef,
   type RequisitionSubmission,
   type UserRef,
 } from "./contract";
 import { submittableRows } from "./validation";
 import { filledItems, type RequisitionValues, type ResponsibilityRow } from "./form";
-import {
-  employeeByTaskId,
-  personById,
-  type DirectoryPerson,
-  type EmployeeRecord,
-} from "./directory";
+import { personById, type DirectoryPerson } from "./directory";
 
 /**
  * A pipe would break the table the JD renderer parses, and a newline would
@@ -57,15 +51,6 @@ const userRef = (person: DirectoryPerson): UserRef => ({
 });
 
 /**
- * A replacement is a link to an employee record. The form stores the record's
- * task id, so this is a lookup rather than a name match.
- */
-const replacementOf = (records: EmployeeRecord[], taskId: string): EmployeeRef | null => {
-  const record = employeeByTaskId(records, taskId);
-  return record ? { clickupTaskId: record.clickupTaskId, displayName: record.name } : null;
-};
-
-/**
  * A list field, as the job description will carry it.
  *
  * Hyphen bullets rather than bare lines: the public role page renders a run of
@@ -99,7 +84,6 @@ export const buildPayload = ({
   values,
   employees,
   users,
-  employeeRecords,
   submissionId,
   submittedAt,
   advisoriesAcknowledged,
@@ -109,8 +93,6 @@ export const buildPayload = ({
   employees: DirectoryPerson[];
   /** The user list — where the interview panel comes from. */
   users: DirectoryPerson[];
-  /** The employee register, for the record a replacement links to. */
-  employeeRecords: EmployeeRecord[];
   submissionId: string;
   submittedAt: string;
   advisoriesAcknowledged: string[];
@@ -149,10 +131,8 @@ export const buildPayload = ({
       jobCodeNo: null,
       positionType: values.positionType,
       newOrReplacement: values.newOrReplacement,
-      replacingEmployee:
-        values.newOrReplacement === "Replacement"
-          ? replacementOf(employeeRecords, values.replacingEmployee)
-          : null,
+      // The form no longer asks who is being replaced — see contract.ts v1.2
+      replacingEmployee: null,
       totalSubPositions: Number(values.totalSubPositions),
       recruitmentType: values.recruitmentType,
       agencyName: values.recruitmentType.includes("Recruitment Agency")
@@ -202,7 +182,6 @@ export const FIELD_BY_PATH: Record<string, keyof RequisitionValues> = {
   "position.location": "location",
   "position.positionType": "positionType",
   "position.newOrReplacement": "newOrReplacement",
-  "position.replacingEmployee": "replacingEmployee",
   "position.totalSubPositions": "totalSubPositions",
   "position.recruitmentType": "recruitmentType",
   "position.agencyName": "agencyName",

@@ -30,8 +30,8 @@ const choose = async (user: User, field: RegExp, option: string) => {
 };
 
 /**
- * Pastes rather than types. Four long-text fields typed a character at a time
- * is most of this file's runtime, and nothing here is testing keystrokes.
+ * Pastes rather than types. Several long-text fields typed a character at a
+ * time is most of this file's runtime, and nothing here is testing keystrokes.
  */
 const type = async (user: User, field: RegExp, value: string) => {
   const input = screen.getByLabelText(field);
@@ -40,25 +40,38 @@ const type = async (user: User, field: RegExp, value: string) => {
   await user.paste(value);
 };
 
-/** Fills a requisition that passes every blocking rule. */
-const fillEverything = async (user: User) => {
+/** Moves on from the step currently on screen. */
+const goNext = (user: User) => user.click(screen.getByRole("button", { name: /^Continue$/i }));
+
+/** An essay answer well past the 300-character floor; the letter just tells two apart. */
+const essay = (letter: string) => letter.repeat(320);
+
+/**
+ * Fills a requisition that passes every blocking rule, one step at a time —
+ * the form only renders the step currently on screen, so each section's
+ * fields have to be answered before `Continue` moves to the next one. Ends on
+ * the Review step.
+ */
+const fillEverything = async (user: User, overrides: { costCentre?: string } = {}) => {
+  // A · Position identity
   await type(user, /Job title/i, "Depot Supervisor");
   await choose(user, /Company/i, "Kenafric Manufacturing Limited");
   await choose(user, /Department/i, "Sales & Distribution");
-  await choose(user, /Cost centre/i, "Sales & Distribution");
+  await choose(user, /Cost centre/i, overrides.costCentre ?? "Sales & Distribution");
   await choose(user, /Work location/i, "Nairobi, Kenya");
   await choose(user, /Position type/i, "Permanent");
   await user.click(screen.getByRole("radio", { name: /^New/i }));
   await type(user, /How many people/i, "2");
   await user.click(screen.getByRole("checkbox", { name: /External Recruitment/i }));
+  await goNext(user);
 
-  // B1 and B2 are comboboxes over the served directories: the list opens on
-  // click, so only one is ever on screen and no scoping is needed.
+  // B · Reporting lines
   await choose(user, /Requesting manager/i, "Asha Wanjiru");
   await choose(user, /Line manager/i, "Brian Otieno");
+  await goNext(user);
 
-  await type(user, /Job overview/i, "A".repeat(160));
-
+  // C · Job description
+  await type(user, /Job overview/i, essay("A"));
   const responsibilities = screen.getAllByLabelText(/^Key responsibility, row/i);
   const outcomes = screen.getAllByLabelText(/^Outcome, row/i);
   await user.type(responsibilities[0], "Manage the depot stock ledger");
@@ -67,19 +80,27 @@ const fillEverything = async (user: User) => {
   await user.type(outcomes[1], "Same-day dispatch on 95% of orders");
   await user.type(responsibilities[2], "Run the weekly stock count");
   await user.type(outcomes[2], "Signed off every Friday");
-
-  // C3 and C4's skills half are lists; C4's experience half is prose
   await type(user, /^Qualification 1$/i, "Degree in supply chain");
-  await type(user, /Relevant experience/i, "Five years in depot operations");
+  await type(user, /Relevant experience/i, essay("E"));
   await type(user, /^Skill 1$/i, "Stock reconciliation");
+  await goNext(user);
 
-  await type(user, /What has worked or failed/i, "The last holder left after six months");
-  await type(user, /Why would a strong candidate/i, "Ownership of a whole region");
-  await type(user, /What must this person achieve in six months/i, "B".repeat(210));
-  await type(user, /Where could this role lead/i, "Regional manager");
+  // D · Business case
+  await type(user, /What has worked or failed/i, essay("F"));
+  await type(user, /Why would a strong candidate/i, essay("G"));
+  await type(user, /Where could this role lead/i, essay("H"));
+  await type(user, /What must this person achieve in six months/i, essay("B"));
+  await goNext(user);
 
+  // E · Provisioning
   await user.click(screen.getByRole("checkbox", { name: /Laptop/i }));
+  await goNext(user);
+
+  // F · Hiring process
   await user.click(screen.getByRole("checkbox", { name: /Telephone/i }));
+  await goNext(user);
+
+  // Lands on Review
 };
 
 const submit = (user: User) =>
@@ -102,7 +123,7 @@ const submitCalls = (mock: ReturnType<typeof routeFetch>) =>
 
 const bodyOf = (call: unknown[]) => JSON.parse((call[1] as RequestInit).body as string);
 
-/** Filling twenty-odd fields through the real controls outruns the 5s default. */
+/** Filling thirty-odd fields across six steps outruns the 5s default. */
 const TIMEOUT = 30_000;
 
 describe("RequisitionForm", () => {
@@ -129,12 +150,13 @@ describe("RequisitionForm", () => {
     expect(payload.position.company).toBe("Kenafric Manufacturing Limited");
     expect(payload.position.totalSubPositions).toBe(2);
     expect(payload.position.agencyName).toBeNull();
+    expect(payload.position.replacingEmployee).toBeNull();
     expect(payload.reporting.requestingManager).toEqual({
       clickupUserId: 1001,
       email: "asha@kenafric.test",
       displayName: "Asha Wanjiru",
     });
-    expect(payload.schemaVersion).toBe("1.1");
+    expect(payload.schemaVersion).toBe("1.2");
     expect(payload.client.app).toBe("kenafric-requisition-web");
     // A UUID v4, because the wire schema pins the format
     expect(payload.submissionId).toMatch(
@@ -184,11 +206,27 @@ describe("RequisitionForm", () => {
     expect(second).toBe(first);
   }, TIMEOUT);
 
-  it("names the fields that need attention rather than failing silently", async () => {
+  it("blocks moving past a step until its own fields are answered", async () => {
     const user = userEvent.setup();
     const fetchMock = routes({ match: SUBMIT, status: 201, body: successBody() });
 
     renderForm();
+    await goNext(user);
+
+    // Still on Position identity — Continue refused to move past it
+    expect(screen.getByRole("heading", { name: /Position identity/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/Job title/i)).toHaveAttribute("aria-invalid", "true");
+    expect(submitCalls(fetchMock)).toHaveLength(0);
+  }, TIMEOUT);
+
+  it("names the fields that need attention on Review rather than failing silently", async () => {
+    const user = userEvent.setup();
+    const fetchMock = routes({ match: SUBMIT, status: 201, body: successBody() });
+
+    renderForm();
+    // Jumping straight to Review via the rail is allowed — the final gate is
+    // the submit on Review, not a lock on any step before it
+    await user.click(screen.getByRole("button", { name: /^Review\b/i }));
     await submit(user);
 
     expect(await screen.findByText(/fields need attention/i)).toBeInTheDocument();
@@ -203,9 +241,8 @@ describe("RequisitionForm", () => {
     const fetchMock = routes({ match: SUBMIT, status: 201, body: successBody() });
 
     renderForm();
-    await fillEverything(user);
-    // A-1 · the cost centre now differs from the department
-    await choose(user, /Cost centre/i, "ICT");
+    // A-1 · the cost centre differs from the department
+    await fillEverything(user, { costCentre: "ICT" });
     await submit(user);
 
     expect(await screen.findByText(/Cost centre differs from department/i)).toBeInTheDocument();
@@ -218,7 +255,7 @@ describe("RequisitionForm", () => {
     expect(bodyOf(submitCalls(fetchMock)[0]).advisoriesAcknowledged).toContain("A-1");
   }, TIMEOUT);
 
-  it("puts a 422's issues on the fields they name, in the server's own words", async () => {
+  it("puts a 422's issues on the field they name, jumping back to its step", async () => {
     const user = userEvent.setup();
     routes({
       match: SUBMIT,
@@ -240,8 +277,11 @@ describe("RequisitionForm", () => {
     await fillEverything(user);
     await submit(user);
 
-    // Shown verbatim — the app never rewords something written for the manager
+    // Shown verbatim — the app never rewords something written for the
+    // manager to read — and the form has jumped back to the step that holds it
     expect(await screen.findByText("Not a valid work location.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Position identity/i })).toBeInTheDocument();
+
     // And it clears the moment that answer changes
     await choose(user, /Work location/i, "Thika, Kenya");
     await waitFor(() =>
@@ -308,25 +348,6 @@ describe("RequisitionForm", () => {
     );
   }, TIMEOUT);
 
-  it("links a replacement to an employee record, not to a typed name", async () => {
-    const user = userEvent.setup();
-    const fetchMock = routes({ match: SUBMIT, status: 201, body: successBody() });
-    renderForm();
-    await fillEverything(user);
-
-    await user.click(screen.getByRole("radio", { name: /^Replacement/i }));
-    await choose(user, /Who is being replaced/i, "Brian Otieno");
-
-    await submit(user);
-    await waitFor(() => expect(submitCalls(fetchMock)).toHaveLength(1));
-
-    // The wire wants a link to a record; the register supplies the task id
-    expect(bodyOf(submitCalls(fetchMock)[0]).position.replacingEmployee).toEqual({
-      clickupTaskId: "869e00001",
-      displayName: "Brian Otieno",
-    });
-  }, TIMEOUT);
-
   it("reveals the agency name only once an agency is involved, and clears it again", async () => {
     const user = userEvent.setup();
     routes({ match: SUBMIT, status: 201, body: successBody() });
@@ -347,4 +368,16 @@ describe("RequisitionForm", () => {
     await user.click(screen.getByRole("checkbox", { name: /Recruitment Agency/i }));
     await waitFor(() => expect(screen.getByLabelText(/Agency name/i)).toHaveValue(""));
   });
+
+  it("jumps straight to a step from the rail, and back again", async () => {
+    const user = userEvent.setup();
+    routes({ match: SUBMIT, status: 201, body: successBody() });
+    renderForm();
+
+    await user.click(screen.getByRole("button", { name: /^Reporting lines\b/i }));
+    expect(screen.getByLabelText(/Requesting manager/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /^Back$/i }));
+    expect(screen.getByLabelText(/Job title/i)).toBeInTheDocument();
+  }, TIMEOUT);
 });

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import Ajv2020 from "ajv/dist/2020";
 import addFormats from "ajv-formats";
 import { describe, expect, it } from "vitest";
-import { testEmployeeRecords, testPeople } from "@/test/requisitionSchema";
+import { testPeople } from "@/test/requisitionSchema";
 import { emptyValues, type RequisitionValues } from "./form";
 import { buildPayload, normaliseCell, toResponsibilityMarkdown } from "./payload";
 import { SCHEMA_VERSION } from "./contract";
@@ -13,7 +13,7 @@ import { SCHEMA_VERSION } from "./contract";
  * stray key fails here exactly as it would at the webhook.
  */
 const wireSchema = JSON.parse(
-  readFileSync("docs/requisition-submission-1.1.schema.json", "utf8"),
+  readFileSync("docs/requisition-submission-1.2.schema.json", "utf8"),
 );
 const ajv = new Ajv2020({ allErrors: true, strict: false });
 addFormats(ajv);
@@ -26,7 +26,9 @@ const conforms = (payload: unknown) => {
 };
 
 const people = testPeople();
-const records = testEmployeeRecords();
+
+/** The wire's 300-character floor on the six essay answers (contract.ts). */
+const essay = (seed: string) => seed.repeat(Math.ceil(300 / seed.length));
 
 const values = (overrides: Partial<RequisitionValues> = {}): RequisitionValues => ({
   ...emptyValues(),
@@ -41,7 +43,7 @@ const values = (overrides: Partial<RequisitionValues> = {}): RequisitionValues =
   recruitmentType: ["External Recruitment"],
   requestingManager: 1001,
   reportingTo: "Regional Sales Manager",
-  jobOverview: "The Depot Supervisor runs day-to-day operations at the Central region depot.",
+  jobOverview: essay("The Depot Supervisor runs day-to-day operations at the Central region depot. "),
   keyResponsibilitiesRows: [
     { id: "a", responsibility: "Manage the ledger", outcome: "Zero variance" },
     { id: "b", responsibility: "Lead dispatch", outcome: "Same-day on 95% of orders" },
@@ -49,12 +51,12 @@ const values = (overrides: Partial<RequisitionValues> = {}): RequisitionValues =
     { id: "d", responsibility: "", outcome: "" },
   ],
   qualifications: ["Diploma in supply chain"],
-  experience: "Four years in depot operations",
+  experience: essay("Four years in depot operations. "),
   skills: ["Stock reconciliation", "SAP"],
-  previousFailuresSuccesses: "The last two holders came from pure warehousing",
-  competitiveAdvantage: "Full ownership of a depot from day one",
-  sixMonthsObjectives: "Stock variance under 0.5%",
-  potentialCareerPath: "Regional Operations Manager",
+  previousFailuresSuccesses: essay("The last two holders came from pure warehousing. "),
+  competitiveAdvantage: essay("Full ownership of a depot from day one. "),
+  sixMonthsObjectives: essay("Stock variance under 0.5%. "),
+  potentialCareerPath: essay("Regional Operations Manager. "),
   positionRequirements: ["Laptop/Computer/Connectivity", "Pick-up"],
   assessmentStagesRequired: ["Telephone"],
   interviewPanel: [1002],
@@ -66,14 +68,13 @@ const build = (overrides: Partial<RequisitionValues> = {}, acknowledged = ["A-1"
     values: values(overrides),
     employees: people,
     users: people,
-    employeeRecords: records,
     submissionId: "3f7c1b62-4d0a-4a1e-9b55-2c8e0a1d9f34",
     submittedAt: "2026-08-25T06:14:22.000Z",
     advisoriesAcknowledged: acknowledged,
   });
 
 describe("wire conformance", () => {
-  it("builds a payload that satisfies the v1.1 schema", () => {
+  it("builds a payload that satisfies the v1.2 schema", () => {
     expect(conforms(build())).toEqual([]);
   });
 
@@ -97,29 +98,16 @@ describe("wire conformance", () => {
     expect(payload.position.agencyName).toBe("Talent Ltd");
   });
 
-  it("conforms on a replacement linked to an employee record", () => {
-    // The form stores the record's task id, so this is a lookup, not a name match
-    const payload = build({
-      newOrReplacement: "Replacement",
-      replacingEmployee: "869e00001",
-    });
-
+  it("always sends replacingEmployee as null — the form no longer asks", () => {
+    const payload = build({ newOrReplacement: "Replacement" });
     expect(conforms(payload)).toEqual([]);
-    expect(payload.position.replacingEmployee).toEqual({
-      clickupTaskId: "869e00001",
-      displayName: "Brian Otieno",
-    });
-  });
-
-  it("sends no replacement for a task id the register does not know", () => {
-    const payload = build({ newOrReplacement: "Replacement", replacingEmployee: "869eZZZZZ" });
     expect(payload.position.replacingEmployee).toBeNull();
   });
 
   it("carries the contract preamble", () => {
     const payload = build();
     expect(payload.schemaVersion).toBe(SCHEMA_VERSION);
-    expect(SCHEMA_VERSION).toBe("1.1");
+    expect(SCHEMA_VERSION).toBe("1.2");
     expect(payload.client).toEqual({ app: "kenafric-requisition-web", appVersion: "1.0.0" });
   });
 
@@ -196,8 +184,7 @@ describe("wire conformance", () => {
   });
 
   it("drops a conditional answer whose condition is not live", () => {
-    const payload = build({ replacingEmployee: "869e00001", agencyName: "Talent Ltd" });
-    expect(payload.position.replacingEmployee).toBeNull();
+    const payload = build({ agencyName: "Talent Ltd" });
     expect(payload.position.agencyName).toBeNull();
   });
 

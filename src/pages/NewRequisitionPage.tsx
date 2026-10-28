@@ -16,6 +16,12 @@ import {
  * C become the official job description verbatim, which is why this is an app
  * rather than a ClickUp form view — a form view has no numeric ranges, no
  * cross-field checks, no repeating rows, no live preview and no draft saving.
+ *
+ * The page itself never scrolls: the banner is fixed above, the wizard's own
+ * footer (Back/Continue, or Review's submit) is fixed below it, and the one
+ * place that scrolls is the step content between them — `RequisitionForm`
+ * owns that split. A section too tall for the screen scrolls in place rather
+ * than carrying the nav bar off with it.
  */
 const NewRequisitionPage = () => {
   const { schema, fault, isFaulty, isLoading, isUnavailable, isUnconfigured, refetch } =
@@ -31,43 +37,47 @@ const NewRequisitionPage = () => {
 
   return (
     <PageShell
+      width="full"
       crumbs={[{ label: "New requisition" }]}
       trail={<SectionLabel>Recruitment</SectionLabel>}
-      mainClassName="pb-20"
+      mainClassName="flex h-[calc(100dvh-4rem)] flex-col overflow-hidden pb-0"
     >
-      {/* One centred column, wide enough for the form's three fields across.
-          The banner shares its width so the two edges line up rather than the
-          form sitting inside a wider header. */}
-      <div className="mx-auto w-full max-w-form">
+      {/* The full width, not a centred column: the wizard spends it on a step
+          rail beside the active step rather than on longer text lines — each
+          step's own fields still sit on the measure the three-column grid was
+          designed for. */}
+      <div className="flex min-h-0 flex-1 flex-col">
         {/* The one landmark gradient on the page: cropped, Water-led,
-            grain-welded. Deliberately shallow — it is a signpost above a long
-            form, not a marketing hero, and every row it takes is a row of
-            fields pushed below the fold. */}
-        <section className="surface-flow-light has-grain mt-5 overflow-hidden rounded-lg border border-frost-200 [--grain-strength:0.5]">
-          <div className="relative z-raised px-5 py-4 sm:px-6 sm:py-5">
-            <p className="text-overline font-semibold uppercase text-steel-600">
-              Kenafric Group · Recruitment
-            </p>
-            <h1 className="mt-1 max-w-measure text-h5 font-extrabold tracking-tight text-ink-900">
+            grain-welded. Deliberately shallow and fixed in place — it is a
+            signpost above the wizard, not something that eats into the
+            section's own room to breathe. */}
+        <section className="surface-flow-light has-grain mt-4 shrink-0 overflow-hidden rounded-lg border border-frost-200 [--grain-strength:0.5]">
+          <div className="relative z-raised flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-5 py-3 sm:px-6">
+            <h1 className="text-h6 font-extrabold tracking-tight text-ink-900 sm:text-h5">
               Raise a new job requisition
             </h1>
-            <p className="measure mt-1.5 text-caption text-steel-700">
-              Describe the role and what it has to deliver. HR adds the terms — salary, benefits and
-              leave — before it goes to the HR Head and the Director. Sections A to C become the
-              official job description, so what you write here is what the candidate reads. It saves
-              as you go, so you can leave and come back.
+            <p className="text-caption text-steel-700">
+              Kenafric Group · Recruitment — a step at a time, saved as you go
             </p>
           </div>
         </section>
 
-        <div className="mt-5">
+        <div className="mt-4 min-h-0 flex-1">
           {isLoading ? (
-            <RequisitionLoading />
+            <div className="mx-auto h-full max-w-form overflow-y-auto">
+              <RequisitionLoading />
+            </div>
           ) : isUnavailable ? (
-            <SchemaUnavailable isUnconfigured={isUnconfigured} onRetry={() => void refetch()} />
+            <div className="mx-auto h-full max-w-form overflow-y-auto">
+              <SchemaUnavailable isUnconfigured={isUnconfigured} onRetry={() => void refetch()} />
+            </div>
           ) : isFaulty ? (
-            <SchemaFaultNotice fault={fault} onRetry={() => void refetch()} />
+            <div className="mx-auto h-full max-w-form overflow-y-auto">
+              <SchemaFaultNotice fault={fault} onRetry={() => void refetch()} />
+            </div>
           ) : (
+            // The wizard owns the full height from here — its own scroll
+            // region and fixed footer live inside RequisitionForm.
             <RequisitionForm schema={schema} />
           )}
         </div>

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { AlertTriangle, ArrowRight, Loader2, RotateCcw, Wand2, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, Loader2, RotateCcw, Wand2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -8,9 +8,10 @@ import {
   coversSeveralOpenings,
   emptyValues,
   fieldSpec,
+  hasValue,
   isFieldActive,
   needsAgencyName,
-  needsReplacingEmployee,
+  sectionState,
   type FieldKey,
   type RequisitionValues,
   type SectionId,
@@ -43,35 +44,36 @@ import {
   TextField,
   TextareaField,
 } from "./fields";
-import { EmployeeField, PeopleField, PersonField, ReportsToField } from "./PeoplePicker";
+import { PeopleField, PersonField, ReportsToField } from "./PeoplePicker";
 import { ResponsibilityRepeater } from "./ResponsibilityRepeater";
 import { focusField } from "@/requisition/review";
 import { RequisitionSubmitted } from "./RequisitionStates";
+import { RequisitionStepper, type StepItem } from "./RequisitionStepper";
+import { RequisitionReview } from "./RequisitionReview";
 
 /**
  * The new job requisition.
  *
- * One scrolling page, sections A to F in the job description's own order, and no
- * wizard: managers write section C and then remember something for section A,
- * and a wizard makes that a fight.
+ * A step at a time, sections A to F in the job description's own order, with a
+ * Review step at the end that reads the whole thing back before it submits. A
+ * manager does several different kinds of thinking in one requisition — who
+ * this reports to, what it pays off in six months, what it ships with on day
+ * one — and a single long page asked for all of it at once; the rail on the
+ * left (a bar on a phone) says how far there is left, and a step's own "Next"
+ * only gates on that step's own fields. The final gate — everything the
+ * submit depends on, advisories, the server's objections — lives on Review,
+ * which is also where a manager catches the thing they got wrong three steps
+ * back without hunting for it in a long scroll.
  *
  * The manager describes the role; HR sets the terms, so there is no salary,
  * benefit, leave or approver field anywhere in here.
  *
- * The fields sit on a three-column grid inside each section, in one centred
- * column of the page. One field per line put Submit a long way down a very
- * tall page; three across lets a manager see a whole section at once, which is
- * how they think about it — "identity", not "field 4 of 30". The grid collapses
- * to two columns below `lg` and to one below `sm`, and a control that owns a
- * table or a long essay still spans the full width, because a two-column table
- * squeezed into a third of the page is worse than no grid at all.
- *
- * The page previously carried a section rail on the left, a live
- * job-description preview on the right, and a "review and submit" summary at
- * the end; all three were removed by request. What the submit itself depends
- * on — advisories that have to be acknowledged, the server's objections, and
- * the list of fields still needing attention — stays, as a plain closing
- * block.
+ * Inside a step the fields sit on a three-column grid, in one column. One
+ * field per line put Submit a long way down a very tall page; three across
+ * lets a manager see a whole section at once, which is how they think about
+ * it — "identity", not "field 4 of 30". The grid collapses to two columns
+ * below `lg` and to one below `sm`, and a control that owns a table or a long
+ * essay still spans the full width.
  */
 
 const AUTOSAVE_MS = 800;
@@ -102,7 +104,7 @@ const Card = ({
      * gradient header's top corners, which the header can do itself — 11px,
      * because the section's own 12px radius has a 1px border inside it.
      */
-    className="scroll-mt-24 rounded-lg border border-mist-200 bg-white shadow-sm"
+    className="scroll-mt-24 rounded-lg border border-mist-200 bg-white shadow-sm [animation-duration:var(--dur-base)] [animation-timing-function:var(--ease-entrance)] animate-in fade-in-0 slide-in-from-bottom-1 motion-reduce:animate-none"
   >
     {/*
       The header earns a gradient, and it is the diagonal sweep rather than the
@@ -164,20 +166,30 @@ const SPAN_ALL = "sm:col-span-2 lg:col-span-3";
 /** Two thirds: a long-text answer that would be cramped in one column. */
 const SPAN_TWO = "lg:col-span-2";
 
+/** Steps, in order. The trailing step has no JD section of its own. */
+const STEP_IDENTITY = 0;
+const STEP_REPORTING = 1;
+const STEP_JOB_DESCRIPTION = 2;
+const STEP_BUSINESS_CASE = 3;
+const STEP_PROVISIONING = 4;
+const STEP_HIRING_PROCESS = 5;
+const STEP_REVIEW = 6;
+
 export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
   const [values, setValues] = React.useState<RequisitionValues>(emptyValues);
   const [touched, setTouched] = React.useState<Set<FieldKey>>(new Set());
   const [attempted, setAttempted] = React.useState(false);
   const [acknowledged, setAcknowledged] = React.useState<string[]>([]);
   const [restored, setRestored] = React.useState<string | null>(null);
+  const [step, setStep] = React.useState(STEP_IDENTITY);
   /** A 422's issues, held until the manager edits the field each one names. */
   const [serverIssues, setServerIssues] = React.useState<SubmissionIssue[]>([]);
   const submissionId = React.useRef(readOrCreateSubmissionId());
   const { state, submit, reset } = useRequisitionSubmit();
+  const topRef = React.useRef<HTMLDivElement>(null);
 
-  // Two directories, because they answer different questions: the employee
-  // register says who can raise a requisition, the user list says who can be
-  // reported to or sit on a panel
+  // The employee register says who can raise a requisition, the user list
+  // says who can be reported to or sit on a panel
   const employees = useEmployees();
   const users = useUsers();
 
@@ -212,14 +224,23 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
     return () => window.clearTimeout(timer);
   }, [values, isSubmitted]);
 
+  // A step change carries the eye to the top of the new step, not the bottom
+  // of the one just finished — but not on the very first render, where the
+  // page has only just arrived there.
+  const firstRender = React.useRef(true);
+  React.useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [step]);
+
   // ---- conditional fields ----------------------------------------------
   // Clearing the condition clears the value: orphaned data must never reach HR
   React.useEffect(() => {
     if (!needsAgencyName(values) && values.agencyName) {
       setValues((current) => ({ ...current, agencyName: "" }));
-    }
-    if (!needsReplacingEmployee(values) && values.replacingEmployee) {
-      setValues((current) => ({ ...current, replacingEmployee: "" }));
     }
   }, [values]);
 
@@ -233,8 +254,10 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
 
   /**
    * Errors are shown on blur, never on keystroke — telling someone their job
-   * title is wrong before they have finished typing it is just noise. After a
-   * failed submit, everything shows.
+   * title is wrong before they have finished typing it is just noise. Moving
+   * on from a step with something wrong in it shows everything that step
+   * holds; reaching Review shows everything, because that is the last chance
+   * to catch it.
    */
   const visible: Partial<Record<FieldKey, string>> = React.useMemo(() => {
     const shown: Partial<Record<FieldKey, string>> = {};
@@ -278,6 +301,49 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
 
   const options = (key: FieldKey): SchemaOption[] => optionsFor(schema, key);
 
+  /** Jumps to the step that holds a field, and puts the caret in it. */
+  const editField = (key: FieldKey) => {
+    const section = fieldSpec(key).section;
+    const index = SECTIONS.findIndex((candidate) => candidate.id === section);
+    if (index === step) {
+      focusField(key);
+      return;
+    }
+    setStep(index);
+    // The step has to mount before there is anything to focus
+    window.setTimeout(() => focusField(key), 80);
+  };
+
+  const editSection = (section: SectionId) => {
+    const index = SECTIONS.findIndex((candidate) => candidate.id === section);
+    setStep(index);
+  };
+
+  /**
+   * Moving on from a step touches everything it holds, so the step's own
+   * errors surface the moment leaving it is attempted rather than only at the
+   * final submit — and blocks the move while any of them stand.
+   */
+  const advanceFrom = (index: number) => {
+    const section = SECTIONS[index].id;
+    const keys = FIELDS.filter((field) => field.section === section).map((field) => field.key);
+
+    setTouched((current) => {
+      const next = new Set(current);
+      keys.forEach((key) => next.add(key));
+      if (section === "jobDescription") next.add("keyResponsibilitiesRows");
+      return next;
+    });
+
+    const invalidHere = keys.filter((key) => isFieldActive(key, values) && errors[key]);
+    const rowsInvalid = section === "jobDescription" && Object.keys(rowErrors).length > 0;
+    if (invalidHere.length > 0 || rowsInvalid) {
+      if (invalidHere[0]) focusField(invalidHere[0]);
+      return;
+    }
+    setStep(index + 1);
+  };
+
   /**
    * Fill the form with sample content.
    *
@@ -303,7 +369,9 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
   /**
    * `?prefill=1` fills on arrival, so a filled form can be linked to rather
    * than reached by remembering to press a button. It runs once, and only
-   * once the directories have landed.
+   * once the directories have landed — and it opens on Review, since the
+   * point of a one-click fill is to look at the whole thing, submit path
+   * included.
    */
   const prefilledFromUrl = React.useRef(false);
   React.useEffect(() => {
@@ -311,6 +379,7 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
     if (new URLSearchParams(window.location.search).get("prefill") === null) return;
     prefilledFromUrl.current = true;
     prefill();
+    setStep(STEP_REVIEW);
   }, [canPrefill, directoriesReady, prefill]);
 
   const send = (extraAck: string[] = []) => {
@@ -320,7 +389,6 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
         values,
         employees: employees.people,
         users: users.people,
-        employeeRecords: employees.records,
         submissionId: submissionId.current,
         submittedAt: new Date().toISOString(),
         advisoriesAcknowledged: ack,
@@ -330,11 +398,22 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
 
   const onSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+
+    // Every step but the last is a "Continue" wearing the submit button, so
+    // Enter inside a text field advances rather than quietly trying to
+    // submit a requisition six sections short of done.
+    if (step < STEP_REVIEW) {
+      advanceFrom(step);
+      return;
+    }
+
     setAttempted(true);
 
+    // Stay on Review and name everything that is wrong, rather than jumping
+    // away to the first bad field before the manager has seen the whole
+    // picture — that summary is the one below, and each entry in it is its
+    // own way to editField.
     if (invalidFields.length > 0 || Object.keys(rowErrors).length > 0) {
-      const first = FIELDS.find((field) => invalidFields.includes(field.key));
-      if (first) focusField(first.key);
       return;
     }
     if (standing.length > 0) {
@@ -351,7 +430,8 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
     if (state.status !== "rejected") return;
     setServerIssues(state.issues);
     const first = state.issues.map((issue) => fieldForPath(issue.path)).find(Boolean);
-    if (first) focusField(first);
+    if (first) editField(first);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
   const raiseAnother = () => {
@@ -364,6 +444,7 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
     setAcknowledged([]);
     setRestored(null);
     setServerIssues([]);
+    setStep(STEP_IDENTITY);
     reset();
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -381,23 +462,52 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
 
   if (state.status === "succeeded") {
     return (
-      <RequisitionSubmitted
-        jobTitle={values.jobTitle}
-        receipt={state.receipt}
-        onRaiseAnother={raiseAnother}
-      />
+      <div className="mx-auto h-full max-w-form overflow-y-auto">
+        <RequisitionSubmitted
+          jobTitle={values.jobTitle}
+          receipt={state.receipt}
+          onRaiseAnother={raiseAnother}
+        />
+      </div>
     );
   }
 
   const busy = state.status === "submitting";
 
+  const requiredComplete = FIELDS.filter(
+    (field) => field.required && isFieldActive(field.key, values),
+  ).every((field) => hasValue(field.key, values));
+
+  const reviewHasErrors = attempted && (invalidFields.length > 0 || Object.keys(rowErrors).length > 0);
+
+  const stepItems: StepItem[] = [
+    ...SECTIONS.map((section) => ({
+      key: section.id,
+      letter: section.letter,
+      title: section.title,
+      state: sectionState(section.id, values, visible),
+    })),
+    {
+      key: "review",
+      title: "Review",
+      state: reviewHasErrors
+        ? ("has-errors" as const)
+        : requiredComplete
+          ? ("complete" as const)
+          : ("untouched" as const),
+    },
+  ];
+
   return (
-    <form
-      onSubmit={onSubmit}
-      noValidate
-      className="form-dense mx-auto w-full max-w-form space-y-5"
-    >
-          {/*
+    <form onSubmit={onSubmit} noValidate className="form-dense flex h-full min-h-0 flex-col">
+      {/*
+        The one place this page scrolls. The banner above and the footer
+        below (Back/Continue, or Review's submit) stay put; a section too
+        tall for the screen scrolls in here rather than carrying the nav bar
+        off with it.
+      */}
+      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto pb-1 pr-0.5">
+      {/*
         The fill action. Absent in production, so it cannot be the reason a
         made-up requisition reaches ClickUp.
       */}
@@ -422,115 +532,105 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
       ) : null}
 
       {/* The draft bar. Quiet, and always offering the way out. */}
-          {restored ? (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-frost-200 bg-frost-50 px-4 py-2">
-              <p className="text-caption text-steel-700">
-                Draft from {relativeTime(restored)} restored
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    clearDraft();
-                    setValues(emptyValues());
-                    setTouched(new Set());
-                    setRestored(null);
-                  }}
-                  className="press tap-44 inline-flex min-h-9 items-center gap-1.5 rounded-md px-1 text-caption font-medium text-teal-700 hover:underline"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
-                  Discard it
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRestored(null)}
-                  className="press flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-steel-600 hover:bg-white/60 hover:text-ink-900"
-                  aria-label="Dismiss"
-                >
-                  <X className="h-4 w-4" aria-hidden="true" />
-                </button>
-              </div>
-            </div>
-          ) : null}
+      {restored ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-frost-200 bg-frost-50 px-4 py-2">
+          <p className="text-caption text-steel-700">
+            Draft from {relativeTime(restored)} restored
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                clearDraft();
+                setValues(emptyValues());
+                setTouched(new Set());
+                setRestored(null);
+              }}
+              className="press tap-44 inline-flex min-h-9 items-center gap-1.5 rounded-md px-1 text-caption font-medium text-teal-700 hover:underline"
+            >
+              <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+              Discard it
+            </button>
+            <button
+              type="button"
+              onClick={() => setRestored(null)}
+              className="press flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-steel-600 hover:bg-white/60 hover:text-ink-900"
+              aria-label="Dismiss"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      ) : null}
 
+      <div className="lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-10">
+        <RequisitionStepper steps={stepItems} current={step} onJump={setStep} />
+
+        <div ref={topRef} className="min-w-0 scroll-mt-20 space-y-5">
           {/* ---- A · Position identity ---------------------------------- */}
-          <Card id="identity" letter="A" title="Position identity">
-            <Row>
-              <TextField
-                fieldKey="jobTitle"
-                value={values.jobTitle}
-                onChange={(v) => set("jobTitle", v)}
-                onBlur={() => blur("jobTitle")}
-                error={visible.jobTitle}
-                placeholder="Depot Supervisor"
-              />
-              <SelectField
-                fieldKey="company"
-                value={values.company}
-                options={options("company")}
-                onChange={setAndTouch("company")}
-                error={visible.company}
-                placeholder="Select the employing entity"
-              />
-              <SelectField
-                fieldKey="department"
-                value={values.department}
-                options={options("department")}
-                onChange={setAndTouch("department")}
-                error={visible.department}
-              />
-              <SelectField
-                fieldKey="costCentre"
-                value={values.costCentre}
-                options={options("costCentre")}
-                onChange={setAndTouch("costCentre")}
-                error={visible.costCentre}
-              />
-              <SelectField
-                fieldKey="location"
-                value={values.location}
-                options={options("location")}
-                onChange={setAndTouch("location")}
-                error={visible.location}
-              />
-              <SelectField
-                fieldKey="positionType"
-                value={values.positionType}
-                options={options("positionType")}
-                onChange={setAndTouch("positionType")}
-                error={visible.positionType}
-              />
-            </Row>
-
-            <RadioField
-              fieldKey="newOrReplacement"
-              value={values.newOrReplacement}
-              options={options("newOrReplacement")}
-              onChange={setAndTouch("newOrReplacement")}
-              error={visible.newOrReplacement}
-              columns={3}
-            />
-
-            <Reveal when={needsReplacingEmployee(values)}>
-              {/* The picker carries a filter and a directory list, so it takes
-                  two thirds rather than being squeezed into a column. */}
+          {step === STEP_IDENTITY ? (
+            <Card id="identity" letter="A" title="Position identity">
               <Row>
-                <div className={SPAN_TWO}>
-                  <EmployeeField
-                    fieldKey="replacingEmployee"
-                    value={values.replacingEmployee}
-                    records={employees.records}
-                    isLoading={employees.isLoading}
-                    isUnavailable={employees.recordsUnavailable}
-                    onChange={setAndTouch("replacingEmployee")}
-                    error={visible.replacingEmployee}
-                  />
-                </div>
+                <TextField
+                  fieldKey="jobTitle"
+                  value={values.jobTitle}
+                  onChange={(v) => set("jobTitle", v)}
+                  onBlur={() => blur("jobTitle")}
+                  error={visible.jobTitle}
+                  placeholder="Depot Supervisor"
+                />
+                <SelectField
+                  fieldKey="company"
+                  value={values.company}
+                  options={options("company")}
+                  onChange={setAndTouch("company")}
+                  error={visible.company}
+                  placeholder="Select the employing entity"
+                />
+                <SelectField
+                  fieldKey="department"
+                  value={values.department}
+                  options={options("department")}
+                  onChange={setAndTouch("department")}
+                  error={visible.department}
+                />
+                <SelectField
+                  fieldKey="costCentre"
+                  value={values.costCentre}
+                  options={options("costCentre")}
+                  onChange={setAndTouch("costCentre")}
+                  error={visible.costCentre}
+                />
+                <SelectField
+                  fieldKey="location"
+                  value={values.location}
+                  options={options("location")}
+                  onChange={setAndTouch("location")}
+                  error={visible.location}
+                />
+                <SelectField
+                  fieldKey="positionType"
+                  value={values.positionType}
+                  options={options("positionType")}
+                  onChange={setAndTouch("positionType")}
+                  error={visible.positionType}
+                />
               </Row>
-            </Reveal>
 
-            <Row>
-              <div className="space-y-2">
+              <RadioField
+                fieldKey="newOrReplacement"
+                value={values.newOrReplacement}
+                options={options("newOrReplacement")}
+                onChange={setAndTouch("newOrReplacement")}
+                error={visible.newOrReplacement}
+                columns={2}
+              />
+
+              {/* Not in a Row — one control in a three-column grid leaves two
+                  empty tracks beside it. A max-width keeps it the size of a
+                  field rather than either a cramped box or a stray short
+                  input stranded in a wide empty row. */}
+              <div className="max-w-xs space-y-2">
                 <NumberStepper
                   fieldKey="totalSubPositions"
                   value={values.totalSubPositions}
@@ -545,352 +645,418 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
                   </InlineNote>
                 </Reveal>
               </div>
-            </Row>
 
-            <CheckboxField
-              fieldKey="recruitmentType"
-              values={values.recruitmentType}
-              options={options("recruitmentType")}
-              onChange={setAndTouch("recruitmentType")}
-              error={visible.recruitmentType}
-              columns={3}
-            />
+              <CheckboxField
+                fieldKey="recruitmentType"
+                values={values.recruitmentType}
+                options={options("recruitmentType")}
+                onChange={setAndTouch("recruitmentType")}
+                error={visible.recruitmentType}
+                columns={3}
+              />
 
-            {/* Revealed by the answer above, so it has to follow it */}
-            <Reveal when={needsAgencyName(values)}>
-              <Row>
-                <TextField
-                  fieldKey="agencyName"
-                  value={values.agencyName}
-                  onChange={(v) => set("agencyName", v)}
-                  onBlur={() => blur("agencyName")}
-                  error={visible.agencyName}
-                  placeholder="Which agency"
-                />
-              </Row>
-            </Reveal>
-          </Card>
+              {/* Revealed by the answer above, so it has to follow it. Same
+                  reasoning as the stepper above — no Row, no empty tracks. */}
+              <Reveal when={needsAgencyName(values)}>
+                <div className="max-w-sm">
+                  <TextField
+                    fieldKey="agencyName"
+                    value={values.agencyName}
+                    onChange={(v) => set("agencyName", v)}
+                    onBlur={() => blur("agencyName")}
+                    error={visible.agencyName}
+                    placeholder="Which agency"
+                  />
+                </div>
+              </Reveal>
+            </Card>
+          ) : null}
 
           {/* ---- B · Reporting lines ------------------------------------ */}
-          <Card id="reporting" letter="B" title="Reporting lines">
-            <Row>
-              <PersonField
-                fieldKey="requestingManager"
-                value={values.requestingManager}
-                people={employees.people}
-                isLoading={employees.isLoading}
-                isUnavailable={employees.isUnavailable}
-                onChange={setAndTouch("requestingManager")}
-                error={visible.requestingManager}
-              />
-              <ReportsToField
-                fieldKey="reportingTo"
-                value={values.reportingTo}
-                people={users.people}
-                isLoading={users.isLoading}
-                isUnavailable={users.isUnavailable}
-                onChange={setAndTouch("reportingTo")}
-                error={visible.reportingTo}
-              />
-              {/* There is deliberately no "others reporting directly" field —
-                  that row of the Kenafric JD template is intentionally blank. */}
-              <TextareaField
-                fieldKey="othersReportingIndirectly"
-                value={values.othersReportingIndirectly}
-                onChange={(v) => set("othersReportingIndirectly", v)}
-                onBlur={() => blur("othersReportingIndirectly")}
-                error={visible.othersReportingIndirectly}
-                rows={3}
-                placeholder="Depot clerks, casual loaders"
-              />
-            </Row>
-          </Card>
-
-          {/* ---- C · Job description ------------------------------------ */}
-          <Card
-            id="jobDescription"
-            letter="C"
-            title="Job description"
-            intro={SECTIONS.find((s) => s.id === "jobDescription")?.intro}
-          >
-            {/* C1 to C4 stay in the job description's own order. The
-                responsibility table is two columns of its own, so it takes the
-                full width rather than a third of it. */}
-            <Row>
-              <TextareaField
-                fieldKey="jobOverview"
-                value={values.jobOverview}
-                onChange={(v) => set("jobOverview", v)}
-                onBlur={() => blur("jobOverview")}
-                error={visible.jobOverview}
-                rows={4}
-                className={SPAN_ALL}
-              />
-            </Row>
-            <ResponsibilityRepeater
-              rows={values.keyResponsibilitiesRows}
-              onChange={(rows) => set("keyResponsibilitiesRows", rows)}
-              onBlur={() => blur("keyResponsibilitiesRows")}
-              error={visible.keyResponsibilitiesRows}
-              rowErrors={visibleRowErrors}
-            />
-            {/* C3 and C4 are lists and a paragraph, not two essays. Each owns
-                its whole row: a numbered list squeezed into a third of the
-                width wraps every entry onto two lines, which is the shape the
-                list exists to avoid. */}
-            <ListField
-              fieldKey="qualifications"
-              values={values.qualifications}
-              onChange={(v) => set("qualifications", v)}
-              onBlur={() => blur("qualifications")}
-              error={visible.qualifications}
-              addLabel="Add another qualification"
-              itemLabel="Qualification"
-              placeholders={[
-                "Diploma in food technology or a related technical discipline",
-                "HACCP or FSSC 22000 certification",
-              ]}
-            />
-
-            <TextareaField
-              fieldKey="experience"
-              value={values.experience}
-              onChange={(v) => set("experience", v)}
-              onBlur={() => blur("experience")}
-              error={visible.experience}
-              rows={3}
-              placeholder="Five years in an FMCG manufacturing plant, at least one of them supervising a packaging or processing line"
-            />
-
-            <ListField
-              fieldKey="skills"
-              values={values.skills}
-              onChange={(v) => set("skills", v)}
-              onBlur={() => blur("skills")}
-              error={visible.skills}
-              addLabel="Add another skill"
-              itemLabel="Skill"
-              placeholders={[
-                "Confectionery or high-speed packaging equipment",
-                "SAP or an equivalent ERP for production entries",
-                "Presence on the floor rather than in an office",
-              ]}
-            />
-          </Card>
-
-          {/* ---- D · Business case -------------------------------------- */}
-          <Card id="businessCase" letter="D" title="Business case">
-            {/* Every answer here is a paragraph, so every answer takes the
-                full row. Three columns gave each of them about a third of the
-                width and roughly ten words a line, and the one a manager
-                writes most — D1, on what has failed before — became a tall
-                narrow ribbon of text beside two much shorter neighbours.
-
-                D3 reads last rather than third because it is the one the
-                person hired actually receives; the ref on its label still says
-                D3 and the payload order is unchanged. */}
-            <TextareaField
-              fieldKey="previousFailuresSuccesses"
-              value={values.previousFailuresSuccesses}
-              onChange={(v) => set("previousFailuresSuccesses", v)}
-              onBlur={() => blur("previousFailuresSuccesses")}
-              error={visible.previousFailuresSuccesses}
-              rows={4}
-            />
-            <TextareaField
-              fieldKey="competitiveAdvantage"
-              value={values.competitiveAdvantage}
-              onChange={(v) => set("competitiveAdvantage", v)}
-              onBlur={() => blur("competitiveAdvantage")}
-              error={visible.competitiveAdvantage}
-              rows={3}
-            />
-            <TextareaField
-              fieldKey="potentialCareerPath"
-              value={values.potentialCareerPath}
-              onChange={(v) => set("potentialCareerPath", v)}
-              onBlur={() => blur("potentialCareerPath")}
-              error={visible.potentialCareerPath}
-              rows={3}
-            />
-            <TextareaField
-              fieldKey="sixMonthsObjectives"
-              value={values.sixMonthsObjectives}
-              onChange={(v) => set("sixMonthsObjectives", v)}
-              onBlur={() => blur("sixMonthsObjectives")}
-              error={visible.sixMonthsObjectives}
-              rows={4}
-              emphasis
-            />
-          </Card>
-
-          {/* ---- E · Provisioning --------------------------------------- */}
-          <Card id="provisioning" letter="E" title="Items to be issued to the new joiner">
-            {/* TODO(kenafric): the list has no motorcycle or scooter option, which
-                a rider or field sales role would plausibly need. Pending the
-                client's confirmation. */}
-            <CheckboxField
-              fieldKey="positionRequirements"
-              values={values.positionRequirements}
-              options={options("positionRequirements")}
-              onChange={setAndTouch("positionRequirements")}
-              error={visible.positionRequirements}
-              exclusive={NOT_APPLICABLE}
-            />
-          </Card>
-
-          {/* ---- F · Hiring process ------------------------------------- */}
-          <Card id="hiringProcess" letter="F" title="Hiring process">
-            <CheckboxField
-              fieldKey="assessmentStagesRequired"
-              values={values.assessmentStagesRequired}
-              options={options("assessmentStagesRequired")}
-              onChange={setAndTouch("assessmentStagesRequired")}
-              error={visible.assessmentStagesRequired}
-              columns={3}
-              note="Background check and negotiation stages are always available regardless of what you select."
-            />
-            <Row>
-              {/* A multi-select over the whole user list. A third of the row
-                  would show four names at a time. */}
-              <div className={SPAN_TWO}>
-                <PeopleField
-                  fieldKey="interviewPanel"
-                  values={values.interviewPanel}
+          {step === STEP_REPORTING ? (
+            <Card id="reporting" letter="B" title="Reporting lines">
+              <Row>
+                <PersonField
+                  fieldKey="requestingManager"
+                  value={values.requestingManager}
+                  people={employees.people}
+                  isLoading={employees.isLoading}
+                  isUnavailable={employees.isUnavailable}
+                  onChange={setAndTouch("requestingManager")}
+                  error={visible.requestingManager}
+                />
+                <ReportsToField
+                  fieldKey="reportingTo"
+                  value={values.reportingTo}
                   people={users.people}
                   isLoading={users.isLoading}
                   isUnavailable={users.isUnavailable}
-                  onChange={setAndTouch("interviewPanel")}
-                  error={visible.interviewPanel}
+                  onChange={setAndTouch("reportingTo")}
+                  error={visible.reportingTo}
                 />
-              </div>
-            </Row>
-          </Card>
+                {/* There is deliberately no "others reporting directly" field —
+                    that row of the Kenafric JD template is intentionally blank. */}
+                <TextareaField
+                  fieldKey="othersReportingIndirectly"
+                  value={values.othersReportingIndirectly}
+                  onChange={(v) => set("othersReportingIndirectly", v)}
+                  onBlur={() => blur("othersReportingIndirectly")}
+                  error={visible.othersReportingIndirectly}
+                  rows={3}
+                  placeholder="Depot clerks, casual loaders"
+                />
+              </Row>
+            </Card>
+          ) : null}
 
-          {/* ---- Submit ------------------------------------------------- */}
-          <div className="space-y-5 rounded-lg border border-mist-200 bg-white p-4 shadow-sm sm:p-5">
-          {/* Advisories: a warning the manager can acknowledge and submit
-              anyway. A rejected submission means retyping four long-text
-              fields, and the next requisition arrives by email instead. */}
-          {advisories.length > 0 ? (
-            <div id="requisition-advisories" className="space-y-2 scroll-mt-24">
-              {advisories.map((advisory) => (
-                <div
-                  key={advisory.id}
-                  className={cn(
-                    "rounded-md border px-4 py-3",
-                    advisory.needsAck
-                      ? "border-sand-200 bg-warmmist-50"
-                      : "border-mist-200 bg-mist-50",
-                  )}
-                >
-                  <p className="flex gap-2 text-caption text-ink-900">
-                    <AlertTriangle
-                      className="mt-0.5 h-4 w-4 shrink-0 text-ember-500"
-                      aria-hidden="true"
-                    />
-                    <span>{advisory.message}</span>
-                  </p>
-                  {advisory.needsAck ? (
-                    <label className="mt-1 flex min-h-10 cursor-pointer items-center gap-2 pl-6 text-[0.75rem] text-steel-700">
-                      <input
-                        type="checkbox"
-                        checked={acknowledged.includes(advisory.id)}
-                        onChange={(event) =>
-                          setAcknowledged((current) =>
-                            event.target.checked
-                              ? [...current, advisory.id]
-                              : current.filter((id) => id !== advisory.id),
-                          )
-                        }
-                        className="h-[1.125rem] w-[1.125rem] shrink-0 rounded-sm border-mist-300 accent-teal-400"
-                      />
-                      I've checked this and it's right
-                    </label>
-                  ) : null}
+          {/* ---- C · Job description ------------------------------------ */}
+          {step === STEP_JOB_DESCRIPTION ? (
+            <Card
+              id="jobDescription"
+              letter="C"
+              title="Job description"
+              intro={SECTIONS.find((s) => s.id === "jobDescription")?.intro}
+            >
+              {/* C1 to C4 stay in the job description's own order. The
+                  responsibility table is two columns of its own, so it takes the
+                  full width rather than a third of it. */}
+              <Row>
+                <TextareaField
+                  fieldKey="jobOverview"
+                  value={values.jobOverview}
+                  onChange={(v) => set("jobOverview", v)}
+                  onBlur={() => blur("jobOverview")}
+                  error={visible.jobOverview}
+                  rows={4}
+                  minLength={300}
+                  className={SPAN_ALL}
+                />
+              </Row>
+              <ResponsibilityRepeater
+                rows={values.keyResponsibilitiesRows}
+                onChange={(rows) => set("keyResponsibilitiesRows", rows)}
+                onBlur={() => blur("keyResponsibilitiesRows")}
+                error={visible.keyResponsibilitiesRows}
+                rowErrors={visibleRowErrors}
+              />
+              {/* C3 and C4 are lists and a paragraph, not two essays. Each owns
+                  its whole row: a numbered list squeezed into a third of the
+                  width wraps every entry onto two lines, which is the shape the
+                  list exists to avoid. */}
+              <ListField
+                fieldKey="qualifications"
+                values={values.qualifications}
+                onChange={(v) => set("qualifications", v)}
+                onBlur={() => blur("qualifications")}
+                error={visible.qualifications}
+                addLabel="Add another qualification"
+                itemLabel="Qualification"
+                placeholders={[
+                  "Diploma in food technology or a related technical discipline",
+                  "HACCP or FSSC 22000 certification",
+                ]}
+              />
+
+              <TextareaField
+                fieldKey="experience"
+                value={values.experience}
+                onChange={(v) => set("experience", v)}
+                onBlur={() => blur("experience")}
+                error={visible.experience}
+                rows={3}
+                minLength={300}
+                placeholder="Five years in an FMCG manufacturing plant, at least one of them supervising a packaging or processing line"
+              />
+
+              <ListField
+                fieldKey="skills"
+                values={values.skills}
+                onChange={(v) => set("skills", v)}
+                onBlur={() => blur("skills")}
+                error={visible.skills}
+                addLabel="Add another skill"
+                itemLabel="Skill"
+                placeholders={[
+                  "Confectionery or high-speed packaging equipment",
+                  "SAP or an equivalent ERP for production entries",
+                  "Presence on the floor rather than in an office",
+                ]}
+              />
+            </Card>
+          ) : null}
+
+          {/* ---- D · Business case -------------------------------------- */}
+          {step === STEP_BUSINESS_CASE ? (
+            <Card id="businessCase" letter="D" title="Business case">
+              {/* Every answer here is a paragraph, so every answer takes the
+                  full row. Three columns gave each of them about a third of the
+                  width and roughly ten words a line, and the one a manager
+                  writes most — D1, on what has failed before — became a tall
+                  narrow ribbon of text beside two much shorter neighbours.
+
+                  D3 reads last rather than third because it is the one the
+                  person hired actually receives; the ref on its label still says
+                  D3 and the payload order is unchanged. */}
+              <TextareaField
+                fieldKey="previousFailuresSuccesses"
+                value={values.previousFailuresSuccesses}
+                onChange={(v) => set("previousFailuresSuccesses", v)}
+                onBlur={() => blur("previousFailuresSuccesses")}
+                error={visible.previousFailuresSuccesses}
+                rows={4}
+                minLength={300}
+              />
+              <TextareaField
+                fieldKey="competitiveAdvantage"
+                value={values.competitiveAdvantage}
+                onChange={(v) => set("competitiveAdvantage", v)}
+                onBlur={() => blur("competitiveAdvantage")}
+                error={visible.competitiveAdvantage}
+                rows={3}
+                minLength={300}
+              />
+              <TextareaField
+                fieldKey="potentialCareerPath"
+                value={values.potentialCareerPath}
+                onChange={(v) => set("potentialCareerPath", v)}
+                onBlur={() => blur("potentialCareerPath")}
+                error={visible.potentialCareerPath}
+                rows={3}
+                minLength={300}
+              />
+              <TextareaField
+                fieldKey="sixMonthsObjectives"
+                value={values.sixMonthsObjectives}
+                onChange={(v) => set("sixMonthsObjectives", v)}
+                onBlur={() => blur("sixMonthsObjectives")}
+                error={visible.sixMonthsObjectives}
+                rows={4}
+                minLength={300}
+                emphasis
+              />
+            </Card>
+          ) : null}
+
+          {/* ---- E · Provisioning --------------------------------------- */}
+          {step === STEP_PROVISIONING ? (
+            <Card id="provisioning" letter="E" title="Items to be issued to the new joiner">
+              {/* TODO(kenafric): the list has no motorcycle or scooter option, which
+                  a rider or field sales role would plausibly need. Pending the
+                  client's confirmation. */}
+              <CheckboxField
+                fieldKey="positionRequirements"
+                values={values.positionRequirements}
+                options={options("positionRequirements")}
+                onChange={setAndTouch("positionRequirements")}
+                error={visible.positionRequirements}
+                exclusive={NOT_APPLICABLE}
+              />
+            </Card>
+          ) : null}
+
+          {/* ---- F · Hiring process ------------------------------------- */}
+          {step === STEP_HIRING_PROCESS ? (
+            <Card id="hiringProcess" letter="F" title="Hiring process">
+              <CheckboxField
+                fieldKey="assessmentStagesRequired"
+                values={values.assessmentStagesRequired}
+                options={options("assessmentStagesRequired")}
+                onChange={setAndTouch("assessmentStagesRequired")}
+                error={visible.assessmentStagesRequired}
+                columns={3}
+                note="Background check and negotiation stages are always available regardless of what you select."
+              />
+              <Row>
+                {/* A multi-select over the whole user list. A third of the row
+                    would show four names at a time. */}
+                <div className={SPAN_TWO}>
+                  <PeopleField
+                    fieldKey="interviewPanel"
+                    values={values.interviewPanel}
+                    people={users.people}
+                    isLoading={users.isLoading}
+                    isUnavailable={users.isUnavailable}
+                    onChange={setAndTouch("interviewPanel")}
+                    error={visible.interviewPanel}
+                  />
                 </div>
-              ))}
-            </div>
+              </Row>
+            </Card>
           ) : null}
 
-          {/* Issues the server raised that no single field owns */}
-          {looseIssues.length > 0 ? (
-            <div
-              role="alert"
-              className="rounded-md border-l-2 border-ember-300 bg-ember-50 px-4 py-3"
+          {/* ---- Review --------------------------------------------------- */}
+          {step === STEP_REVIEW ? (
+            <>
+              <RequisitionReview
+                values={values}
+                employees={employees.people}
+                users={users.people}
+                errors={attempted ? invalidFieldErrors(invalidFields, errors) : {}}
+                onEditSection={editSection}
+                onEditField={editField}
+              />
+
+              <div className="space-y-5 rounded-lg border border-mist-200 bg-white p-4 shadow-sm sm:p-5">
+                {/* Advisories: a warning the manager can acknowledge and submit
+                    anyway. A rejected submission means retyping four long-text
+                    fields, and the next requisition arrives by email instead. */}
+                {advisories.length > 0 ? (
+                  <div id="requisition-advisories" className="space-y-2 scroll-mt-24">
+                    {advisories.map((advisory) => (
+                      <div
+                        key={advisory.id}
+                        className={cn(
+                          "rounded-md border px-4 py-3",
+                          advisory.needsAck
+                            ? "border-sand-200 bg-warmmist-50"
+                            : "border-mist-200 bg-mist-50",
+                        )}
+                      >
+                        <p className="flex gap-2 text-caption text-ink-900">
+                          <AlertTriangle
+                            className="mt-0.5 h-4 w-4 shrink-0 text-ember-500"
+                            aria-hidden="true"
+                          />
+                          <span>{advisory.message}</span>
+                        </p>
+                        {advisory.needsAck ? (
+                          <label className="mt-1 flex min-h-10 cursor-pointer items-center gap-2 pl-6 text-[0.75rem] text-steel-700">
+                            <input
+                              type="checkbox"
+                              checked={acknowledged.includes(advisory.id)}
+                              onChange={(event) =>
+                                setAcknowledged((current) =>
+                                  event.target.checked
+                                    ? [...current, advisory.id]
+                                    : current.filter((id) => id !== advisory.id),
+                                )
+                              }
+                              className="h-[1.125rem] w-[1.125rem] shrink-0 rounded-sm border-mist-300 accent-teal-400"
+                            />
+                            I've checked this and it's right
+                          </label>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+
+                {/* Issues the server raised that no single field owns */}
+                {looseIssues.length > 0 ? (
+                  <div
+                    role="alert"
+                    className="rounded-md border-l-2 border-ember-300 bg-ember-50 px-4 py-3"
+                  >
+                    <p className="text-caption font-medium text-ink-900">
+                      The requisition was not accepted
+                    </p>
+                    <ul className="mt-1 space-y-1">
+                      {looseIssues.map((issue) => (
+                        <li key={`${issue.path}-${issue.code}`} className="text-caption text-steel-700">
+                          {issue.message}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+
+                {state.status === "failed" ? (
+                  <div
+                    role="alert"
+                    className="rounded-md border-l-2 border-ember-300 bg-ember-50 px-4 py-3 text-caption text-ink-900"
+                  >
+                    <p>{state.message}</p>
+                    {/* A retry reuses the same submissionId, so it cannot raise a
+                        second requisition. Where retrying cannot help, it is not
+                        offered — a missing ClickUp field needs HR, not another go. */}
+                    {state.retryable ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        className="mt-3"
+                        onClick={() => send()}
+                      >
+                        Try again
+                      </Button>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            </>
+          ) : null}
+        </div>
+      </div>
+      </div>
+
+      {/* ---- Footer: always visible, never scrolled past -------------- */}
+      <div className="mt-4 shrink-0 border-t border-mist-200 pt-4">
+        {step < STEP_REVIEW ? (
+          <div className="flex items-center justify-between gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setStep((current) => Math.max(STEP_IDENTITY, current - 1))}
+              disabled={step === STEP_IDENTITY}
             >
-              <p className="text-caption font-medium text-ink-900">
-                The requisition was not accepted
-              </p>
-              <ul className="mt-1 space-y-1">
-                {looseIssues.map((issue) => (
-                  <li key={`${issue.path}-${issue.code}`} className="text-caption text-steel-700">
-                    {issue.message}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-
-          {state.status === "failed" ? (
-            <div
-              role="alert"
-              className="rounded-md border-l-2 border-ember-300 bg-ember-50 px-4 py-3 text-caption text-ink-900"
-            >
-              <p>{state.message}</p>
-              {/* A retry reuses the same submissionId, so it cannot raise a
-                  second requisition. Where retrying cannot help, it is not
-                  offered — a missing ClickUp field needs HR, not another go. */}
-              {state.retryable ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  className="mt-3"
-                  onClick={() => send()}
-                >
-                  Try again
-                </Button>
-              ) : null}
-            </div>
-          ) : null}
-
-          {/* The summary. Never a bare disabled button with no explanation. */}
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              Back
+            </Button>
+            <Button type="submit" variant="secondary">
+              Continue
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </div>
+        ) : (
+          /* The summary. Never a bare disabled button with no explanation. */
           <div
             className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
             role="status"
             aria-live="polite"
           >
-            <div className="min-w-0 text-caption">
-              {attempted && invalidFields.length > 0 ? (
-                <div className="space-y-1">
-                  <p className="font-medium text-ember-500">
-                    {invalidFields.length} field{invalidFields.length === 1 ? "" : "s"} need
-                    {invalidFields.length === 1 ? "s" : ""} attention
+            <div className="flex min-w-0 items-center gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setStep(STEP_HIRING_PROCESS)}
+                className="shrink-0 -ml-1"
+              >
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                Back
+              </Button>
+
+              <div className="min-w-0 text-caption">
+                {attempted && invalidFields.length > 0 ? (
+                  <div className="space-y-1">
+                    <p className="font-medium text-ember-500">
+                      {invalidFields.length} field{invalidFields.length === 1 ? "" : "s"} need
+                      {invalidFields.length === 1 ? "s" : ""} attention
+                    </p>
+                    <ul className="flex flex-wrap gap-x-3 gap-y-1">
+                      {invalidFields.map((key) => (
+                        <li key={key}>
+                          <button
+                            type="button"
+                            onClick={() => editField(key)}
+                            className="press tap-44 inline-flex min-h-8 items-center text-caption font-medium text-teal-700 hover:underline"
+                          >
+                            {fieldSpec(key).label}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : standing.length > 0 && attempted ? (
+                  <p className="text-steel-700">
+                    Confirm the {standing.length === 1 ? "warning" : "warnings"} above, then submit.
                   </p>
-                  <ul className="flex flex-wrap gap-x-3 gap-y-1">
-                    {invalidFields.map((key) => (
-                      <li key={key}>
-                        <button
-                          type="button"
-                          onClick={() => focusField(key)}
-                          className="press tap-44 inline-flex min-h-8 items-center text-caption font-medium text-teal-700 hover:underline"
-                        >
-                          {fieldSpec(key).label}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : standing.length > 0 && attempted ? (
-                <p className="text-steel-700">
-                  Confirm the {standing.length === 1 ? "warning" : "warnings"} above, then submit.
-                </p>
-              ) : (
-                <p className="text-steel-600">
-                  HR reviews this, then the HR Head, then the Director.
-                </p>
-              )}
+                ) : (
+                  <p className="text-steel-600">
+                    HR reviews this, then the HR Head, then the Director.
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* The one Ember CTA on the page — Fire is the spark */}
@@ -908,7 +1074,20 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
               )}
             </Button>
           </div>
-          </div>
+        )}
+      </div>
     </form>
   );
+};
+
+/** Only the errors of fields a manager has actually been told about. */
+const invalidFieldErrors = (
+  invalidFields: FieldKey[],
+  errors: Partial<Record<FieldKey, string>>,
+): Partial<Record<FieldKey, string>> => {
+  const shown: Partial<Record<FieldKey, string>> = {};
+  invalidFields.forEach((key) => {
+    shown[key] = errors[key];
+  });
+  return shown;
 };

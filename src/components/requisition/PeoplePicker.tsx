@@ -3,15 +3,7 @@ import { Loader2, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { fieldId, fieldSpec, type FieldKey } from "@/requisition/form";
-import {
-  employeeByTaskId,
-  initialsOf,
-  matchesEmployee,
-  matchesPerson,
-  personById,
-  type DirectoryPerson,
-  type EmployeeRecord,
-} from "@/requisition/directory";
+import { initialsOf, matchesPerson, personById, type DirectoryPerson } from "@/requisition/directory";
 import { FieldShell } from "./fields";
 
 /**
@@ -627,88 +619,3 @@ export const ReportsToField = ({
   );
 };
 
-/**
- * "Who is being replaced" — a search over the employee register.
- *
- * The value stored is the record's ClickUp task id, not a name, because the
- * wire contract links a replacement to a record. Matching on a typed name was
- * the fragile part this replaces.
- */
-export const EmployeeField = ({
-  fieldKey,
-  value,
-  records,
-  isLoading,
-  isUnavailable,
-  onChange,
-  error,
-}: {
-  fieldKey: FieldKey;
-  value: string;
-  records: EmployeeRecord[];
-  isLoading: boolean;
-  isUnavailable: boolean;
-  onChange: (taskId: string) => void;
-  error?: string;
-}) => {
-  const [query, setQuery] = React.useState("");
-  const selected = employeeByTaskId(records, value);
-  const visible = records.filter((record) => matchesEmployee(record, query));
-
-  return (
-    <FieldShell fieldKey={fieldKey} error={error} labelFor={fieldId(fieldKey)}>
-      {selected ? (
-        <div className="flex items-center gap-3 rounded-md border border-teal-400 bg-teal-50/50 px-3 py-2">
-          <Avatar person={selected} size={9} />
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-body-sm font-medium text-ink-900">
-              {selected.name}
-            </span>
-            {selected.company || selected.email ? (
-              <span className="block truncate text-caption text-steel-600">
-                {selected.company ?? selected.email}
-              </span>
-            ) : null}
-          </span>
-          <button
-            type="button"
-            onClick={() => onChange("")}
-            className="press rounded-sm p-1 text-steel-600 hover:bg-white hover:text-ink-900"
-            aria-label={`Clear ${selected.name}`}
-          >
-            <X className="h-4 w-4" aria-hidden="true" />
-          </button>
-        </div>
-      ) : (
-        <Picker
-          inputId={fieldId(fieldKey)}
-          label={fieldSpec(fieldKey).label}
-          query={query}
-          onQueryChange={setQuery}
-          isLoading={isLoading}
-          isUnavailable={isUnavailable}
-          invalid={!!error}
-          options={visible.map((record) => ({
-            id: record.clickupTaskId,
-            selected: false,
-            choose: () => onChange(record.clickupTaskId),
-            content: (
-              <>
-                <Avatar person={record} />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-ink-900">{record.name}</span>
-                  {record.company || record.email ? (
-                    <span className="block truncate text-caption text-steel-500">
-                      {record.company ?? record.email}
-                    </span>
-                  ) : null}
-                </span>
-                {record.jobTitle ? <Band label={record.jobTitle} /> : null}
-              </>
-            ),
-          }))}
-        />
-      )}
-    </FieldShell>
-  );
-};

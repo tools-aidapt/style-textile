@@ -15,7 +15,6 @@ import {
   completeRows,
   filledItems,
   needsAgencyName,
-  needsReplacingEmployee,
   type FieldKey,
   type RequisitionValues,
   type ResponsibilityRow,
@@ -128,12 +127,9 @@ export const validate = (
     errors.assessmentStagesRequired = "Select at least one assessment stage.";
   }
 
-  // B-9 and B-10 · the conditional fields, required only while they are shown
+  // B-9 · the conditional field, required only while it is shown
   if (needsAgencyName(values) && blank(values.agencyName)) {
     errors.agencyName = "Name the recruitment agency.";
-  }
-  if (needsReplacingEmployee(values) && blank(values.replacingEmployee)) {
-    errors.replacingEmployee = "Select who is being replaced.";
   }
 
   // The wire schema enforces every length below. Checking them here means a
@@ -145,6 +141,17 @@ export const validate = (
   tooLong("location", LIMITS.location.max);
   tooLong("agencyName", LIMITS.agencyName.max);
   tooLong("othersReportingIndirectly", LIMITS.othersReportingIndirectly.max);
+
+  /**
+   * The essay fields carry no upper bound — write as much as the role needs —
+   * but a one-line answer is not a job description, so each one still has a
+   * floor. B-2's job title and B-10's reports-to keep their own ranges above;
+   * this is the six long-form answers the form actually wants an essay from.
+   */
+  const tooShort = (key: FieldKey, min: number) => {
+    const value = String(values[key] ?? "").trim();
+    if (value && value.length < min) errors[key] = `Write at least ${min} characters.`;
+  };
   (
     [
       "jobOverview",
@@ -154,7 +161,7 @@ export const validate = (
       "sixMonthsObjectives",
       "potentialCareerPath",
     ] as FieldKey[]
-  ).forEach((key) => tooLong(key, LIMITS.longText.max));
+  ).forEach((key) => tooShort(key, LIMITS.longText.min));
 
   /**
    * C3 and the skills half of C4 are lists.
@@ -233,23 +240,9 @@ export const advise = (values: RequisitionValues): Advisory[] => {
     });
   }
 
-  if (values.jobOverview.trim() && values.jobOverview.trim().length < 150) {
-    advisories.push({
-      id: "A-2",
-      field: "jobOverview",
-      needsAck: true,
-      message: "This is short for a job description. Two or three sentences works better.",
-    });
-  }
-
-  if (values.sixMonthsObjectives.trim() && values.sixMonthsObjectives.trim().length < 200) {
-    advisories.push({
-      id: "A-3",
-      field: "sixMonthsObjectives",
-      needsAck: true,
-      message: "The new joiner reads this in week one. A little more detail helps them.",
-    });
-  }
+  // A-2 and A-3 used to nudge for more detail on a thin jobOverview or
+  // sixMonthsObjectives; both are now a blocking 300-character floor instead
+  // (see validation's tooShort), so an advisory would only ever repeat it.
 
   if (values.positionType === "Fixed Term Contract" || values.positionType === "Intern") {
     advisories.push({
