@@ -4,6 +4,7 @@ import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import RolePage from "./RolePage";
 import CareersBoardPage from "./CareersBoardPage";
+import ApplyPage from "./ApplyPage";
 
 const task = (id: string, name: string) => ({
   id,
@@ -26,6 +27,7 @@ const renderAt = (path: string) => {
     [
       { path: "/", element: <CareersBoardPage /> },
       { path: "/roles/:positionId", element: <RolePage /> },
+      { path: "/roles/:positionId/apply", element: <ApplyPage /> },
     ],
     { initialEntries: [path] },
   );
@@ -86,6 +88,70 @@ describe("deep-linking to a role", () => {
 
     expect(await screen.findByText(/couldn't load this role/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+  });
+});
+
+describe("what a candidate sees before applying", () => {
+  const described = {
+    id: "jd1",
+    name: "Quality Officer",
+    description: [
+      "## Job Overview",
+      "Owns product quality on the line.",
+      "",
+      "## Key Responsibilities and Duties",
+      "- Run line checks",
+      "",
+      "## Qualifications",
+      "- Degree in food science",
+      "",
+      "## Skills",
+      "- HACCP",
+      "",
+      "## Reporting",
+      "- Reports to: Plant Manager",
+    ].join("\n"),
+    custom_fields: [
+      { name: "Department", type: "short_text", value: "Quality" },
+      { name: "Application Deadline", type: "date", value: "4102433940000" },
+    ],
+  };
+
+  beforeEach(() => {
+    vi.stubGlobal("fetch", respondWith({ tasks: [described] }));
+  });
+
+  it("shows the overview, responsibilities and qualifications, and nothing else", async () => {
+    renderAt("/roles/jd1");
+
+    expect(await screen.findByRole("heading", { name: "Job overview" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Responsibilities" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Qualifications" })).toBeInTheDocument();
+    expect(screen.queryByText("HACCP")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Plant Manager/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Department")).not.toBeInTheDocument();
+  });
+
+  it("shows the application deadline", async () => {
+    renderAt("/roles/jd1");
+
+    expect((await screen.findAllByText("2099-12-31")).length).toBeGreaterThan(0);
+  });
+
+  it("sends Apply now to the form's own page", async () => {
+    renderAt("/roles/jd1");
+
+    const links = await screen.findAllByRole("link", { name: /apply now/i });
+    links.forEach((link) => expect(link).toHaveAttribute("href", "/roles/jd1/apply"));
+  });
+
+  it("opens the application form on the apply page", async () => {
+    renderAt("/roles/jd1/apply");
+
+    expect(
+      await screen.findByRole("heading", { name: "Quality Officer", level: 1 }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
   });
 });
 

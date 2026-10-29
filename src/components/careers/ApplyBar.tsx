@@ -1,20 +1,16 @@
 import * as React from "react";
-import { ArrowDown } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SPRING, useSpringStyle } from "@/lib/motion";
 
 /**
  * A floating way to apply, for the middle of a long role page.
  *
- * The only apply affordance was a jump link in the masthead. On a fully
- * written role that is a couple of thousand pixels above the form, so a
- * candidate who decided halfway down had nothing to act on — the answer to
- * "how do I do the thing this page is for" was scroll back up, or keep
- * scrolling and hope.
- *
- * It earns its place by staying out of the way: it is absent at the top, where
- * the masthead button is still visible, and absent again once the form itself
- * is on screen, where a second button would just be a duplicate.
+ * The masthead's Apply now scrolls away as the candidate reads, and a
+ * candidate who decides halfway down should not have to scroll back up to
+ * act on it. The bar is absent at the top, where the masthead button is still
+ * visible, and appears once it has gone.
  *
  * The bar springs rather than slides. A spring animates from wherever the bar
  * currently is, so scrolling back and forth across the threshold reverses the
@@ -23,40 +19,32 @@ import { SPRING, useSpringStyle } from "@/lib/motion";
 export const ApplyBar = ({
   /** The masthead's own button. While it is visible, this bar is not needed. */
   topAnchorId,
-  /** The form. Once it is in view, the bar has been replaced by the real thing. */
-  formAnchorId,
+  /** The application form's page. */
+  to,
   roleName,
 }: {
   topAnchorId: string;
-  formAnchorId: string;
+  to: string;
   roleName: string;
 }) => {
   const [topVisible, setTopVisible] = React.useState(true);
-  const [formVisible, setFormVisible] = React.useState(false);
 
   React.useEffect(() => {
     const top = document.getElementById(topAnchorId);
-    const form = document.getElementById(formAnchorId);
-    if (!top || !form) return;
+    if (!top || typeof IntersectionObserver === "undefined") return;
 
     // The header is 64px of floating chrome; an anchor sitting under it is not
     // visible to the reader even though it intersects the viewport
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.target === top) setTopVisible(entry.isIntersecting);
-          if (entry.target === form) setFormVisible(entry.isIntersecting);
-        });
-      },
-      { rootMargin: "-72px 0px -80px 0px" },
+      ([entry]) => setTopVisible(entry.isIntersecting),
+      { rootMargin: "-72px 0px 0px 0px" },
     );
 
     observer.observe(top);
-    observer.observe(form);
     return () => observer.disconnect();
-  }, [topAnchorId, formAnchorId]);
+  }, [topAnchorId]);
 
-  const shown = !topVisible && !formVisible;
+  const shown = !topVisible;
 
   const ref = useSpringStyle<HTMLDivElement>(
     shown ? 0 : 1,
@@ -88,11 +76,14 @@ export const ApplyBar = ({
           {roleName}
         </p>
         <span className="hidden h-5 w-px shrink-0 bg-mist-200 sm:block" aria-hidden="true" />
-        <Button asChild className="shrink-0 rounded-pill">
-          <a href={`#${formAnchorId}`}>
-            Apply for this role
-            <ArrowDown className="h-4 w-4" aria-hidden="true" />
-          </a>
+        <Button asChild className="group shrink-0 rounded-pill">
+          <Link to={to}>
+            Apply now
+            <ArrowRight
+              className="h-4 w-4 transition-transform duration-base ease-chevron group-hover:translate-x-1"
+              aria-hidden="true"
+            />
+          </Link>
         </Button>
       </div>
     </div>

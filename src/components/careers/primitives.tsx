@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ChevronRight, type LucideIcon } from "lucide-react";
+import { CalendarClock, ChevronRight, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logo from "@/aidapt/assets/logo/aidapt-logo.png";
 import logoDark from "@/aidapt/assets/logo/aidapt-logo-dark.png";
@@ -96,6 +96,23 @@ export const Chip = ({
   </span>
 );
 
+/**
+ * The application deadline, with how long is left. Fire only when it is the
+ * last day — the one moment the deadline is worth a spark.
+ */
+export const DeadlineChip = ({ date, note }: { date: string; note?: string }) => (
+  <span
+    className={cn(
+      "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-caption font-medium",
+      note === "Closes today" ? "bg-ember-50 text-ember-500" : "bg-mist-50 text-steel-700",
+    )}
+  >
+    <CalendarClock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+    Apply by <span className="font-mono tabular-nums">{date}</span>
+    {note ? <span className="text-steel-500">· {note}</span> : null}
+  </span>
+);
+
 const PROSE_BULLET = /^\s*[•·▪‣]\s*|^\s*[-*–]\s+/;
 
 /**
@@ -114,7 +131,7 @@ export const Prose = ({ children, className }: { children: string; className?: s
     .filter((lines) => lines.length > 0);
 
   return (
-    <div className={cn("measure space-y-4 text-steel-700", className)}>
+    <div className={cn("space-y-4 text-steel-700", className)}>
       {groups.map((lines, i) => {
         const bullets = lines.filter((l) => PROSE_BULLET.test(l));
 

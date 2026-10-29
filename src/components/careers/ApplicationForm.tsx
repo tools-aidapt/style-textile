@@ -500,7 +500,7 @@ export const ApplicationForm = ({
       <div className="surface-sweep-light has-grain border-b border-frost-200 p-5 [--grain-strength:0.35] sm:p-6">
         <div className="relative z-raised">
           <h2 className="text-h4 font-bold tracking-snug text-ink-900">Apply for this role</h2>
-          <p className="measure mt-2 text-body text-steel-600">
+          <p className="mt-2 text-body text-steel-600">
             Seven fields and two files. Everything marked with an asterisk is required.
           </p>
         </div>

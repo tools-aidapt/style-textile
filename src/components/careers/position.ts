@@ -32,6 +32,8 @@ export interface Position {
   /** ISO date the requisition was created, for JobPosting structured data. */
   datePosted?: string;
   location?: string;
+  /** ISO date, the last day applications are accepted. */
+  applicationDeadline?: string;
 }
 
 /** The shape n8n forwards from ClickUp. Only the fields this page reads. */
@@ -59,12 +61,18 @@ export interface ClickUpTask {
   custom_fields?: ClickUpCustomField[];
 }
 
-/** ClickUp epoch-millisecond strings -> an ISO date, or nothing if unparseable. */
-const toIsoDate = (value?: string | number): string | undefined => {
+/** East Africa Time, UTC+3 all year. */
+const NAIROBI_MS = 3 * 60 * 60 * 1000;
+
+/**
+ * ClickUp epoch-millisecond strings -> an ISO date, or nothing if unparseable.
+ * `offsetMs` reads the date in a timezone other than UTC.
+ */
+const toIsoDate = (value?: string | number, offsetMs = 0): string | undefined => {
   if (value === undefined || value === null || value === "") return undefined;
   const ms = typeof value === "number" ? value : Number.parseInt(value, 10);
   if (!Number.isFinite(ms) || ms <= 0) return undefined;
-  return new Date(ms).toISOString().slice(0, 10);
+  return new Date(ms + offsetMs).toISOString().slice(0, 10);
 };
 
 /**
@@ -135,7 +143,27 @@ export const parsePositionFromTask = (task: ClickUpTask): Position => ({
   competitiveAdvantage: getCustomFieldValue(task, "Competitive Advantage"),
   datePosted: toIsoDate(task.date_created),
   location: LOCATION_FIELDS.map((name) => getCustomFieldValue(task, name)).find(Boolean),
+  // Read in Nairobi time, not UTC: a deadline picked in ClickUp is stored at
+  // local midnight, which in UTC is still the evening before
+  applicationDeadline: toIsoDate(getCustomFieldValue(task, "Application Deadline"), NAIROBI_MS),
 });
+
+/**
+ * How long a candidate has left, said the way they would say it. Counted in
+ * whole calendar days against the deadline date, not hours, so "today" means
+ * the last day rather than the last 24 hours.
+ */
+export const deadlineNote = (iso?: string, now: Date = new Date()): string | undefined => {
+  if (!iso) return undefined;
+  const [y, m, d] = iso.split("-").map(Number);
+  const deadline = Date.UTC(y, m - 1, d);
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const days = Math.round((deadline - today) / 86_400_000);
+  if (days < 0) return "Closed";
+  if (days === 0) return "Closes today";
+  if (days === 1) return "1 day left";
+  return `${days} days left`;
+};
 
 // "labels" fields arrive from getCustomFieldValue as a comma-joined string.
 // "N/A" is a real option in ClickUp and is never worth showing a candidate.

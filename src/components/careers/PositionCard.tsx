@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import { Briefcase, Building2, GraduationCap, Hash, Users } from "lucide-react";
 import { rolePath } from "@/lib/seo";
-import { Chip, ForwardLabel } from "./primitives";
-import { splitLabels, type Position } from "./position";
+import { Chip, DeadlineChip, ForwardLabel } from "./primitives";
+import { deadlineNote, splitLabels, type Position } from "./position";
 
 const MAX_BENEFIT_CHIPS = 3;
 
@@ -23,7 +23,7 @@ export const PositionCard = ({ position }: { position: Position }) => {
     <Link
       to={rolePath(position.id)}
       aria-label={`View role: ${position.name}`}
-      className="press ring-outline group relative flex h-full flex-col overflow-hidden rounded-lg border border-mist-200 bg-white p-6 text-left shadow-sm hover:border-teal-200 hover:shadow-md"
+      className="press ring-outline group relative flex h-full flex-col overflow-hidden rounded-lg border border-mist-200 bg-white p-6 text-left shadow-sm transition-[border-color,box-shadow,transform] duration-base ease-forward hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-lg motion-reduce:hover:translate-y-0"
     >
       {/* Water keyline — the hero colour, present on every card, earned on hover */}
       <span
@@ -34,7 +34,9 @@ export const PositionCard = ({ position }: { position: Position }) => {
       <p className="text-overline font-semibold uppercase tracking-wider text-steel-500">
         Job title
       </p>
-      <h3 className="mt-2 text-h5 font-bold tracking-snug text-ink-900">{position.name}</h3>
+      <h3 className="mt-2 text-h5 font-bold tracking-snug text-ink-900 transition-colors duration-fast group-hover:text-teal-700">
+        {position.name}
+      </h3>
 
       {position.company ? (
         <p className="mt-3 flex items-center gap-2 text-body-sm text-steel-600">
@@ -54,7 +56,7 @@ export const PositionCard = ({ position }: { position: Position }) => {
         </div>
       ) : null}
 
-      <dl className="mt-5 space-y-2.5 text-body-sm text-steel-600">
+      <dl className="mb-5 mt-5 space-y-2.5 text-body-sm text-steel-600">
         {position.educationalQualification ? (
           <div className="flex items-center gap-2">
             <GraduationCap className="h-4 w-4 shrink-0 text-steel-300" aria-hidden="true" />
@@ -81,6 +83,15 @@ export const PositionCard = ({ position }: { position: Position }) => {
             </Chip>
           ))}
           {remaining > 0 ? <Chip>{`+${remaining} more`}</Chip> : null}
+        </div>
+      ) : null}
+
+      {position.applicationDeadline ? (
+        <div className="mb-5 mt-1">
+          <DeadlineChip
+            date={position.applicationDeadline}
+            note={deadlineNote(position.applicationDeadline)}
+          />
         </div>
       ) : null}
 

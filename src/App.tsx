@@ -36,6 +36,12 @@ const router = createBrowserRouter([
     errorElement: <RouteError />,
   },
   {
+    // The form, reached from Apply now once the role has been read
+    path: "/roles/:positionId/apply",
+    lazy: async () => ({ Component: (await import("./pages/ApplyPage")).default }),
+    errorElement: <RouteError />,
+  },
+  {
     // Internal. A requesting manager raises a role; not linked from the board.
     path: "/requisitions/new",
     lazy: async () => ({ Component: (await import("./pages/NewRequisitionPage")).default }),

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import {
   ArrowRight,
@@ -158,7 +158,7 @@ const Blocks = ({ blocks, style }: { blocks: Block[]; style: SectionStyle }) => 
     {blocks.map((block, i) => {
       if (block.kind === "para") {
         return (
-          <p key={i} className="max-w-measure-wide text-body-sm leading-relaxed text-steel-700">
+          <p key={i} className="text-body-sm leading-relaxed text-steel-700">
             {block.text}
           </p>
         );
@@ -178,6 +178,121 @@ const Blocks = ({ blocks, style }: { blocks: Block[]; style: SectionStyle }) => 
     })}
   </div>
 );
+
+/**
+ * The three sections a candidate needs before applying, in the order they read
+ * them. Everything else the JD carries — skills, experience, reporting lines,
+ * the internal requisition detail — is for HR and the hiring manager.
+ */
+const CANDIDATE_SECTIONS: { match: RegExp; title: string }[] = [
+  { match: /overview|about|purpose|summary/, title: "Job overview" },
+  { match: /responsib|duti|accountab/, title: "Responsibilities" },
+  { match: /qualificat|educat|academic/, title: "Qualifications" },
+];
+
+/** One open section: a header mark, a title, and its content. No accordion. */
+const SectionCard = ({
+  title,
+  style,
+  children,
+}: {
+  title: string;
+  style: SectionStyle;
+  children: ReactNode;
+}) => {
+  const Icon = style.icon;
+  return (
+    <section className="group relative overflow-hidden rounded-xl border border-mist-200 bg-white shadow-sm transition-[border-color,box-shadow] duration-base ease-forward hover:border-teal-200 hover:shadow-md">
+      {/* The water keyline grows in on hover, as on the board's cards */}
+      <span
+        aria-hidden="true"
+        className="absolute inset-y-0 left-0 w-0.5 bg-teal-400 opacity-0 transition-opacity duration-base ease-forward group-hover:opacity-100"
+      />
+      <div className="flex items-center gap-3 border-b border-mist-100 px-5 py-4 sm:px-6">
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-teal-50 text-teal-600 transition-colors duration-fast group-hover:bg-teal-100">
+          <Icon className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <h2 className="font-display text-h5 font-bold tracking-snug text-ink-900">{title}</h2>
+      </div>
+      <div className="px-5 py-5 sm:px-6">{children}</div>
+    </section>
+  );
+};
+
+/**
+ * What a candidate reads before applying: the job overview, the
+ * responsibilities and the qualifications, each open on the page.
+ *
+ * Falls back to the full description when the text has none of those headings,
+ * so an unstructured JD still shows something rather than an empty page. The
+ * qualification field on the position stands in when the JD has no
+ * qualifications section of its own.
+ */
+export const CandidateDescription = ({
+  description,
+  positionName,
+  qualification,
+}: {
+  description?: string;
+  positionName?: string;
+  qualification?: string;
+}) => {
+  const { intro, sections } = useMemo(
+    () =>
+      description
+        ? groupIntoSections(parseJobDescription(description, positionName))
+        : { intro: [] as Block[], sections: [] },
+    [description, positionName],
+  );
+
+  const picked = CANDIDATE_SECTIONS.map(({ match, title }) => ({
+    title,
+    section: sections.find((s) => match.test(s.title.toLowerCase())),
+  }));
+
+  // No headings it recognises: show the description whole rather than nothing
+  if (description && picked.every((p) => !p.section)) {
+    return <JobDescription description={description} positionName={positionName} />;
+  }
+
+  return (
+    <div className="space-y-5">
+      {picked.map(({ title, section }) => {
+        const style = styleFor(title);
+        // An overview written before the first heading is still the overview
+        const blocks =
+          section?.blocks ?? (title === "Job overview" && intro.length > 0 ? intro : null);
+        if (blocks) {
+          return (
+            <SectionCard key={title} title={title} style={style}>
+              <Blocks blocks={blocks} style={style} />
+            </SectionCard>
+          );
+        }
+        if (title === "Qualifications" && qualification) {
+          return (
+            <SectionCard key={title} title={title} style={style}>
+              <Blocks
+                blocks={[
+                  {
+                    kind: "list",
+                    items: qualification
+                      .split("\n")
+                      .map((line) => line.replace(/^\s*[-*•]\s*/, "").trim())
+                      .filter(Boolean)
+                      .map((text) => ({ text })),
+                  },
+                ]}
+                style={style}
+              />
+            </SectionCard>
+          );
+        }
+        return null;
+      })}
+    </div>
+  );
+};
 
 /**
  * Renders a parsed Job Description as openable sections.

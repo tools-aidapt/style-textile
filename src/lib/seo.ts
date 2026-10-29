@@ -71,6 +71,9 @@ export const useDocumentMeta = ({
 /** The path a role lives at. One place, so links and canonicals cannot drift. */
 export const rolePath = (id: string) => `/roles/${encodeURIComponent(id)}`;
 
+/** The application form for a role, on a page of its own. */
+export const applyPath = (id: string) => `${rolePath(id)}/apply`;
+
 /** A one-line summary for meta description and link previews. */
 export const positionSummary = (position: Position): string => {
   const facts = [position.company, position.department, position.positionType].filter(Boolean);

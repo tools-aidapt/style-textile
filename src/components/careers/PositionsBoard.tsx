@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
-import { Briefcase, RotateCw, Search, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Briefcase, RotateCcw, RotateCw, Search, Users, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -17,6 +18,13 @@ import { matchesQuery, type Position } from "./position";
 
 const ALL = "all";
 
+/** A filter dropdown at rest: bordered like the search beside it, warming on hover. */
+const TRIGGER =
+  "h-11 rounded-lg border-mist-200 bg-white text-body-sm shadow-xs transition-[border-color,background-color,box-shadow] duration-fast hover:border-teal-200 hover:bg-teal-50/40 focus:ring-2 focus:ring-teal-100";
+
+/** A dropdown holding a choice says so — the filter is on. */
+const TRIGGER_ACTIVE = "border-teal-300 bg-teal-50 font-medium text-teal-800";
+
 /**
  * Skeletons, not a spinner — the page keeps its shape while data lands.
  *
@@ -24,7 +32,7 @@ const ALL = "all";
  * footer) so the switch to live content is a fill rather than a reflow.
  */
 const LoadingGrid = () => (
-  <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+  <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4" aria-hidden="true">
     {[0, 1, 2, 3, 4, 5].map((i) => (
       <div
         key={i}
@@ -90,7 +98,23 @@ export const PositionsBoard = ({
     [positions, query, department, positionType],
   );
 
-  const activeFilters = (department !== ALL ? 1 : 0) + (positionType !== ALL ? 1 : 0);
+  // "/" jumps to the search from anywhere on the board, unless already typing
+  const searchRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const typing =
+        target?.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target?.tagName ?? "");
+      if (e.key === "/" && !typing && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const activeFilters =(department !== ALL ? 1 : 0) + (positionType !== ALL ? 1 : 0);
   const isFiltered = query.trim() !== "" || activeFilters > 0;
   const clearFilters = () => {
     setQuery("");
@@ -127,7 +151,7 @@ export const PositionsBoard = ({
         <div className="relative z-raised px-6 py-7 sm:px-10 sm:py-9">
           <Eyebrow className="text-teal-700">Careers at Aidapt</Eyebrow>
           <h1 className="mt-2.5 text-h3 font-extrabold tracking-tight text-ink-900">Open roles</h1>
-          <p className="measure mt-3 text-body text-steel-700">
+          <p className="mt-3 text-body text-steel-700">
             We are the operator&apos;s AI firm. Every role here works on the AI our clients actually
             run on, across MEA and APAC.
           </p>
@@ -146,19 +170,21 @@ export const PositionsBoard = ({
       */}
       {hasResults ? (
         <div className="sticky top-[4.5rem] z-raised mt-6">
-          <div className="chrome-float flex items-center gap-3 rounded-lg p-2.5">
-            <div className="relative min-w-0 flex-1 lg:max-w-sm">
+          <div className="chrome-float rounded-xl p-3">
+          <div className="flex items-center gap-3">
+            <div className="group/search relative min-w-0 flex-1">
               <Search
-                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-steel-500"
+                className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-steel-500 transition-colors duration-fast group-focus-within/search:text-teal-600"
                 aria-hidden="true"
               />
               <Input
+                ref={searchRef}
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search roles"
+                placeholder="Search by title, company or department"
                 aria-label="Search roles"
-                className="border-transparent bg-white/70 pl-10 pr-10"
+                className="h-11 rounded-lg border-mist-200 bg-white pl-10 pr-16 shadow-xs transition-[border-color,box-shadow] duration-fast hover:border-teal-200 focus-visible:border-teal-300 focus-visible:ring-2 focus-visible:ring-teal-100"
               />
               {/* Clearing a search by selecting the text and deleting it is
                   work the control should do */}
@@ -171,7 +197,12 @@ export const PositionsBoard = ({
                 >
                   <X className="h-4 w-4" aria-hidden="true" />
                 </button>
-              ) : null}
+              ) : (
+                // The keyboard way in, said where the eye already is
+                <kbd className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-sm border border-mist-200 bg-mist-50 px-1.5 font-mono text-caption text-steel-500 sm:block">
+                  /
+                </kbd>
+              )}
             </div>
 
             {/* Below lg the same filters live in a drawer, one tap away */}
@@ -190,11 +221,17 @@ export const PositionsBoard = ({
               </div>
             ) : null}
 
-            <div className="hidden items-center gap-3 lg:flex">
+            <div className="hidden items-center gap-2.5 lg:flex">
               {departments.length > 1 ? (
                 <Select value={department} onValueChange={setDepartment}>
-                  <SelectTrigger className="w-48 border-transparent bg-white/70" aria-label="Filter by department">
-                    <SelectValue />
+                  <SelectTrigger
+                    className={cn(TRIGGER, "w-56", department !== ALL && TRIGGER_ACTIVE)}
+                    aria-label="Filter by department"
+                  >
+                    <span className="flex min-w-0 items-center gap-2">
+                      <Users className="h-4 w-4 shrink-0 opacity-70" aria-hidden="true" />
+                      <SelectValue />
+                    </span>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={ALL}>All departments</SelectItem>
@@ -209,8 +246,14 @@ export const PositionsBoard = ({
 
               {positionTypes.length > 1 ? (
                 <Select value={positionType} onValueChange={setPositionType}>
-                  <SelectTrigger className="w-44 border-transparent bg-white/70" aria-label="Filter by position type">
-                    <SelectValue />
+                  <SelectTrigger
+                    className={cn(TRIGGER, "w-52", positionType !== ALL && TRIGGER_ACTIVE)}
+                    aria-label="Filter by position type"
+                  >
+                    <span className="flex min-w-0 items-center gap-2">
+                      <Briefcase className="h-4 w-4 shrink-0 opacity-70" aria-hidden="true" />
+                      <SelectValue />
+                    </span>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={ALL}>All types</SelectItem>
@@ -224,14 +267,18 @@ export const PositionsBoard = ({
               ) : null}
 
               {isFiltered ? (
-                <Button variant="ghost" onClick={clearFilters} className="text-steel-600">
-                  <X className="h-4 w-4" aria-hidden="true" />
-                  Clear
+                <Button variant="ghost" onClick={clearFilters} className="h-11 text-steel-600 hover:text-ink-900">
+                  <RotateCcw className="h-4 w-4" aria-hidden="true" />
+                  Reset
                 </Button>
               ) : null}
             </div>
 
-            <div className="ml-auto hidden pr-2 sm:block">{count}</div>
+            <div className="ml-auto hidden shrink-0 rounded-pill bg-teal-50 px-3.5 py-1.5 sm:block">
+              {count}
+            </div>
+          </div>
+
           </div>
 
           {/* On a phone the bar has no room for the count, so it sits just
@@ -283,7 +330,7 @@ export const PositionsBoard = ({
             }
           />
         ) : (
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {visible.map((position) => (
               <PositionCard key={position.id} position={position} />
             ))}

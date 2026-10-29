@@ -38,7 +38,12 @@ export const PageShell = ({
   children,
   mainClassName,
 }: {
-  /** The requisition form earns the full width; everything else is 1200. */
+  /**
+   * Kept so callers still compile, but every view now spans the full width:
+   * the header, the page and the footer line up edge to edge on any screen.
+   * Reading measure is held by the text itself (`measure`, `max-w-[40ch]`),
+   * not by a centred column.
+   */
   width?: "default" | "wide" | "full";
   crumbs?: Crumb[];
   /** Right-hand slot: the section label, or an action. */
@@ -46,8 +51,8 @@ export const PageShell = ({
   children: React.ReactNode;
   mainClassName?: string;
 }) => {
-  const container =
-    width === "full" ? "" : width === "wide" ? "max-w-container-wide" : "max-w-container";
+  void width;
+  const container = "";
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
