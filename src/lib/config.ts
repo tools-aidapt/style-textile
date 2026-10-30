@@ -19,7 +19,7 @@ const read = (value: string | undefined): string => (value ?? "").trim();
  * written out here either.
  */
 export const N8N_HOST =
-  read(import.meta.env.VITE_N8N_BASE_URL) || "https://aidapt.app.n8n.cloud";
+  read(import.meta.env.VITE_N8N_BASE_URL) || "https://kenafric.app.n8n.cloud";
 
 export const N8N_BASE = `${N8N_HOST}/webhook`;
 

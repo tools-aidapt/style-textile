@@ -33,17 +33,17 @@ describe("the KPI endpoints", () => {
    * endpoints rather than post to `undefined`.
    */
   it("fall back to the live webhooks when nothing is configured", () => {
-    expect(N8N_HOST).toBe("https://aidapt.app.n8n.cloud");
-    expect(N8N_BASE).toBe("https://aidapt.app.n8n.cloud/webhook");
+    expect(N8N_HOST).toBe("https://kenafric.app.n8n.cloud");
+    expect(N8N_BASE).toBe("https://kenafric.app.n8n.cloud/webhook");
 
     expect(config.kpiContextUrl).toBe(
-      "https://aidapt.app.n8n.cloud/webhook/kenafric-kpi-context",
+      "https://kenafric.app.n8n.cloud/webhook/kenafric-kpi-context",
     );
     expect(config.kpiDefineSubmitUrl).toBe(
-      "https://aidapt.app.n8n.cloud/webhook/kenafric-wf18b",
+      "https://kenafric.app.n8n.cloud/webhook/kenafric-wf18b",
     );
     expect(config.kpiReviewSubmitUrl).toBe(
-      "https://aidapt.app.n8n.cloud/webhook/kenafric-wf26b",
+      "https://kenafric.app.n8n.cloud/webhook/kenafric-wf26b",
     );
   });
 

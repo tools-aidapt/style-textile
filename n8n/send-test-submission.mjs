@@ -7,7 +7,7 @@
  * item with one JSON string and N binaries.
  *
  *   node n8n/send-test-submission.mjs \
- *     --url https://aidapt.app.n8n.cloud/webhook/onboarding-form-submission \
+ *     --url https://kenafric.app.n8n.cloud/webhook/onboarding-form-submission \
  *     --employee 869eykhcg \
  *     --name "Amina Otieno" \
  *     --docs national-id=./id.pdf,kra-pin=./pin.pdf,passport-photo=./face.jpg

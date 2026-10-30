@@ -333,7 +333,7 @@ preview build with nothing set still works instead of posting to `undefined`.
 
 | Variable | Production | Local | What it is |
 |---|---|---|---|
-| `VITE_N8N_BASE_URL` | `https://aidapt.app.n8n.cloud` | same | The n8n host. No trailing slash needed — one is stripped |
+| `VITE_N8N_BASE_URL` | `https://kenafric.app.n8n.cloud` | same | The n8n host. No trailing slash needed — one is stripped |
 | `VITE_KPI_CONTEXT_PATH` | `/webhook/kenafric-kpi-context` | same | Serves **both** forms: verifies the token, returns the employee and, for a review, the agreed KPI set |
 | `VITE_KPI_DEFINE_PATH` | `/webhook/kenafric-wf18b` | same | WF-18b — takes a new KPI set |
 | `VITE_KPI_REVIEW_PATH` | `/webhook/kenafric-wf26b` | same | WF-26b — takes a mid or final review |
