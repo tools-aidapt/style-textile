@@ -238,6 +238,17 @@
         },
         "othersReportingIndirectly": {
           "$ref": "#/$defs/nullableText2000"
+        },
+        "reportingToEmail": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "format": "email"
+            }
+          ]
         }
       }
     },
@@ -391,7 +402,10 @@
         },
         "applicationDeadline": {
           "description": "Last day applications are accepted, YYYY-MM-DD. Added later in 1.2: the form requires it, the server accepts its absence from older tabs. Written to the ClickUp Application Deadline date field at 23:59 Nairobi time.",
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
         }
       }
@@ -488,7 +502,10 @@
       ],
       "properties": {
         "clickupUserId": {
-          "type": "integer"
+          "type": [
+            "integer",
+            "null"
+          ]
         },
         "email": {
           "oneOf": [

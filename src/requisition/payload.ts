@@ -105,6 +105,9 @@ export const buildPayload = ({
     ? userRef(manager)
     : { clickupUserId: null, email: null, displayName: null };
 
+  // The line manager is stored by name; their email comes from the same list
+  const reportsTo = users.find((person) => person.name === values.reportingTo.trim());
+
   const panel = users
     .filter((person) => values.interviewPanel.includes(person.key))
     .map(userRef);
@@ -142,6 +145,7 @@ export const buildPayload = ({
     reporting: {
       requestingManager: managerRef,
       reportingTo: values.reportingTo.trim(),
+      reportingToEmail: orNull(reportsTo?.email),
       othersReportingIndirectly: orNull(values.othersReportingIndirectly),
     },
     jobDescription: {
