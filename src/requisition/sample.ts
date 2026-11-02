@@ -88,7 +88,7 @@ export const sampleValues = ({
   // without one is not a usable choice
   const manager = employees.find((person) => person.email) ?? employees[0];
   const reportsTo = users[0];
-  const panel = users.slice(0, 2).map((person) => person.clickupUserId);
+  const panel = users.slice(0, 2).map((person) => person.key);
 
   const multi = (key: string, count: number, avoid: string[] = []): string[] =>
     optionsFor(schema, key)
@@ -119,7 +119,7 @@ export const sampleValues = ({
     agencyName: "",
 
     // ---- B · Reporting lines ------------------------------------------
-    requestingManager: manager?.clickupUserId ?? null,
+    requestingManager: manager?.key ?? null,
     reportingTo: reportsTo?.name ?? "",
     othersReportingIndirectly: "Quality analysts, line QC checkers, laboratory assistants",
 
