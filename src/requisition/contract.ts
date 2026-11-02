@@ -70,7 +70,8 @@ export const LIMITS = {
 } as const;
 
 export interface UserRef {
-  clickupUserId: number;
+  /** `null` for a contact with no ClickUp account; n8n records them by name. */
+  clickupUserId: number | null;
   email: string | null;
   displayName: string | null;
 }

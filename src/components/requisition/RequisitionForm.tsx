@@ -31,7 +31,7 @@ import {
   writeDraft,
 } from "@/requisition/draft";
 import { useRequisitionSubmit } from "@/hooks/useRequisitionSubmit";
-import { useEmployees, useUsers } from "@/hooks/useDirectory";
+import { useEmployees } from "@/hooks/useDirectory";
 import { isPrefillEnabled, sampleValues } from "@/requisition/sample";
 import {
   CheckboxField,
@@ -188,10 +188,10 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
   const { state, submit, reset } = useRequisitionSubmit();
   const topRef = React.useRef<HTMLDivElement>(null);
 
-  // The employee register says who can raise a requisition, the user list
-  // says who can be reported to or sit on a panel
+  // One directory for all three pickers: the Internal Contact Database, so
+  // the requesting manager, the line manager and the panel offer the same
+  // people, with or without a ClickUp account
   const employees = useEmployees();
-  const users = useUsers();
 
   // ---- draft ------------------------------------------------------------
   React.useEffect(() => {
@@ -201,7 +201,7 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
       // browser used. Replace with the signed-in identity once SSO is wired.
       try {
         const last = Number(window.localStorage.getItem(LAST_MANAGER_KEY));
-        if (Number.isFinite(last) && last > 0) {
+        if (Number.isInteger(last) && last !== 0) {
           setValues((current) => ({ ...current, requestingManager: last }));
         }
       } catch {
@@ -356,15 +356,15 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
    * an id the directory has never heard of is not a filled field, it is a
    * broken one.
    */
-  const directoriesReady = employees.people.length > 0 && users.people.length > 0;
+  const directoriesReady = employees.people.length > 0;
   const canPrefill = isPrefillEnabled() && !isSubmitted;
 
   const prefill = React.useCallback(() => {
-    setValues(sampleValues({ schema, employees: employees.people, users: users.people }));
+    setValues(sampleValues({ schema, employees: employees.people, users: employees.people }));
     // Everything is answered, so every field is fair game for an error
     setTouched(new Set(FIELDS.map((field) => field.key)));
     setServerIssues([]);
-  }, [schema, employees.people, users.people]);
+  }, [schema, employees.people]);
 
   /**
    * `?prefill=1` fills on arrival, so a filled form can be linked to rather
@@ -388,7 +388,7 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
       buildPayload({
         values,
         employees: employees.people,
-        users: users.people,
+        users: employees.people,
         submissionId: submissionId.current,
         submittedAt: new Date().toISOString(),
         advisoriesAcknowledged: ack,
@@ -688,9 +688,9 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
                 <ReportsToField
                   fieldKey="reportingTo"
                   value={values.reportingTo}
-                  people={users.people}
-                  isLoading={users.isLoading}
-                  isUnavailable={users.isUnavailable}
+                  people={employees.people}
+                  isLoading={employees.isLoading}
+                  isUnavailable={employees.isUnavailable}
                   onChange={setAndTouch("reportingTo")}
                   error={visible.reportingTo}
                 />
@@ -873,9 +873,9 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
                   <PeopleField
                     fieldKey="interviewPanel"
                     values={values.interviewPanel}
-                    people={users.people}
-                    isLoading={users.isLoading}
-                    isUnavailable={users.isUnavailable}
+                    people={employees.people}
+                    isLoading={employees.isLoading}
+                    isUnavailable={employees.isUnavailable}
                     onChange={setAndTouch("interviewPanel")}
                     error={visible.interviewPanel}
                   />
@@ -899,7 +899,7 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
               <RequisitionReview
                 values={values}
                 employees={employees.people}
-                users={users.people}
+                users={employees.people}
                 errors={attempted ? invalidFieldErrors(invalidFields, errors) : {}}
                 onEditSection={editSection}
                 onEditField={editField}

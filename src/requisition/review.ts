@@ -35,7 +35,7 @@ export const describeValue = (
 
   if (key === "interviewPanel") {
     return people.users
-      .filter((person) => values.interviewPanel.includes(person.clickupUserId))
+      .filter((person) => values.interviewPanel.includes(person.key))
       .map((person) => person.name)
       .join(", ");
   }

@@ -63,6 +63,7 @@ describe("parsePeople", () => {
     expect(people).toEqual([
       {
         clickupUserId: 1001,
+        key: 1001,
         name: "Asha Wanjiru",
         email: "asha@kenafric.test",
         avatarUrl: "https://avatars.test/1.png",
@@ -109,6 +110,7 @@ describe("parsePeople", () => {
 
     expect(people[0]).toEqual({
       clickupUserId: 1003,
+      key: 1003,
       name: "Catherine Njeri",
       email: "cat@kenafric.test",
       avatarUrl: "https://avatars.test/3.png",
@@ -121,14 +123,30 @@ describe("parsePeople", () => {
     expect(parsePeople({ id: 1004, name: "Daniel Kiprono" })).toHaveLength(1);
   });
 
-  it("drops anyone with no numeric ClickUp id", () => {
-    // A person the wire cannot name is worse than a shorter list
-    const people = parsePeople([
-      { id: "not-a-number", name: "Nobody" },
-      { name: "Also nobody" },
+  it("keeps someone with no ClickUp id, under a stable negative key", () => {
+    // They are on the contact list, so the manager must be able to pick them
+    const rows = [
+      { clickup_user_id: null, name: "Zawadi Akinyi", email: "Zawadi@Kenafric.test" },
+      { id: "not-a-number", name: "Nobody", email: "nobody@kenafric.test" },
       { id: 1005, name: "Esther Mutiso" },
-    ]);
-    expect(people.map((p) => p.name)).toEqual(["Esther Mutiso"]);
+    ];
+    const people = parsePeople(rows);
+
+    // Alphabetical, mapped and unmapped together
+    expect(people.map((p) => p.name)).toEqual(["Esther Mutiso", "Nobody", "Zawadi Akinyi"]);
+
+    const [esther, nobody, zawadi] = people;
+    expect(esther).toMatchObject({ clickupUserId: 1005, key: 1005 });
+    expect(zawadi.clickupUserId).toBeNull();
+    expect(zawadi.key).toBeLessThan(0);
+    expect(nobody.key).not.toBe(zawadi.key);
+
+    // The same person parses to the same key on the next load, whatever the
+    // email's case — a saved draft names them by it
+    expect(parsePeople([rows[0]])[0].key).toBe(zawadi.key);
+    expect(parsePeople([{ name: "Zawadi Akinyi", email: "zawadi@kenafric.test" }])[0].key).toBe(
+      zawadi.key,
+    );
   });
 
   it("ignores an avatar that is not an absolute http URL", () => {
@@ -170,6 +188,7 @@ describe("people helpers", () => {
   it("searches name, email and job title together", () => {
     const person = {
       clickupUserId: 1,
+      key: 1,
       name: "Asha Wanjiru",
       email: "asha@kenafric.test",
       avatarUrl: null,

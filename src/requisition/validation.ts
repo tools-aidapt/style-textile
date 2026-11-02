@@ -210,7 +210,7 @@ export const validate = (
   const manager = personById(employees, values.requestingManager);
   if (manager && !manager.email) {
     errors.requestingManager =
-      "That account has no email address in ClickUp. Pick another manager, or ask HR to add one.";
+      "That person has no email address on the contact list. Pick another manager, or ask HR to add one.";
   }
 
   // B-11 · a restored draft can outlive the option it names

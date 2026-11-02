@@ -1,4 +1,5 @@
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { Loader2, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -105,9 +106,17 @@ const PREFERRED_HEIGHT = 288;
 /** Breathing room between the list and the edge of the window. */
 const VIEWPORT_GUTTER = 16;
 
+/** Space between the field and its list. */
+const LIST_GAP = 4;
+
 interface Placement {
   side: "bottom" | "top";
   maxHeight: number;
+  /** Viewport coordinates: the list is fixed-positioned under (or over) the field. */
+  left: number;
+  width: number;
+  top?: number;
+  bottom?: number;
 }
 
 /** One choosable person, in the shape the combobox needs. */
@@ -163,6 +172,8 @@ const Picker = ({
   const [placement, setPlacement] = React.useState<Placement>({
     side: "bottom",
     maxHeight: PREFERRED_HEIGHT,
+    left: 0,
+    width: 0,
   });
   const container = React.useRef<HTMLDivElement>(null);
   const list = React.useRef<HTMLDivElement>(null);
@@ -181,8 +192,15 @@ const Picker = ({
    *
    * Measured on every scroll and resize while open, because the anchor moves
    * with the page and a list pinned to a stale position drifts off its field.
+   *
+   * The list is portalled to the body and positioned from these measurements.
+   * Inside the field's own box it was cut off by the form's scroll region and
+   * ran under the Back/Continue footer, so a list opened near the bottom of
+   * the step showed a row and a half.
    */
-  React.useEffect(() => {
+  // A layout effect: the list is fixed-positioned from these numbers, so an
+  // effect that ran after paint would show it for one frame at the top-left
+  React.useLayoutEffect(() => {
     if (!open) return;
 
     const measure = () => {
@@ -195,6 +213,12 @@ const Picker = ({
       setPlacement({
         side,
         maxHeight: Math.max(MIN_HEIGHT, Math.min(PREFERRED_HEIGHT, room)),
+        left: box.left,
+        width: box.width,
+        // Anchored to the near edge, so an upward list grows away from the field
+        ...(side === "bottom"
+          ? { top: box.bottom + LIST_GAP }
+          : { bottom: window.innerHeight - box.top + LIST_GAP }),
       });
     };
 
@@ -223,7 +247,8 @@ const Picker = ({
     if (!open) return;
 
     const outside = (event: Event) => {
-      if (!container.current?.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      if (!container.current?.contains(target) && !list.current?.contains(target)) setOpen(false);
     };
     document.addEventListener("pointerdown", outside);
     document.addEventListener("focusin", outside);
@@ -301,46 +326,54 @@ const Picker = ({
         className="pl-9"
       />
 
-      {open ? (
-        <div
-          ref={list}
-          id={listId}
-          role="listbox"
-          aria-label={label}
-          aria-multiselectable={multiple || undefined}
-          style={{ maxHeight: placement.maxHeight }}
-          className={cn(
-            "absolute left-0 right-0 z-dropdown overflow-y-auto rounded-lg border border-mist-200 bg-white shadow-lg [animation-duration:var(--dur-fast)] [animation-timing-function:var(--ease-spring)] animate-in fade-in-0",
-            // Enter from the edge it is attached to, so the list reads as
-            // coming out of the field rather than arriving from nowhere
-            placement.side === "bottom"
-              ? "top-full mt-1 slide-in-from-top-1"
-              : "bottom-full mb-1 slide-in-from-bottom-1",
-          )}
-        >
-          <DirectoryState
-            isLoading={isLoading}
-            isUnavailable={isUnavailable}
-            empty={options.length === 0}
-          />
-          {options.map((option, index) => (
-            <button
-              key={option.id}
-              id={`${inputId}-opt-${index}`}
-              type="button"
-              role="option"
-              aria-selected={option.selected}
-              data-active={index === active || undefined}
-              className={row(option.selected, index === active)}
-              onMouseDown={(event) => event.preventDefault()}
-              onPointerEnter={() => setActive(index)}
-              onClick={() => choose(option)}
+      {open
+        ? createPortal(
+            <div
+              ref={list}
+              id={listId}
+              role="listbox"
+              aria-label={label}
+              aria-multiselectable={multiple || undefined}
+              style={{
+                position: "fixed",
+                left: placement.left,
+                width: placement.width,
+                top: placement.top,
+                bottom: placement.bottom,
+                maxHeight: placement.maxHeight,
+              }}
+              className={cn(
+                "z-dropdown overflow-y-auto rounded-lg border border-mist-200 bg-white shadow-lg [animation-duration:var(--dur-fast)] [animation-timing-function:var(--ease-spring)] animate-in fade-in-0",
+                // Enter from the edge it is attached to, so the list reads as
+                // coming out of the field rather than arriving from nowhere
+                placement.side === "bottom" ? "slide-in-from-top-1" : "slide-in-from-bottom-1",
+              )}
             >
-              {option.content}
-            </button>
-          ))}
-        </div>
-      ) : null}
+              <DirectoryState
+                isLoading={isLoading}
+                isUnavailable={isUnavailable}
+                empty={options.length === 0}
+              />
+              {options.map((option, index) => (
+                <button
+                  key={option.id}
+                  id={`${inputId}-opt-${index}`}
+                  type="button"
+                  role="option"
+                  aria-selected={option.selected}
+                  data-active={index === active || undefined}
+                  className={row(option.selected, index === active)}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onPointerEnter={() => setActive(index)}
+                  onClick={() => choose(option)}
+                >
+                  {option.content}
+                </button>
+              ))}
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 };
@@ -430,9 +463,9 @@ export const PersonField = ({
           isUnavailable={isUnavailable}
           invalid={!!error}
           options={visible.map((person) => ({
-            id: String(person.clickupUserId),
+            id: String(person.key),
             selected: false,
-            choose: () => onChange(person.clickupUserId),
+            choose: () => onChange(person.key),
             content: (
               <>
                 <Avatar person={person} />
@@ -462,7 +495,7 @@ export const PeopleField = ({
 }) => {
   const [query, setQuery] = React.useState("");
   const visible = people.filter((person) => matchesPerson(person, query));
-  const chosen = people.filter((person) => values.includes(person.clickupUserId));
+  const chosen = people.filter((person) => values.includes(person.key));
 
   const toggle = (id: number) =>
     onChange(values.includes(id) ? values.filter((v) => v !== id) : [...values, id]);
@@ -480,11 +513,11 @@ export const PeopleField = ({
           invalid={!!error}
           multiple
           options={visible.map((person) => {
-            const selected = values.includes(person.clickupUserId);
+            const selected = values.includes(person.key);
             return {
-              id: String(person.clickupUserId),
+              id: String(person.key),
               selected,
-              choose: () => toggle(person.clickupUserId),
+              choose: () => toggle(person.key),
               content: (
                 <>
                   <Avatar person={person} />
@@ -503,10 +536,10 @@ export const PeopleField = ({
         {chosen.length > 0 ? (
           <ul className="flex flex-wrap gap-2">
             {chosen.map((person) => (
-              <li key={person.clickupUserId}>
+              <li key={person.key}>
                 <button
                   type="button"
-                  onClick={() => toggle(person.clickupUserId)}
+                  onClick={() => toggle(person.key)}
                   className="press inline-flex items-center gap-1.5 rounded-pill bg-teal-50 py-1 pl-1 pr-3 text-caption font-medium text-teal-700 hover:bg-teal-100"
                 >
                   <Avatar person={person} />
@@ -603,7 +636,7 @@ export const ReportsToField = ({
           isUnavailable={isUnavailable}
           invalid={!!error}
           options={visible.map((person) => ({
-            id: String(person.clickupUserId),
+            id: String(person.key),
             selected: false,
             choose: () => onChange(person.name),
             content: (

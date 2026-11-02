@@ -103,10 +103,10 @@ export const buildPayload = ({
   const manager = personById(employees, values.requestingManager);
   const managerRef: UserRef = manager
     ? userRef(manager)
-    : { clickupUserId: 0, email: null, displayName: null };
+    : { clickupUserId: null, email: null, displayName: null };
 
   const panel = users
-    .filter((person) => values.interviewPanel.includes(person.clickupUserId))
+    .filter((person) => values.interviewPanel.includes(person.key))
     .map(userRef);
 
   return {

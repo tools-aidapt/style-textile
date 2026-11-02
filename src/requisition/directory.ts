@@ -14,8 +14,19 @@
  */
 
 export interface DirectoryPerson {
-  /** ClickUp user id. The wire contract wants an integer. */
-  clickupUserId: number;
+  /**
+   * ClickUp user id, or `null` for someone on the contact list who has no
+   * ClickUp seat. They are still offered — the manager picking them knows who
+   * they mean — but there is no user to assign, so n8n records them by name.
+   */
+  clickupUserId: number | null;
+  /**
+   * What the form stores and the pickers key on. The ClickUp user id where
+   * there is one; otherwise a negative number derived from the email, so it
+   * can never collide with an id and survives a reload (a draft names people
+   * by this value).
+   */
+  key: number;
   name: string;
   email: string | null;
   /** Absolute URL. Rendered as an avatar, with initials as the fallback. */
@@ -80,25 +91,36 @@ const toPerson = (raw: unknown): DirectoryPerson | null => {
   if (!raw || typeof raw !== "object") return null;
   const row = flatten(raw as Row);
 
-  const id = Number(pick(row, ID_KEYS));
-  // A person with no numeric ClickUp id cannot be put on the wire, so dropping
-  // them beats submitting a requisition that names nobody
-  if (!Number.isFinite(id) || id <= 0) return null;
-
   const name = pick(row, NAME_KEYS) ?? firstLast(row) ?? pick(row, EMAIL_KEYS);
   if (!name) return null;
+
+  const email = pick(row, EMAIL_KEYS);
+  const id = Number(pick(row, ID_KEYS));
+  // No ClickUp id is not a reason to hide someone: the contact list is the
+  // register of who works here, and a requisition can still name them
+  const clickupUserId = Number.isInteger(id) && id > 0 ? id : null;
 
   const avatar = pick(row, AVATAR_KEYS);
 
   return {
-    clickupUserId: id,
+    clickupUserId,
+    key: clickupUserId ?? unmappedKey(email ?? name),
     name,
-    email: pick(row, EMAIL_KEYS),
+    email,
     // A relative path or a data URI is not something we can render from here
     avatarUrl: absoluteAvatar(avatar),
     initials: pick(row, INITIALS_KEYS),
     jobTitle: pick(row, TITLE_KEYS),
   };
+};
+
+/** A stable negative integer for someone with no ClickUp id (FNV-1a, 31 bits). */
+const unmappedKey = (identity: string): number => {
+  let hash = 0x811c9dc5;
+  for (const char of identity.trim().toLowerCase()) {
+    hash = Math.imul(hash ^ char.charCodeAt(0), 0x01000193);
+  }
+  return -((hash >>> 0) % 0x7fffffff || 1);
 };
 
 const absoluteAvatar = (value: string | null): string | null =>
@@ -126,7 +148,7 @@ export const parsePeople = (response: unknown): DirectoryPerson[] => {
   // Two entries for one person is a directory problem, not the manager's
   const seen = new Set<number>();
   return people
-    .filter((person) => !seen.has(person.clickupUserId) && seen.add(person.clickupUserId))
+    .filter((person) => !seen.has(person.key) && seen.add(person.key))
     .sort((a, b) => a.name.localeCompare(b.name));
 };
 
@@ -144,7 +166,7 @@ export const personById = (
   people: DirectoryPerson[],
   id: number | null,
 ): DirectoryPerson | undefined =>
-  id === null ? undefined : people.find((person) => person.clickupUserId === id);
+  id === null ? undefined : people.find((person) => person.key === id);
 
 /** Name, email and job title all searched together — people recall any of them. */
 export const matchesPerson = (person: DirectoryPerson, query: string): boolean => {
