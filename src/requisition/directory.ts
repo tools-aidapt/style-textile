@@ -104,7 +104,9 @@ const toPerson = (raw: unknown): DirectoryPerson | null => {
 
   return {
     clickupUserId,
-    key: clickupUserId ?? unmappedKey(email ?? name),
+    // Name and email together: test personas, and some real shared mailboxes,
+    // reuse one address, and email alone would merge them into one person
+    key: clickupUserId ?? unmappedKey(`${name}|${email ?? ""}`),
     name,
     email,
     // A relative path or a data URI is not something we can render from here

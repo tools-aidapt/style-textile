@@ -149,6 +149,16 @@ describe("parsePeople", () => {
     );
   });
 
+  it("keeps contacts that share one email address apart", () => {
+    const people = parsePeople([
+      { name: "Test + HR", email: "shared@kenafric.test" },
+      { name: "Test + Director", email: "shared@kenafric.test" },
+      { name: "Test + Manager", email: "shared@kenafric.test" },
+    ]);
+    expect(people.map((p) => p.name)).toEqual(["Test + Director", "Test + HR", "Test + Manager"]);
+    expect(new Set(people.map((p) => p.key)).size).toBe(3);
+  });
+
   it("ignores an avatar that is not an absolute http URL", () => {
     const [person] = parsePeople([{ id: 1, name: "A", avatar: "/relative/path.png" }]);
     expect(person.avatarUrl).toBeNull();
