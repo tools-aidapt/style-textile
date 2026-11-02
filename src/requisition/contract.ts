@@ -116,6 +116,13 @@ export interface RequisitionSubmission {
   reporting: {
     requestingManager: UserRef;
     reportingTo: string;
+    /**
+     * The line manager's email from the contact list, so they can be reached
+     * even with no ClickUp account. Written to the Reporting To Email field.
+     * Optional on the wire, like `applicationDeadline`: a tab opened before it
+     * shipped omits it and still submits.
+     */
+    reportingToEmail: string | null;
     othersReportingIndirectly: string | null;
   };
   jobDescription: {

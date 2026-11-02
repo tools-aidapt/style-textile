@@ -132,6 +132,31 @@ describe("wire conformance", () => {
     ]);
   });
 
+  it("sends the line manager's email, and null for someone with no email", () => {
+    // values() names "Regional Sales Manager" in reportingTo; point it at a real contact
+    expect(build({ reportingTo: "Brian Otieno" }).reporting.reportingToEmail).toBe(
+      "brian@kenafric.test",
+    );
+    expect(build({ reportingTo: "Someone not listed" }).reporting.reportingToEmail).toBeNull();
+    expect(conforms(build({ reportingTo: "Brian Otieno" }))).toEqual([]);
+  });
+
+  it("sends a contact with no ClickUp account as a user ref with a null id", () => {
+    const noAccount = { ...people[0], clickupUserId: null, key: -7 };
+    const payload = buildPayload({
+      values: values({ requestingManager: -7, interviewPanel: [-7] }),
+      employees: [noAccount],
+      users: [noAccount],
+      submissionId: "3f7c1b62-4d0a-4a1e-9b55-2c8e0a1d9f34",
+      submittedAt: "2026-08-25T06:14:22.000Z",
+      advisoriesAcknowledged: [],
+    });
+    expect(payload.reporting.requestingManager.clickupUserId).toBeNull();
+    expect(payload.reporting.requestingManager.email).toBe("asha@kenafric.test");
+    expect(payload.hiringProcess.interviewPanel[0].clickupUserId).toBeNull();
+    expect(conforms(payload)).toEqual([]);
+  });
+
   it("takes the submitter from the requesting manager until SSO is wired", () => {
     expect(build().submitter).toEqual({
       email: "asha@kenafric.test",
