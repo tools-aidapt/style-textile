@@ -14,7 +14,12 @@ import {
   type UserRef,
 } from "./contract";
 import { submittableRows } from "./validation";
-import { filledItems, type RequisitionValues, type ResponsibilityRow } from "./form";
+import {
+  filledItems,
+  needsReplacementDetails,
+  type RequisitionValues,
+  type ResponsibilityRow,
+} from "./form";
 import { personById, type DirectoryPerson } from "./directory";
 
 /**
@@ -136,6 +141,13 @@ export const buildPayload = ({
       newOrReplacement: values.newOrReplacement,
       // The form no longer asks who is being replaced — see contract.ts v1.2
       replacingEmployee: null,
+      // Typed in instead, and only sent while the answer above is Replacement
+      replacedEmployeeName: needsReplacementDetails(values)
+        ? orNull(values.replacedEmployeeName)
+        : null,
+      replacedEmployeePosition: needsReplacementDetails(values)
+        ? orNull(values.replacedEmployeePosition)
+        : null,
       totalSubPositions: Number(values.totalSubPositions),
       recruitmentType: values.recruitmentType,
       agencyName: values.recruitmentType.includes("Recruitment Agency")
@@ -168,7 +180,8 @@ export const buildPayload = ({
     hiringProcess: {
       assessmentStagesRequired: values.assessmentStagesRequired,
       interviewPanel: panel,
-      applicationDeadline: orNull(values.applicationDeadline),
+      // HR Responsible sets the deadline in ClickUp — see contract.ts v1.2
+      applicationDeadline: null,
     },
     advisoriesAcknowledged,
   };
@@ -187,6 +200,8 @@ export const FIELD_BY_PATH: Record<string, keyof RequisitionValues> = {
   "position.location": "location",
   "position.positionType": "positionType",
   "position.newOrReplacement": "newOrReplacement",
+  "position.replacedEmployeeName": "replacedEmployeeName",
+  "position.replacedEmployeePosition": "replacedEmployeePosition",
   "position.totalSubPositions": "totalSubPositions",
   "position.recruitmentType": "recruitmentType",
   "position.agencyName": "agencyName",
@@ -205,7 +220,6 @@ export const FIELD_BY_PATH: Record<string, keyof RequisitionValues> = {
   "provisioning.positionRequirements": "positionRequirements",
   "hiringProcess.assessmentStagesRequired": "assessmentStagesRequired",
   "hiringProcess.interviewPanel": "interviewPanel",
-  "hiringProcess.applicationDeadline": "applicationDeadline",
 };
 
 /** `position.recruitmentType[1]` and `position.recruitmentType` are the same field. */

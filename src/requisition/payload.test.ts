@@ -60,7 +60,6 @@ const values = (overrides: Partial<RequisitionValues> = {}): RequisitionValues =
   positionRequirements: ["Laptop/Computer/Connectivity", "Pick-up"],
   assessmentStagesRequired: ["Telephone"],
   interviewPanel: [1002],
-  applicationDeadline: "2099-12-31",
   ...overrides,
 });
 
@@ -103,6 +102,27 @@ describe("wire conformance", () => {
     const payload = build({ newOrReplacement: "Replacement" });
     expect(conforms(payload)).toEqual([]);
     expect(payload.position.replacingEmployee).toBeNull();
+  });
+
+  it("sends who is being replaced, typed in, for a replacement", () => {
+    const payload = build({
+      newOrReplacement: "Replacement",
+      replacedEmployeeName: "  Jane Wanjiru ",
+      replacedEmployeePosition: "Sales Representative",
+    });
+    expect(conforms(payload)).toEqual([]);
+    expect(payload.position.replacedEmployeeName).toBe("Jane Wanjiru");
+    expect(payload.position.replacedEmployeePosition).toBe("Sales Representative");
+  });
+
+  it("drops the replacement answers on a new position", () => {
+    const payload = build({ replacedEmployeeName: "Jane Wanjiru", replacedEmployeePosition: "Clerk" });
+    expect(payload.position.replacedEmployeeName).toBeNull();
+    expect(payload.position.replacedEmployeePosition).toBeNull();
+  });
+
+  it("never sends an application deadline — HR sets it in ClickUp", () => {
+    expect(build().hiringProcess.applicationDeadline).toBeNull();
   });
 
   it("carries the contract preamble", () => {

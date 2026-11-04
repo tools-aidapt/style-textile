@@ -55,6 +55,9 @@ export interface RequisitionValues {
   location: string;
   positionType: string;
   newOrReplacement: string;
+  /** Who is being replaced, typed in. Only asked when this is a replacement. */
+  replacedEmployeeName: string;
+  replacedEmployeePosition: string;
   totalSubPositions: string;
   recruitmentType: string[];
   agencyName: string;
@@ -78,8 +81,6 @@ export interface RequisitionValues {
   // F · Hiring process
   assessmentStagesRequired: string[];
   interviewPanel: number[];
-  /** YYYY-MM-DD, the last day applications are accepted. */
-  applicationDeadline: string;
 }
 
 export type FieldKey = keyof RequisitionValues;
@@ -138,6 +139,24 @@ export const FIELDS: FieldSpec[] = [
     label: "New or replacement",
     section: "identity",
     required: true,
+  },
+  {
+    key: "replacedEmployeeName",
+    ref: "A10a",
+    label: "Name of the person being replaced",
+    help: "Their full name, as HR knows them",
+    section: "identity",
+    required: true,
+    conditional: true,
+  },
+  {
+    key: "replacedEmployeePosition",
+    ref: "A10b",
+    label: "Their position",
+    help: "The job title they held",
+    section: "identity",
+    required: true,
+    conditional: true,
   },
   {
     key: "totalSubPositions",
@@ -302,22 +321,9 @@ export const FIELDS: FieldSpec[] = [
     section: "hiringProcess",
     required: false,
   },
-  {
-    key: "applicationDeadline",
-    ref: "F3",
-    label: "Application deadline",
-    help: "The last day applications are accepted. The role closes to new applicants after this day",
-    section: "hiringProcess",
-    required: true,
-  },
+  // F3, the application deadline, is no longer the manager's to set: HR
+  // Responsible fills it on the ClickUp position before accepting.
 ];
-
-/** Today as YYYY-MM-DD in the browser's own timezone — the deadline's floor. */
-export const todayIso = (): string => {
-  const now = new Date();
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-};
 
 export const fieldSpec = (key: FieldKey): FieldSpec =>
   FIELDS.find((field) => field.key === key) as FieldSpec;
@@ -346,6 +352,8 @@ export const emptyValues = (): RequisitionValues => ({
   location: "",
   positionType: "",
   newOrReplacement: "",
+  replacedEmployeeName: "",
+  replacedEmployeePosition: "",
   totalSubPositions: "1",
   recruitmentType: [],
   agencyName: "",
@@ -364,12 +372,15 @@ export const emptyValues = (): RequisitionValues => ({
   positionRequirements: [],
   assessmentStagesRequired: [],
   interviewPanel: [],
-  applicationDeadline: "",
 });
 
 /** Conditional rule 2 — an agency has to be named once one is involved. */
 export const needsAgencyName = (values: RequisitionValues): boolean =>
   values.recruitmentType.includes("Recruitment Agency");
+
+/** Conditional rule 3 — a replacement names who it replaces, and their role. */
+export const needsReplacementDetails = (values: RequisitionValues): boolean =>
+  values.newOrReplacement === "Replacement";
 
 /** Conditional rule 1 — several openings on one requisition. */
 export const coversSeveralOpenings = (values: RequisitionValues): boolean =>
@@ -377,6 +388,9 @@ export const coversSeveralOpenings = (values: RequisitionValues): boolean =>
 
 export const isFieldActive = (key: FieldKey, values: RequisitionValues): boolean => {
   if (key === "agencyName") return needsAgencyName(values);
+  if (key === "replacedEmployeeName" || key === "replacedEmployeePosition") {
+    return needsReplacementDetails(values);
+  }
   return true;
 };
 

@@ -112,6 +112,9 @@ export const sampleValues = ({
       "Intern",
     ]),
     newOrReplacement: pick(schema, "newOrReplacement", ["New"], ["Replacement"]),
+    // Empty for the same reason as the agency name below: the sample is New
+    replacedEmployeeName: "",
+    replacedEmployeePosition: "",
     totalSubPositions: "2",
     recruitmentType: multi("recruitmentType", 1, ["Recruitment Agency"]),
     // The conditional stays empty: the answer above is the one that does
@@ -176,7 +179,5 @@ export const sampleValues = ({
     // ---- F · Hiring process -------------------------------------------
     assessmentStagesRequired: multi("assessmentStagesRequired", 2),
     interviewPanel: panel,
-    // Four weeks out, so the sample never trips the not-in-the-past rule
-    applicationDeadline: new Date(Date.now() + 28 * 86_400_000).toISOString().slice(0, 10),
   };
 };
