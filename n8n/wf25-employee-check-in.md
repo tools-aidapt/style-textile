@@ -116,7 +116,7 @@ an employee's 60th day, so there is no event to hang this on. Daily 09:00 EAT.
 1. Query Employee Database `901220480058` where `Joining Date` is exactly 30, 60, 90, 120,
    150 or 180 days ago. One query, six offsets — a cron that runs six times is six chances to
    half-fail.
-2. `GUARD_RECRUITMENT` — skip `Offboarding` and `Exited`, and skip subtasks. Nothing asks a
+2. `GUARD_RECRUITMENT` — skip `Confirmation` and `Exited`, and skip subtasks. Nothing asks a
    leaver how they are settling in.
 3. **The guard is a lookup, not a tag.** Does a Feedback Response already exist with this
    `Employee` **and** this `Review Point`? Found → skip. A single tag cannot guard six sends,

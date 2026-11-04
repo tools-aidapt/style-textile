@@ -333,7 +333,7 @@ one is a *Task Created* event. Part C step 4 is the test that matters: **exactly
 per fresh hire, not sixteen.**
 
 1. Refuse the record if it already carries the `manager feedback new hire` tag.
-2. `GUARD_RECRUITMENT` — skip anyone at `Offboarding` or `Exited`, and skip a subtask.
+2. `GUARD_RECRUITMENT` — skip anyone at `Confirmation` or `Exited`, and skip a subtask.
    Nothing reaches somebody about a colleague who has left.
 3. Read `Line Manager` `33d1e113-…`. **It is multi-user — see D-19 before building this.**
    No line manager → skip and log; a readiness review with no reviewer is not a thing to
