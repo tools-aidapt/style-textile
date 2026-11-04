@@ -31,9 +31,15 @@
  *   and the four business-case fields) drop their 4000-character ceiling and
  *   gain a 300-character floor instead — see `LIMITS.longText`.
  *
- * Later in 1.2, `hiringProcess.applicationDeadline` (YYYY-MM-DD) was added. The
- * form requires it; n8n accepts its absence so a tab opened before it shipped
- * still submits, and writes it to ClickUp's Application Deadline date field.
+ * Later in 1.2, `hiringProcess.applicationDeadline` (YYYY-MM-DD) was added. It
+ * has since moved off the form: HR Responsible sets Application Deadline on the
+ * ClickUp position before accepting, so the key is always `null` now. n8n
+ * still accepts a date from a tab opened before the change.
+ *
+ * Still within 1.2, a replacement names who it replaces as two free-text
+ * answers, `position.replacedEmployeeName` and `replacedEmployeePosition`.
+ * Both are `null` unless `newOrReplacement` is "Replacement", and n8n
+ * treats their absence as an older tab rather than an error.
  *
  * TODO(kenafric): n8n's JSON Schema validation node must accept 1.2 — both
  * changes above — before this ships, or every affected submission is a 422.
@@ -57,6 +63,7 @@ export const LIMITS = {
   jobTitle: { min: 3, max: 80 },
   location: { max: 120 },
   agencyName: { max: 120 },
+  replacedEmployee: { max: 120 },
   reportingTo: { min: 2, max: 120 },
   othersReportingIndirectly: { max: 2000 },
   /** The six essay answers: a floor, deliberately no ceiling — see v1.2 above. */
@@ -109,6 +116,10 @@ export interface RequisitionSubmission {
     positionType: string;
     newOrReplacement: string;
     replacingEmployee: EmployeeRef | null;
+    /** Free text, only for a replacement. Written to Replaced Employee Name. */
+    replacedEmployeeName: string | null;
+    /** Free text, only for a replacement. Written to Replaced Employee Position. */
+    replacedEmployeePosition: string | null;
     totalSubPositions: number;
     recruitmentType: string[];
     agencyName: string | null;
@@ -142,7 +153,7 @@ export interface RequisitionSubmission {
   hiringProcess: {
     assessmentStagesRequired: string[];
     interviewPanel: UserRef[];
-    /** YYYY-MM-DD. Added later in 1.2; n8n treats it as optional for older tabs. */
+    /** Always null now: HR Responsible sets the deadline in ClickUp. See v1.2 above. */
     applicationDeadline: string | null;
   };
   advisoriesAcknowledged: string[];

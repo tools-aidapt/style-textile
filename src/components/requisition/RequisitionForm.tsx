@@ -11,12 +11,13 @@ import {
   hasValue,
   isFieldActive,
   needsAgencyName,
+  needsReplacementDetails,
   sectionState,
   type FieldKey,
   type RequisitionValues,
   type SectionId,
 } from "@/requisition/form";
-import { NOT_APPLICABLE, todayIso } from "@/requisition/form";
+import { NOT_APPLICABLE } from "@/requisition/form";
 import { optionsFor, type RequisitionSchema, type SchemaOption } from "@/requisition/schema";
 import { advise, unacknowledged, validate } from "@/requisition/validation";
 import { fieldForPath } from "@/requisition/payload";
@@ -241,6 +242,16 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
   React.useEffect(() => {
     if (!needsAgencyName(values) && values.agencyName) {
       setValues((current) => ({ ...current, agencyName: "" }));
+    }
+    if (
+      !needsReplacementDetails(values) &&
+      (values.replacedEmployeeName || values.replacedEmployeePosition)
+    ) {
+      setValues((current) => ({
+        ...current,
+        replacedEmployeeName: "",
+        replacedEmployeePosition: "",
+      }));
     }
   }, [values]);
 
@@ -626,6 +637,30 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
                 columns={2}
               />
 
+              {/* Revealed by the answer above, so it has to follow it. Free
+                  text rather than a picker: the person may have left already
+                  and no longer be on any list. */}
+              <Reveal when={needsReplacementDetails(values)}>
+                <Row>
+                  <TextField
+                    fieldKey="replacedEmployeeName"
+                    value={values.replacedEmployeeName}
+                    onChange={(v) => set("replacedEmployeeName", v)}
+                    onBlur={() => blur("replacedEmployeeName")}
+                    error={visible.replacedEmployeeName}
+                    placeholder="First and last name"
+                  />
+                  <TextField
+                    fieldKey="replacedEmployeePosition"
+                    value={values.replacedEmployeePosition}
+                    onChange={(v) => set("replacedEmployeePosition", v)}
+                    onBlur={() => blur("replacedEmployeePosition")}
+                    error={visible.replacedEmployeePosition}
+                    placeholder="e.g. Sales Representative"
+                  />
+                </Row>
+              </Reveal>
+
               {/* Not in a Row — one control in a three-column grid leaves two
                   empty tracks beside it. A max-width keeps it the size of a
                   field rather than either a cramped box or a stray short
@@ -880,15 +915,6 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
                     error={visible.interviewPanel}
                   />
                 </div>
-                <TextField
-                  fieldKey="applicationDeadline"
-                  type="date"
-                  min={todayIso()}
-                  value={values.applicationDeadline}
-                  onChange={(v) => set("applicationDeadline", v)}
-                  onBlur={() => blur("applicationDeadline")}
-                  error={visible.applicationDeadline}
-                />
               </Row>
             </Card>
           ) : null}

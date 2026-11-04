@@ -35,7 +35,6 @@ const complete = (overrides: Partial<RequisitionValues> = {}): RequisitionValues
   potentialCareerPath: "p".repeat(300),
   positionRequirements: ["Laptop/Computer/Connectivity"],
   assessmentStagesRequired: ["Telephone", "Stage 1"],
-  applicationDeadline: "2099-12-31",
   ...overrides,
 });
 
@@ -134,6 +133,23 @@ describe("blocking rules", () => {
     ).toBeUndefined();
     // Without the condition the field is not required, filled or not
     expect(validate(complete(), schema, people).errors.agencyName).toBeUndefined();
+  });
+
+  it("B-12 · requires who is being replaced only for a replacement", () => {
+    const replacement = complete({ newOrReplacement: "Replacement" });
+    const { errors } = validate(replacement, schema, people);
+    expect(errors.replacedEmployeeName).toBe("Name the person being replaced.");
+    expect(errors.replacedEmployeePosition).toBe("Enter the position they held.");
+
+    const named = { ...replacement, replacedEmployeeName: "Jane Wanjiru", replacedEmployeePosition: "Sales Representative" };
+    expect(validate(named, schema, people).errors).toEqual({});
+
+    // A new position never asks
+    expect(validate(complete(), schema, people).errors.replacedEmployeeName).toBeUndefined();
+    expect(
+      validate(complete({ newOrReplacement: "Replacement", replacedEmployeeName: "x".repeat(121), replacedEmployeePosition: "Clerk" }), schema, people)
+        .errors.replacedEmployeeName,
+    ).toMatch(/under 120/);
   });
 
   it("holds optional free text to the length the wire schema enforces", () => {

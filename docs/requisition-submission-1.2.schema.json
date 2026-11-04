@@ -172,6 +172,14 @@
             }
           ]
         },
+        "replacedEmployeeName": {
+          "description": "Full name of the person being replaced. Free text, sent only when newOrReplacement is Replacement, otherwise null. Optional so older tabs still submit. Written to the ClickUp Replaced Employee Name field.",
+          "$ref": "#/$defs/nullableText120"
+        },
+        "replacedEmployeePosition": {
+          "description": "Job title the replaced person held. Same rules as replacedEmployeeName. Written to the ClickUp Replaced Employee Position field.",
+          "$ref": "#/$defs/nullableText120"
+        },
         "totalSubPositions": {
           "type": "integer",
           "minimum": 1,
@@ -401,7 +409,7 @@
           }
         },
         "applicationDeadline": {
-          "description": "Last day applications are accepted, YYYY-MM-DD. Added later in 1.2: the form requires it, the server accepts its absence from older tabs. Written to the ClickUp Application Deadline date field at 23:59 Nairobi time.",
+          "description": "Last day applications are accepted, YYYY-MM-DD. No longer asked on the form: HR Responsible sets Application Deadline on the ClickUp position before accepting, so the form always sends null. The server still accepts a date from an older tab and writes it at 23:59 Nairobi time.",
           "type": [
             "string",
             "null"

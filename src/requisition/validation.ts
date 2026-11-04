@@ -15,7 +15,7 @@ import {
   completeRows,
   filledItems,
   needsAgencyName,
-  todayIso,
+  needsReplacementDetails,
   type FieldKey,
   type RequisitionValues,
   type ResponsibilityRow,
@@ -73,7 +73,6 @@ export const validate = (
     "competitiveAdvantage",
     "sixMonthsObjectives",
     "potentialCareerPath",
-    "applicationDeadline",
   ];
   requiredText.forEach((key) => {
     if (blank(values[key] as string)) errors[key] = REQUIRED;
@@ -134,6 +133,16 @@ export const validate = (
     errors.agencyName = "Name the recruitment agency.";
   }
 
+  // B-12 · a replacement says who it replaces, by name and by role
+  if (needsReplacementDetails(values)) {
+    if (blank(values.replacedEmployeeName)) {
+      errors.replacedEmployeeName = "Name the person being replaced.";
+    }
+    if (blank(values.replacedEmployeePosition)) {
+      errors.replacedEmployeePosition = "Enter the position they held.";
+    }
+  }
+
   // The wire schema enforces every length below. Checking them here means a
   // manager is told before a submit rather than after a 422.
   const tooLong = (key: FieldKey, max: number) => {
@@ -142,6 +151,8 @@ export const validate = (
   };
   tooLong("location", LIMITS.location.max);
   tooLong("agencyName", LIMITS.agencyName.max);
+  tooLong("replacedEmployeeName", LIMITS.replacedEmployee.max);
+  tooLong("replacedEmployeePosition", LIMITS.replacedEmployee.max);
   tooLong("othersReportingIndirectly", LIMITS.othersReportingIndirectly.max);
 
   /**
@@ -194,15 +205,6 @@ export const validate = (
 
   if (values.interviewPanel.length > LIMITS.interviewPanel.max) {
     errors.interviewPanel = `A panel of ${LIMITS.interviewPanel.max} is the maximum.`;
-  }
-
-  // F3 · a deadline already behind us would close the role on the day it opens.
-  // ISO dates compare correctly as strings.
-  const deadline = values.applicationDeadline.trim();
-  if (deadline && !/^\d{4}-\d{2}-\d{2}$/.test(deadline)) {
-    errors.applicationDeadline = "Enter a valid date.";
-  } else if (deadline && deadline < todayIso()) {
-    errors.applicationDeadline = "The application deadline cannot be in the past.";
   }
 
   // The submitter's email is a required string on the wire, and it comes from
