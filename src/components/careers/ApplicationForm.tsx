@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import { ArrowRight, Check, Loader2 } from "lucide-react";
+import { ArrowRight, Check, Info, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -295,6 +295,8 @@ export const ApplicationForm = ({
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  /** WF-02 found an application from this email for this role already. */
+  const [alreadyApplied, setAlreadyApplied] = useState(false);
   /**
    * The two files sit outside the zod schema, so a submit with either one
    * missing used to be reported by a toast alone. A toast is transient, is not
@@ -432,6 +434,16 @@ export const ApplicationForm = ({
       });
 
       if (response.ok) {
+        // A repeat comes back 200 too, so the body has to be read to tell the
+        // candidate their first application stands rather than thank them for
+        // one that was never filed
+        const body: unknown = await response.json().catch(() => null);
+        const duplicate =
+          typeof body === "object" &&
+          body !== null &&
+          ((body as { duplicate?: unknown }).duplicate === true ||
+            (body as { error?: unknown }).error === "already_applied");
+        setAlreadyApplied(duplicate);
         setIsSubmitted(true);
       } else {
         reportSubmissionFailure("http", { status: response.status, position: position.id });
@@ -456,6 +468,34 @@ export const ApplicationForm = ({
       setIsSubmitting(false);
     }
   };
+
+  if (isSubmitted && alreadyApplied) {
+    return (
+      <div
+        id="apply"
+        role="status"
+        className="scroll-mt-24 rounded-lg border border-mist-200 bg-white p-8 text-center shadow-sm sm:p-12"
+      >
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-mist-50">
+          <Info className="h-6 w-6 text-steel-600" aria-hidden="true" />
+        </div>
+        <h2 className="mt-6 text-h4 font-bold tracking-snug text-ink-900">You have already applied</h2>
+        <p className="measure mx-auto mt-3 text-body text-steel-600">
+          We already have an application from this email address for{" "}
+          <span className="font-medium text-ink-900">{position.name}</span>. Your first application
+          is on file and under review, so there is no need to apply again.
+        </p>
+
+        {onBrowseOther ? (
+          <div className="mt-8 flex justify-center">
+            <Button variant="secondary" onClick={onBrowseOther}>
+              Browse other roles
+            </Button>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
 
   // A confirmation the candidate can actually read — the old flow reset the
   // form and left only a toast, so a successful application looked like a wipe
