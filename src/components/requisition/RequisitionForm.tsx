@@ -675,7 +675,7 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
                     it, so the labels line up. */}
                 <div
                   className={cn(
-                    "space-y-2 pt-1",
+                    "pt-1",
                     !needsReplacementDetails(values) && "col-start-1 row-start-1",
                   )}
                 >
@@ -686,13 +686,27 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
                     onBlur={() => blur("totalSubPositions")}
                     error={visible.totalSubPositions}
                   />
-                  <Reveal when={coversSeveralOpenings(values)}>
-                    <InlineNote>
-                      HR tracks each hire against this requisition. It closes automatically when
-                      all are filled.
-                    </InlineNote>
-                  </Reveal>
                 </div>
+
+                {/* Beside the stepper wherever there is a free track, under it
+                    where there is not: on phones, and in the third column when
+                    the replacement fields fill the first two. mt-6 drops it
+                    past the label so it lines up with the stepper buttons; the
+                    negative margin pulls it up to the stepper when stacked. */}
+                <Reveal
+                  when={coversSeveralOpenings(values)}
+                  className={cn(
+                    "-mt-4 sm:mt-6",
+                    needsReplacementDetails(values)
+                      ? "lg:col-start-3 lg:-mt-4"
+                      : "sm:col-start-2 sm:row-start-1 lg:col-span-2",
+                  )}
+                >
+                  <InlineNote>
+                    HR tracks each hire against this requisition. It closes automatically when all
+                    are filled.
+                  </InlineNote>
+                </Reveal>
               </Row>
 
               <CheckboxField
