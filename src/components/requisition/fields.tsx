@@ -602,7 +602,15 @@ export const NumberStepper = ({
  * the change instead of hunting for it — and a crossfade stands in when the
  * viewer has asked for less motion.
  */
-export const Reveal = ({ when, children }: { when: boolean; children: React.ReactNode }) => {
+export const Reveal = ({
+  when,
+  children,
+  className,
+}: {
+  when: boolean;
+  children: React.ReactNode;
+  className?: string;
+}) => {
   const ref = React.useRef<HTMLDivElement>(null);
 
   // A collapsed field is still in the DOM so it can animate, which would leave
@@ -620,6 +628,7 @@ export const Reveal = ({ when, children }: { when: boolean; children: React.Reac
       className={cn(
         "grid transition-all duration-base ease-entrance motion-reduce:transition-opacity motion-reduce:duration-fast",
         when ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+        className,
       )}
     >
       <div className={cn("overflow-hidden", when ? undefined : "pointer-events-none")}>
