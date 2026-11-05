@@ -43,8 +43,8 @@ const type = async (user: User, field: RegExp, value: string) => {
 /** Moves on from the step currently on screen. */
 const goNext = (user: User) => user.click(screen.getByRole("button", { name: /^Continue$/i }));
 
-/** An essay answer well past the 300-character floor; the letter just tells two apart. */
-const essay = (letter: string) => letter.repeat(320);
+/** An essay answer past the 300-word floor; the letter just tells two apart. */
+const essay = (letter: string) => Array.from({ length: 310 }, () => letter).join(" ");
 
 /**
  * Fills a requisition that passes every blocking rule, one step at a time —

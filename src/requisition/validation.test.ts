@@ -4,6 +4,9 @@ import { emptyValues, type RequisitionValues } from "./form";
 import { advise, unacknowledged, validate } from "./validation";
 
 const schema = testSchema();
+
+/** An essay of exactly `n` words; the essay floor is counted in words. */
+const words = (n: number, w = "word") => Array.from({ length: n }, () => w).join(" ");
 const people = testPeople();
 
 /** A requisition that passes every blocking rule, for a test to break one at a time. */
@@ -20,19 +23,19 @@ const complete = (overrides: Partial<RequisitionValues> = {}): RequisitionValues
   recruitmentType: ["External Recruitment"],
   requestingManager: 1001,
   reportingTo: "Regional Sales Manager",
-  jobOverview: "x".repeat(300),
+  jobOverview: words(300, "overview"),
   keyResponsibilitiesRows: [
     { id: "a", responsibility: "Manage the ledger", outcome: "Zero variance at month end" },
     { id: "b", responsibility: "Lead dispatch", outcome: "Same-day dispatch on 95% of orders" },
     { id: "c", responsibility: "Run stock counts", outcome: "Weekly count signed off" },
   ],
   qualifications: ["Degree in supply chain"],
-  experience: "e".repeat(300),
+  experience: words(300, "experience"),
   skills: ["Stock reconciliation", "SAP"],
-  previousFailuresSuccesses: "f".repeat(300),
-  competitiveAdvantage: "c".repeat(300),
-  sixMonthsObjectives: "y".repeat(300),
-  potentialCareerPath: "p".repeat(300),
+  previousFailuresSuccesses: words(300, "history"),
+  competitiveAdvantage: words(300, "advantage"),
+  sixMonthsObjectives: words(300, "objective"),
+  potentialCareerPath: words(300, "career"),
   positionRequirements: ["Laptop/Computer/Connectivity"],
   assessmentStagesRequired: ["Telephone", "Stage 1"],
   ...overrides,
@@ -160,7 +163,7 @@ describe("blocking rules", () => {
     ).toMatch(/2000/);
   });
 
-  it("holds the six essay answers to a 300-character floor and no ceiling", () => {
+  it("holds the six essay answers to a 300-word floor and no ceiling", () => {
     const essayKeys = [
       "jobOverview",
       "experience",
@@ -171,12 +174,14 @@ describe("blocking rules", () => {
     ] as const;
 
     essayKeys.forEach((key) => {
-      expect(validate(complete({ [key]: "o".repeat(299) }), schema, people).errors[key]).toMatch(
-        /at least 300/,
+      expect(validate(complete({ [key]: words(299) }), schema, people).errors[key]).toMatch(
+        /at least 300 words/,
       );
-      expect(validate(complete({ [key]: "o".repeat(300) }), schema, people).errors[key]).toBeUndefined();
+      expect(validate(complete({ [key]: words(300) }), schema, people).errors[key]).toBeUndefined();
+      // 300 characters is no longer enough: the floor counts words
+      expect(validate(complete({ [key]: "o".repeat(400) }), schema, people).errors[key]).toMatch(/at least 300 words/);
       // No upper bound: a very long essay answer is never rejected for length
-      expect(validate(complete({ [key]: "o".repeat(20000) }), schema, people).errors[key]).toBeUndefined();
+      expect(validate(complete({ [key]: words(5000) }), schema, people).errors[key]).toBeUndefined();
     });
   });
 

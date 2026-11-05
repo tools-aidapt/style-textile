@@ -16,6 +16,7 @@ import {
   filledItems,
   needsAgencyName,
   needsReplacementDetails,
+  wordCount,
   type FieldKey,
   type RequisitionValues,
   type ResponsibilityRow,
@@ -161,9 +162,11 @@ export const validate = (
    * floor. B-2's job title and B-10's reports-to keep their own ranges above;
    * this is the six long-form answers the form actually wants an essay from.
    */
-  const tooShort = (key: FieldKey, min: number) => {
-    const value = String(values[key] ?? "").trim();
-    if (value && value.length < min) errors[key] = `Write at least ${min} characters.`;
+  const tooShort = (key: FieldKey, minWords: number) => {
+    const words = wordCount(values[key] as string);
+    if (words > 0 && words < minWords) {
+      errors[key] = `Write at least ${minWords} words. You have ${words}.`;
+    }
   };
   (
     [
@@ -174,7 +177,7 @@ export const validate = (
       "sixMonthsObjectives",
       "potentialCareerPath",
     ] as FieldKey[]
-  ).forEach((key) => tooShort(key, LIMITS.longText.min));
+  ).forEach((key) => tooShort(key, LIMITS.longText.minWords));
 
   /**
    * C3 and the skills half of C4 are lists.

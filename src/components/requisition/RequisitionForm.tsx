@@ -21,7 +21,7 @@ import { NOT_APPLICABLE } from "@/requisition/form";
 import { optionsFor, type RequisitionSchema, type SchemaOption } from "@/requisition/schema";
 import { advise, unacknowledged, validate } from "@/requisition/validation";
 import { fieldForPath } from "@/requisition/payload";
-import type { SubmissionIssue } from "@/requisition/contract";
+import { LIMITS, type SubmissionIssue } from "@/requisition/contract";
 import { buildPayload } from "@/requisition/payload";
 import {
   clearDraft,
@@ -763,7 +763,7 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
                   onBlur={() => blur("jobOverview")}
                   error={visible.jobOverview}
                   rows={4}
-                  minLength={300}
+                  minWords={LIMITS.longText.minWords}
                   className={SPAN_ALL}
                 />
               </Row>
@@ -799,7 +799,7 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
                 onBlur={() => blur("experience")}
                 error={visible.experience}
                 rows={3}
-                minLength={300}
+                minWords={LIMITS.longText.minWords}
                 placeholder="Five years in an FMCG manufacturing plant, at least one of them supervising a packaging or processing line"
               />
 
@@ -839,7 +839,7 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
                 onBlur={() => blur("previousFailuresSuccesses")}
                 error={visible.previousFailuresSuccesses}
                 rows={4}
-                minLength={300}
+                minWords={LIMITS.longText.minWords}
               />
               <TextareaField
                 fieldKey="competitiveAdvantage"
@@ -848,7 +848,7 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
                 onBlur={() => blur("competitiveAdvantage")}
                 error={visible.competitiveAdvantage}
                 rows={3}
-                minLength={300}
+                minWords={LIMITS.longText.minWords}
               />
               <TextareaField
                 fieldKey="potentialCareerPath"
@@ -857,7 +857,7 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
                 onBlur={() => blur("potentialCareerPath")}
                 error={visible.potentialCareerPath}
                 rows={3}
-                minLength={300}
+                minWords={LIMITS.longText.minWords}
               />
               <TextareaField
                 fieldKey="sixMonthsObjectives"
@@ -866,7 +866,7 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
                 onBlur={() => blur("sixMonthsObjectives")}
                 error={visible.sixMonthsObjectives}
                 rows={4}
-                minLength={300}
+                minWords={LIMITS.longText.minWords}
                 emphasis
               />
             </Card>
