@@ -59,13 +59,31 @@ const pick = (
   return labels.find((label) => !avoid.includes(label)) ?? labels[0] ?? "";
 };
 
-/** Long enough to clear the advisory that asks for more than one sentence. */
-const JOB_OVERVIEW =
-  "This is sample content. The role holds product release for a manufacturing site: in-process checks on the line, finished-goods testing in the laboratory, and the decision on whether a batch ships or is held. It keeps the site audit-ready against HACCP and FSSC 22000, and owns the records an auditor asks for. It reports into quality management and works daily with production and product development.";
+/**
+ * The essay answers have a 300-word floor, so each sample answer carries this
+ * paragraph after its own text. It says plainly that it is filler, so nobody
+ * mistakes a requisition raised from the sample for one a manager wrote.
+ */
+const SAMPLE_PADDING =
+  "The remainder of this answer is sample padding, added only so the answer clears the three hundred word minimum the form asks for. " +
+  "A real answer would use this space to describe the role in the manager's own words: the work that fills a typical week, the decisions the holder is trusted to make without escalating, the people they deal with every day inside and outside the department, and the situations that test whether someone is right for the job. " +
+  "It would say what good looks like after the first month, after the first quarter and at the end of probation, and which of those milestones matter most to the team. " +
+  "It would describe the systems, equipment and documents the holder works with, the standards they are measured against, and any certification or licence the role depends on. " +
+  "It would also be honest about the difficult parts of the job, such as shift patterns, peak seasons, travel, physical demands or pressure from other departments, because a candidate who understands those before they apply is far more likely to stay. " +
+  "Finally, it would explain how the role connects to the wider business, who it reports to, who reports to it, and how success in this position helps the company meet its commitments to customers, regulators and colleagues. " +
+  "None of this padding should ever reach a real job description. If you are reading it on a live requisition, the form was filled from the sample by mistake and the requisition should be rejected and raised again with real content written by the hiring manager.";
+
+const padded = (text: string): string => `${text} ${SAMPLE_PADDING}`;
+
+/** Long enough to clear the essay floor. */
+const JOB_OVERVIEW = padded(
+  "This is sample content. The role holds product release for a manufacturing site: in-process checks on the line, finished-goods testing in the laboratory, and the decision on whether a batch ships or is held. It keeps the site audit-ready against HACCP and FSSC 22000, and owns the records an auditor asks for. It reports into quality management and works daily with production and product development.",
+);
 
 /** The new joiner reads D3 in week one, and advisory A-3 asks for detail. */
-const SIX_MONTH_OBJECTIVES =
-  "This is sample content. By the end of month six you should be releasing product on your own authority, and we will look at four things. First, every batch released against a complete and signed check record, with no gaps found on internal audit. Second, no customer complaint traced to a specification breach an in-process check should have caught. Third, the site HACCP documentation current and defensible without preparation time before an audit. Fourth, a monthly quality report production acts on rather than files.";
+const SIX_MONTH_OBJECTIVES = padded(
+  "This is sample content. By the end of month six you should be releasing product on your own authority, and we will look at four things. First, every batch released against a complete and signed check record, with no gaps found on internal audit. Second, no customer complaint traced to a specification breach an in-process check should have caught. Third, the site HACCP documentation current and defensible without preparation time before an audit. Fourth, a monthly quality report production acts on rather than files.",
+);
 
 export const sampleValues = ({
   schema,
@@ -156,7 +174,9 @@ export const sampleValues = ({
       "Internal auditor training is welcome but not expected",
     ],
     experience:
-      "Four years in a food or beverage manufacturing quality function, at least one of them holding release authority for finished product. Comfortable reading a specification against a batch record and making the call to hold a line, rather than only flagging it upward and waiting for someone else to decide.",
+      padded(
+        "Four years in a food or beverage manufacturing quality function, at least one of them holding release authority for finished product. Comfortable reading a specification against a batch record and making the call to hold a line, rather than only flagging it upward and waiting for someone else to decide.",
+      ),
     skills: [
       "Laboratory testing methods for food and beverage products",
       "HACCP plans, product specifications and audit documentation",
@@ -166,12 +186,18 @@ export const sampleValues = ({
 
     // ---- D · Business case --------------------------------------------
     previousFailuresSuccesses:
-      "This is sample content. The officers who lasted in this role were comfortable holding a batch when production wanted it released. The two who did not last were technically sound but deferred to the shift manager every time there was a deadline. The failure mode is not analytical skill, it is willingness to be unpopular on the day.",
+      padded(
+        "This is sample content. The officers who lasted in this role were comfortable holding a batch when production wanted it released. The two who did not last were technically sound but deferred to the shift manager every time there was a deadline. The failure mode is not analytical skill, it is willingness to be unpopular on the day.",
+      ),
     competitiveAdvantage:
-      "This is sample content. You hold genuine release authority rather than recommending it to someone else, across a site making several product categories, with a laboratory that is properly equipped. Quality officers here move into quality management or product development, and the site invests in HACCP and FSSC training rather than treating it as a box to tick once a year.",
+      padded(
+        "This is sample content. You hold genuine release authority rather than recommending it to someone else, across a site making several product categories, with a laboratory that is properly equipped. Quality officers here move into quality management or product development, and the site invests in HACCP and FSSC training rather than treating it as a box to tick once a year.",
+      ),
     sixMonthsObjectives: SIX_MONTH_OBJECTIVES,
     potentialCareerPath:
-      "This is sample content. The route from here is Senior Quality Officer, then Quality Assurance Manager for a site, then Group Quality and Compliance. Each step carries wider release authority and a bigger laboratory team, and the group has moved people through all three in under five years where the fundamentals were solid from day one.",
+      padded(
+        "This is sample content. The route from here is Senior Quality Officer, then Quality Assurance Manager for a site, then Group Quality and Compliance. Each step carries wider release authority and a bigger laboratory team, and the group has moved people through all three in under five years where the fundamentals were solid from day one.",
+      ),
 
     // ---- E · Provisioning ---------------------------------------------
     positionRequirements: multi("positionRequirements", 3),

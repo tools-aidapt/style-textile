@@ -17,6 +17,7 @@ import {
   fieldId,
   fieldSpec,
   filledItems,
+  wordCount,
   type FieldKey,
 } from "@/requisition/form";
 import type { SchemaOption } from "@/requisition/schema";
@@ -160,15 +161,15 @@ export const TextField = ({
  *
  * There is no ceiling on these fields any more — write as much as the role
  * needs — but a one-line answer is not a job description, so the only number
- * worth showing is distance from the 300-character floor: a thin teal bar
+ * worth showing is distance from the 300-word floor: a thin teal bar
  * that fills as it is cleared, then settles into a plain running count once it
  * has been. Counting up forever past the floor would turn into a number
  * nobody is trying to hit.
  */
-const LengthProgress = ({ value, minLength }: { value: string; minLength: number }) => {
-  const length = value.trim().length;
-  const met = length >= minLength;
-  const pct = Math.min(100, (length / minLength) * 100);
+const LengthProgress = ({ value, minWords }: { value: string; minWords: number }) => {
+  const length = wordCount(value);
+  const met = length >= minWords;
+  const pct = Math.min(100, (length / minWords) * 100);
 
   return (
     <div className="flex items-center gap-2 pt-0.5">
@@ -176,9 +177,9 @@ const LengthProgress = ({ value, minLength }: { value: string; minLength: number
         className="h-1 w-20 shrink-0 overflow-hidden rounded-full bg-mist-100"
         role="progressbar"
         aria-valuemin={0}
-        aria-valuemax={minLength}
-        aria-valuenow={Math.min(length, minLength)}
-        aria-label="Characters toward the minimum"
+        aria-valuemax={minWords}
+        aria-valuenow={Math.min(length, minWords)}
+        aria-label="Words toward the minimum"
       >
         <div
           className={cn(
@@ -196,7 +197,7 @@ const LengthProgress = ({ value, minLength }: { value: string; minLength: number
           met ? "text-teal-700" : "text-steel-500",
         )}
       >
-        {met ? `${length} characters` : `${length} of ${minLength} minimum`}
+        {met ? `${length} words` : `${length} of ${minWords} words minimum`}
       </p>
     </div>
   );
@@ -212,7 +213,7 @@ export const TextareaField = ({
   rows = 4,
   className,
   emphasis,
-  minLength,
+  minWords,
 }: {
   fieldKey: FieldKey;
   value: string;
@@ -224,8 +225,8 @@ export const TextareaField = ({
   className?: string;
   /** D3 earns a teal wash on its help text — the new joiner reads that answer. */
   emphasis?: boolean;
-  /** Shows a live progress-to-floor meter. There is never an upper bound. */
-  minLength?: number;
+  /** Shows a live progress-to-floor meter, in words. There is never an upper bound. */
+  minWords?: number;
 }) => {
   const spec = fieldSpec(fieldKey);
   return (
@@ -243,7 +244,7 @@ export const TextareaField = ({
           aria-describedby={describedBy(fieldKey, !!spec.help, !!error)}
           className={errorKeyline(error)}
         />
-        {minLength ? <LengthProgress value={value} minLength={minLength} /> : null}
+        {minWords ? <LengthProgress value={value} minWords={minWords} /> : null}
       </FieldShell>
     </div>
   );

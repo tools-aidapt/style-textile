@@ -27,8 +27,8 @@ const conforms = (payload: unknown) => {
 
 const people = testPeople();
 
-/** The wire's 300-character floor on the six essay answers (contract.ts). */
-const essay = (seed: string) => seed.repeat(Math.ceil(300 / seed.length));
+/** Clears the 300-word floor on the six essay answers (contract.ts). */
+const essay = (seed: string) => seed.repeat(Math.ceil(300 / seed.trim().split(/\s+/).length));
 
 const values = (overrides: Partial<RequisitionValues> = {}): RequisitionValues => ({
   ...emptyValues(),

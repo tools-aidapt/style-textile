@@ -397,6 +397,10 @@ export const isFieldActive = (key: FieldKey, values: RequisitionValues): boolean
 export const completeRows = (rows: ResponsibilityRow[]): ResponsibilityRow[] =>
   rows.filter((row) => row.responsibility.trim() && row.outcome.trim());
 
+/** Words in an answer: runs of non-space characters, the way a reader counts them. */
+export const wordCount = (value: string | null | undefined): number =>
+  String(value ?? "").trim().split(/\s+/).filter(Boolean).length;
+
 /** Has the manager put anything in this field yet? Drives the rail, not validity. */
 /** How many list fields there can be. Generous, but not a document. */
 export const MAX_LIST_ITEMS = 12;
