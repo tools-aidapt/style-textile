@@ -28,9 +28,10 @@
  *   `newOrReplacement` is "Replacement" has to be dropped server-side, or a
  *   replacement requisition 422s on a field nothing can ever answer again.
  * - The six long-form essay answers (`jobOverview`, the C4 experience half,
- *   and the four business-case fields) drop their 4000-character ceiling and
- *   gain a floor instead — see `LIMITS.longText`. The floor is counted in
- *   words (300), as agreed with Kenafric on 2026-11-04; it was 300 characters.
+ *   and the four business-case fields) drop their 4000-character ceiling.
+ *   They briefly had a floor (300 characters, then 300 words from
+ *   2026-11-04); since 2026-11-05 they have no length limit at all, only
+ *   "required".
  *
  * Later in 1.2, `hiringProcess.applicationDeadline` (YYYY-MM-DD) was added. It
  * has since moved off the form: HR Responsible sets Application Deadline on the
@@ -67,8 +68,6 @@ export const LIMITS = {
   replacedEmployee: { max: 120 },
   reportingTo: { min: 2, max: 120 },
   othersReportingIndirectly: { max: 2000 },
-  /** The six essay answers: a floor in WORDS, deliberately no ceiling — see v1.2 above. */
-  longText: { minWords: 300 },
   responsibilityCell: { max: 300 },
   rows: { min: 3, max: 12 },
   totalSubPositions: { min: 1, max: 10 },

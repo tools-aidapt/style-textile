@@ -60,12 +60,12 @@ const pick = (
 };
 
 /**
- * The essay answers have a 300-word floor, so each sample answer carries this
- * paragraph after its own text. It says plainly that it is filler, so nobody
+ * Each sample answer carries this paragraph after its own text, so the sample
+ * reads like a full-length answer. It says plainly that it is filler, so nobody
  * mistakes a requisition raised from the sample for one a manager wrote.
  */
 const SAMPLE_PADDING =
-  "The remainder of this answer is sample padding, added only so the answer clears the three hundred word minimum the form asks for. " +
+  "The remainder of this answer is sample padding, added only so the sample reads like a full-length answer. " +
   "A real answer would use this space to describe the role in the manager's own words: the work that fills a typical week, the decisions the holder is trusted to make without escalating, the people they deal with every day inside and outside the department, and the situations that test whether someone is right for the job. " +
   "It would say what good looks like after the first month, after the first quarter and at the end of probation, and which of those milestones matter most to the team. " +
   "It would describe the systems, equipment and documents the holder works with, the standards they are measured against, and any certification or licence the role depends on. " +
@@ -75,7 +75,7 @@ const SAMPLE_PADDING =
 
 const padded = (text: string): string => `${text} ${SAMPLE_PADDING}`;
 
-/** Long enough to clear the essay floor. */
+/** A full-length sample answer. */
 const JOB_OVERVIEW = padded(
   "This is sample content. The role holds product release for a manufacturing site: in-process checks on the line, finished-goods testing in the laboratory, and the decision on whether a batch ships or is held. It keeps the site audit-ready against HACCP and FSSC 22000, and owns the records an auditor asks for. It reports into quality management and works daily with production and product development.",
 );

@@ -16,7 +16,6 @@ import {
   filledItems,
   needsAgencyName,
   needsReplacementDetails,
-  wordCount,
   type FieldKey,
   type RequisitionValues,
   type ResponsibilityRow,
@@ -156,28 +155,8 @@ export const validate = (
   tooLong("replacedEmployeePosition", LIMITS.replacedEmployee.max);
   tooLong("othersReportingIndirectly", LIMITS.othersReportingIndirectly.max);
 
-  /**
-   * The essay fields carry no upper bound — write as much as the role needs —
-   * but a one-line answer is not a job description, so each one still has a
-   * floor. B-2's job title and B-10's reports-to keep their own ranges above;
-   * this is the six long-form answers the form actually wants an essay from.
-   */
-  const tooShort = (key: FieldKey, minWords: number) => {
-    const words = wordCount(values[key] as string);
-    if (words > 0 && words < minWords) {
-      errors[key] = `Write at least ${minWords} words. You have ${words}.`;
-    }
-  };
-  (
-    [
-      "jobOverview",
-      "experience",
-      "previousFailuresSuccesses",
-      "competitiveAdvantage",
-      "sixMonthsObjectives",
-      "potentialCareerPath",
-    ] as FieldKey[]
-  ).forEach((key) => tooShort(key, LIMITS.longText.minWords));
+  // The six essay answers have no length limit either way (2026-11-05): they
+  // are only required, which the required pass above already covers.
 
   /**
    * C3 and the skills half of C4 are lists.

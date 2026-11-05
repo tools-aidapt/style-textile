@@ -27,7 +27,7 @@ const conforms = (payload: unknown) => {
 
 const people = testPeople();
 
-/** Clears the 300-word floor on the six essay answers (contract.ts). */
+/** A long essay answer: the six essay answers have no length limit (contract.ts). */
 const essay = (seed: string) => seed.repeat(Math.ceil(300 / seed.trim().split(/\s+/).length));
 
 const values = (overrides: Partial<RequisitionValues> = {}): RequisitionValues => ({

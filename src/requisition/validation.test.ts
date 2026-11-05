@@ -163,7 +163,7 @@ describe("blocking rules", () => {
     ).toMatch(/2000/);
   });
 
-  it("holds the six essay answers to a 300-word floor and no ceiling", () => {
+  it("puts no length limit on the six essay answers, only required", () => {
     const essayKeys = [
       "jobOverview",
       "experience",
@@ -174,13 +174,9 @@ describe("blocking rules", () => {
     ] as const;
 
     essayKeys.forEach((key) => {
-      expect(validate(complete({ [key]: words(299) }), schema, people).errors[key]).toMatch(
-        /at least 300 words/,
-      );
-      expect(validate(complete({ [key]: words(300) }), schema, people).errors[key]).toBeUndefined();
-      // 300 characters is no longer enough: the floor counts words
-      expect(validate(complete({ [key]: "o".repeat(400) }), schema, people).errors[key]).toMatch(/at least 300 words/);
-      // No upper bound: a very long essay answer is never rejected for length
+      expect(validate(complete({ [key]: "" }), schema, people).errors[key]).toBe("Required");
+      // One word is enough, and so is a very long answer
+      expect(validate(complete({ [key]: words(1) }), schema, people).errors[key]).toBeUndefined();
       expect(validate(complete({ [key]: words(5000) }), schema, people).errors[key]).toBeUndefined();
     });
   });
