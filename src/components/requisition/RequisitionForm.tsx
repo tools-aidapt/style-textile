@@ -460,6 +460,14 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // The stored id is spent once n8n has the requisition. Leaving it would make
+  // the next form opened in this browser (a reload, a new tab) replay this
+  // one's receipt instead of raising its own, unless the manager happened to
+  // press "Raise another requisition". The ref keeps the id for this receipt.
+  React.useEffect(() => {
+    if (isSubmitted) clearSubmissionId();
+  }, [isSubmitted]);
+
   // Remember the manager for next time, in place of an SSO identity
   React.useEffect(() => {
     if (!isSubmitted || values.requestingManager === null) return;
