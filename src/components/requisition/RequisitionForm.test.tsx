@@ -206,6 +206,28 @@ describe("RequisitionForm", () => {
     expect(second).toBe(first);
   }, TIMEOUT);
 
+  it("gives the next form its own submissionId once one succeeds, even without Raise another", async () => {
+    const user = userEvent.setup();
+    const fetchMock = routes({ match: SUBMIT, status: 201, body: successBody() });
+
+    const first = renderForm();
+    await fillEverything(user);
+    await submit(user);
+    expect(await screen.findByText(/Requisition submitted/i)).toBeInTheDocument();
+
+    // A reload or a new tab, rather than the button on the receipt
+    first.unmount();
+    // The remembered manager would prefill step B; this test fills it afresh
+    window.localStorage.removeItem("aidapt.requisition.manager.v1");
+    renderForm();
+    await fillEverything(user);
+    await submit(user);
+
+    await waitFor(() => expect(submitCalls(fetchMock)).toHaveLength(2));
+    const [one, two] = submitCalls(fetchMock).map((call) => bodyOf(call).submissionId);
+    expect(two).not.toBe(one);
+  }, TIMEOUT * 2);
+
   it("blocks moving past a step until its own fields are answered", async () => {
     const user = userEvent.setup();
     const fetchMock = routes({ match: SUBMIT, status: 201, body: successBody() });
