@@ -639,47 +639,61 @@ export const RequisitionForm = ({ schema }: { schema: RequisitionSchema }) => {
 
               {/* Revealed by the answer above, so it has to follow it. Free
                   text rather than a picker: the person may have left already
-                  and no longer be on any list. */}
-              <Reveal when={needsReplacementDetails(values)}>
-                <Row>
-                  <TextField
-                    fieldKey="replacedEmployeeName"
-                    value={values.replacedEmployeeName}
-                    onChange={(v) => set("replacedEmployeeName", v)}
-                    onBlur={() => blur("replacedEmployeeName")}
-                    error={visible.replacedEmployeeName}
-                    placeholder="First and last name"
-                  />
-                  <TextField
-                    fieldKey="replacedEmployeePosition"
-                    value={values.replacedEmployeePosition}
-                    onChange={(v) => set("replacedEmployeePosition", v)}
-                    onBlur={() => blur("replacedEmployeePosition")}
-                    error={visible.replacedEmployeePosition}
-                    placeholder="e.g. Sales Representative"
-                  />
-                </Row>
-              </Reveal>
-
-              {/* Not in a Row — one control in a three-column grid leaves two
-                  empty tracks beside it. A max-width keeps it the size of a
-                  field rather than either a cramped box or a stray short
-                  input stranded in a wide empty row. */}
-              <div className="max-w-xs space-y-2">
-                <NumberStepper
-                  fieldKey="totalSubPositions"
-                  value={values.totalSubPositions}
-                  onChange={(v) => set("totalSubPositions", v)}
-                  onBlur={() => blur("totalSubPositions")}
-                  error={visible.totalSubPositions}
-                />
-                <Reveal when={coversSeveralOpenings(values)}>
-                  <InlineNote>
-                    HR tracks each hire against this requisition. It closes automatically when all
-                    are filled.
-                  </InlineNote>
+                  and no longer be on any list. The stepper takes the third
+                  track beside them; while they are collapsed both sit in the
+                  first cell, so the stepper starts the row instead of
+                  trailing two empty tracks. */}
+              <Row>
+                <Reveal
+                  when={needsReplacementDetails(values)}
+                  className={cn(
+                    "sm:col-span-2",
+                    !needsReplacementDetails(values) && "col-start-1 row-start-1",
+                  )}
+                >
+                  <div className="grid grid-cols-1 items-start gap-5 sm:grid-cols-2">
+                      <TextField
+                      fieldKey="replacedEmployeeName"
+                      value={values.replacedEmployeeName}
+                      onChange={(v) => set("replacedEmployeeName", v)}
+                      onBlur={() => blur("replacedEmployeeName")}
+                      error={visible.replacedEmployeeName}
+                      placeholder="First and last name"
+                    />
+                    <TextField
+                      fieldKey="replacedEmployeePosition"
+                      value={values.replacedEmployeePosition}
+                      onChange={(v) => set("replacedEmployeePosition", v)}
+                      onBlur={() => blur("replacedEmployeePosition")}
+                      error={visible.replacedEmployeePosition}
+                      placeholder="e.g. Sales Representative"
+                    />
+                  </div>
                 </Reveal>
-              </div>
+
+                {/* pt-1 matches the padding Reveal puts above the fields beside
+                    it, so the labels line up. */}
+                <div
+                  className={cn(
+                    "space-y-2 pt-1",
+                    !needsReplacementDetails(values) && "col-start-1 row-start-1",
+                  )}
+                >
+                  <NumberStepper
+                    fieldKey="totalSubPositions"
+                    value={values.totalSubPositions}
+                    onChange={(v) => set("totalSubPositions", v)}
+                    onBlur={() => blur("totalSubPositions")}
+                    error={visible.totalSubPositions}
+                  />
+                  <Reveal when={coversSeveralOpenings(values)}>
+                    <InlineNote>
+                      HR tracks each hire against this requisition. It closes automatically when
+                      all are filled.
+                    </InlineNote>
+                  </Reveal>
+                </div>
+              </Row>
 
               <CheckboxField
                 fieldKey="recruitmentType"
