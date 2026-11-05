@@ -144,3 +144,39 @@ describe("ApplicationForm validation", () => {
     expect(honeypot).toHaveAttribute("tabindex", "-1");
   });
 });
+
+describe("ApplicationForm submit", () => {
+  /** Fills and sends a valid application, past the too-fast bot check. */
+  const apply = async (reply: Record<string, unknown>) => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(reply), { status: 200 })));
+    const now = vi.spyOn(Date, "now").mockReturnValue(1_000);
+    const user = userEvent.setup({ delay: null });
+    render(<ApplicationForm position={position} />);
+
+    await fillForm(user);
+    await user.upload(screen.getByLabelText(/^Resume/i), new File(["cv"], "cv.pdf", { type: "application/pdf" }));
+    await user.upload(
+      screen.getByLabelText(/^Passport-size photo/i),
+      new File(["img"], "photo.png", { type: "image/png" }),
+    );
+    now.mockReturnValue(60_000);
+    await submit(user);
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+    now.mockRestore();
+  };
+
+  it("thanks the candidate for a new application", async () => {
+    await apply({ ok: true, duplicate: false, taskId: "86abc" });
+
+    expect(await screen.findByText(/Application received/i)).toBeInTheDocument();
+    expect(screen.queryByText(/already applied/i)).not.toBeInTheDocument();
+  });
+
+  it("says the candidate has already applied when WF-02 finds a repeat, not that it was received", async () => {
+    // WF-02 answers a repeat with 200 and this body, having filed no second card
+    await apply({ ok: true, duplicate: true, error: "already_applied", taskId: "86abc" });
+
+    expect(await screen.findByText(/You have already applied/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Application received/i)).not.toBeInTheDocument();
+  });
+});
