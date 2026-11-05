@@ -43,7 +43,7 @@ const type = async (user: User, field: RegExp, value: string) => {
 /** Moves on from the step currently on screen. */
 const goNext = (user: User) => user.click(screen.getByRole("button", { name: /^Continue$/i }));
 
-/** An essay answer past the 300-word floor; the letter just tells two apart. */
+/** A long essay answer (there is no length limit); the letter just tells two apart. */
 const essay = (letter: string) => Array.from({ length: 310 }, () => letter).join(" ");
 
 /**

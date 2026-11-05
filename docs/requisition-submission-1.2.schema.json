@@ -450,7 +450,7 @@
     },
     "longText": {
       "type": "string",
-      "minLength": 300
+      "minLength": 1
     },
     "nullableText40": {
       "oneOf": [

@@ -17,7 +17,6 @@ import {
   fieldId,
   fieldSpec,
   filledItems,
-  wordCount,
   type FieldKey,
 } from "@/requisition/form";
 import type { SchemaOption } from "@/requisition/schema";
@@ -156,53 +155,6 @@ export const TextField = ({
   );
 };
 
-/**
- * How far past the floor an essay answer is, read live as the manager types.
- *
- * There is no ceiling on these fields any more — write as much as the role
- * needs — but a one-line answer is not a job description, so the only number
- * worth showing is distance from the 300-word floor: a thin teal bar
- * that fills as it is cleared, then settles into a plain running count once it
- * has been. Counting up forever past the floor would turn into a number
- * nobody is trying to hit.
- */
-const LengthProgress = ({ value, minWords }: { value: string; minWords: number }) => {
-  const length = wordCount(value);
-  const met = length >= minWords;
-  const pct = Math.min(100, (length / minWords) * 100);
-
-  return (
-    <div className="flex items-center gap-2 pt-0.5">
-      <div
-        className="h-1 w-20 shrink-0 overflow-hidden rounded-full bg-mist-100"
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={minWords}
-        aria-valuenow={Math.min(length, minWords)}
-        aria-label="Words toward the minimum"
-      >
-        <div
-          className={cn(
-            "h-full rounded-full transition-[width] duration-base ease-out",
-            met
-              ? "bg-gradient-to-r from-teal-300 to-cyan-400"
-              : "bg-gradient-to-r from-sand-300 to-ember-300",
-          )}
-          style={{ width: `${Math.max(met ? 100 : 4, pct)}%` }}
-        />
-      </div>
-      <p
-        className={cn(
-          "font-mono text-[0.6875rem] tabular-nums",
-          met ? "text-teal-700" : "text-steel-500",
-        )}
-      >
-        {met ? `${length} words` : `${length} of ${minWords} words minimum`}
-      </p>
-    </div>
-  );
-};
-
 export const TextareaField = ({
   fieldKey,
   value,
@@ -213,7 +165,6 @@ export const TextareaField = ({
   rows = 4,
   className,
   emphasis,
-  minWords,
 }: {
   fieldKey: FieldKey;
   value: string;
@@ -225,8 +176,6 @@ export const TextareaField = ({
   className?: string;
   /** D3 earns a teal wash on its help text — the new joiner reads that answer. */
   emphasis?: boolean;
-  /** Shows a live progress-to-floor meter, in words. There is never an upper bound. */
-  minWords?: number;
 }) => {
   const spec = fieldSpec(fieldKey);
   return (
@@ -244,7 +193,6 @@ export const TextareaField = ({
           aria-describedby={describedBy(fieldKey, !!spec.help, !!error)}
           className={errorKeyline(error)}
         />
-        {minWords ? <LengthProgress value={value} minWords={minWords} /> : null}
       </FieldShell>
     </div>
   );
