@@ -145,7 +145,7 @@ describe("/kpi/define", () => {
     routeFetch([{ match: CONTEXT, status: 410, body: {} }]);
     renderRoute("/kpi/define", <KpiDefinePage />);
 
-    expect(await screen.findByText(/link has expired/i)).toBeInTheDocument();
+    expect(await screen.findByText(/link is not valid/i)).toBeInTheDocument();
     namesNobody();
   });
 });
@@ -194,7 +194,7 @@ describe("/kpi/review", () => {
     ]);
     renderRoute("/kpi/review", <KpiReviewPage />);
 
-    expect(await screen.findByText(/link has expired/i)).toBeInTheDocument();
+    expect(await screen.findByText(/link is not valid/i)).toBeInTheDocument();
     namesNobody();
   });
 
