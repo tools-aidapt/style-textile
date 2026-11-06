@@ -170,9 +170,12 @@ export const copy = {
   noTokenBody:
     "The last part of the address is missing, which usually means an email app cut it short. Open the link from the original email, or reply to it and we will send a new one.",
 
-  deadHeading: "This link has expired",
+  // One heading for every refused token: expired, spent and altered links read
+  // the same, so it has to be true of all three. "Expired" was wrong for an
+  // altered link.
+  deadHeading: "This link is not valid",
   deadBody:
-    "KPI links stop working after a few weeks, and each one can only be used once. Reply to the email we sent you and we will send a new one.",
+    "KPI links stop working after a few weeks, each one can only be used once, and a link that has been changed will not open. Reply to the email we sent you and we will send a new one.",
 
   unreachableHeading: "We could not open the form",
   unreachableBody:
